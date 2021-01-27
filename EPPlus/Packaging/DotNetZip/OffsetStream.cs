@@ -8,23 +8,22 @@
 //
 // ------------------------------------------------------------------
 //
-// This code is licensed under the Microsoft Public License. 
+// This code is licensed under the Microsoft Public License.
 // See the file License.txt for the license details.
 // More info on: http://dotnetzip.codeplex.com
 //
 // ------------------------------------------------------------------
 //
-// last saved (in emacs): 
+// last saved (in emacs):
 // Time-stamp: <2009-August-27 12:50:35>
 //
 // ------------------------------------------------------------------
 //
-// This module defines logic for handling reading of zip archives embedded 
+// This module defines logic for handling reading of zip archives embedded
 // into larger streams.  The initial position of the stream serves as
 // the base offset for all future Seek() operations.
-// 
+//
 // ------------------------------------------------------------------
-
 
 using System;
 using System.IO;
@@ -33,24 +32,14 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
     internal class OffsetStream : System.IO.Stream, System.IDisposable
     {
-        private Int64 _originalPosition;
         private Stream _innerStream;
+        private Int64 _originalPosition;
 
         public OffsetStream(Stream s)
             : base()
         {
             _originalPosition = s.Position;
             _innerStream = s;
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            return _innerStream.Read(buffer, offset, count);
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
         }
 
         public override bool CanRead
@@ -68,11 +57,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get { return false; }
         }
 
-        public override void Flush()
-        {
-            _innerStream.Flush();
-        }
-
         public override long Length
         {
             get
@@ -87,26 +71,39 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             set { _innerStream.Position = _originalPosition + value; }
         }
 
-
-        public override long Seek(long offset, System.IO.SeekOrigin origin)
+        public override void Close()
         {
-            return _innerStream.Seek(_originalPosition + offset, origin) - _originalPosition;
-        }
-
-
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
+            base.Close();
         }
 
         void IDisposable.Dispose()
         {
             Close();
         }
-        public override void Close()
+
+        public override void Flush()
         {
-            base.Close();
+            _innerStream.Flush();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            return _innerStream.Read(buffer, offset, count);
+        }
+
+        public override long Seek(long offset, System.IO.SeekOrigin origin)
+        {
+            return _innerStream.Seek(_originalPosition + offset, origin) - _originalPosition;
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
         }
     }
-
 }

@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.Exceptions;
+﻿using OfficeOpenXml.FormulaParsing.Exceptions;
 using OfficeOpenXml.FormulaParsing.Utilities;
+using System.Linq;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions.RefAndLookup
 {
     public class ArrayLookupNavigator : LookupNavigator
     {
         private readonly FunctionArgument[] _arrayData;
-        private int _index = 0;
         private object _currentValue;
- 
+        private int _index = 0;
+
         public ArrayLookupNavigator(LookupDirection direction, LookupArguments arguments, ParsingContext parsingContext)
             : base(direction, arguments, parsingContext)
         {
@@ -22,14 +19,9 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.RefAndLookup
             Initialize();
         }
 
-        private void Initialize()
+        public override object CurrentValue
         {
-            if (Arguments.LookupIndex >= _arrayData.Length)
-            {
-                throw new ExcelErrorValueException(eErrorType.Ref);
-            }
-            SetCurrentValue();
-
+            get { return _arrayData[_index].Value; }
         }
 
         public override int Index
@@ -37,9 +29,20 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.RefAndLookup
             get { return _index; }
         }
 
-        private void SetCurrentValue()
+        public override object GetLookupValue()
         {
-            _currentValue = _arrayData[_index];
+            return _arrayData[_index].Value;
+        }
+
+        public override bool MoveNext()
+        {
+            if (!HasNext()) return false;
+            if (Direction == LookupDirection.Vertical)
+            {
+                _index++;
+            }
+            SetCurrentValue();
+            return true;
         }
 
         private bool HasNext()
@@ -54,25 +57,18 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.RefAndLookup
             }
         }
 
-        public override bool MoveNext()
+        private void Initialize()
         {
-            if (!HasNext()) return false;
-            if (Direction == LookupDirection.Vertical)
+            if (Arguments.LookupIndex >= _arrayData.Length)
             {
-                _index++;
+                throw new ExcelErrorValueException(eErrorType.Ref);
             }
             SetCurrentValue();
-            return true;
         }
 
-        public override object CurrentValue
+        private void SetCurrentValue()
         {
-            get { return _arrayData[_index].Value; }
-        }
-
-        public override object GetLookupValue()
-        {
-            return _arrayData[_index].Value;
+            _currentValue = _arrayData[_index];
         }
     }
 }

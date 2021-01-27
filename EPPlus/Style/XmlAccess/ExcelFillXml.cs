@@ -13,41 +13,54 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 using System.Xml;
+
 namespace OfficeOpenXml.Style.XmlAccess
 {
     /// <summary>
     /// Xml access class for fills
     /// </summary>
-    public class ExcelFillXml : StyleXmlHelper 
+    public class ExcelFillXml : StyleXmlHelper
     {
+        protected ExcelColorXml _backgroundColor = null;
+
+        protected ExcelFillStyle _fillPatternType;
+
+        protected ExcelColorXml _patternColor = null;
+
+        private const string _backgroundColorPath = "d:patternFill/d:fgColor";
+
+        private const string _patternColorPath = "d:patternFill/d:bgColor";
+
+        private const string fillPatternTypePath = "d:patternFill/@patternType";
+
         internal ExcelFillXml(XmlNamespaceManager nameSpaceManager)
-            : base(nameSpaceManager)
+                                                            : base(nameSpaceManager)
         {
             _fillPatternType = ExcelFillStyle.None;
             _backgroundColor = new ExcelColorXml(NameSpaceManager);
             _patternColor = new ExcelColorXml(NameSpaceManager);
         }
+
         internal ExcelFillXml(XmlNamespaceManager nsm, XmlNode topNode):
             base(nsm, topNode)
         {
@@ -56,45 +69,21 @@ namespace OfficeOpenXml.Style.XmlAccess
             _patternColor = new ExcelColorXml(nsm, topNode.SelectSingleNode(_patternColorPath, nsm));
         }
 
-        private ExcelFillStyle GetPatternType(string patternType)
-        {
-            if (patternType == "") return ExcelFillStyle.None;
-            patternType = patternType.Substring(0, 1).ToUpper(CultureInfo.InvariantCulture) + patternType.Substring(1, patternType.Length - 1);
-            try
-            {
-                return (ExcelFillStyle)Enum.Parse(typeof(ExcelFillStyle), patternType);
-            }
-            catch
-            {
-                return ExcelFillStyle.None;
-            }
-        }
-        internal override string Id
-        {
-            get
-            {
-                return PatternType + PatternColor.Id + BackgroundColor.Id;
-            }
-        }
-        #region Public Properties
-        const string fillPatternTypePath = "d:patternFill/@patternType";
-        protected ExcelFillStyle _fillPatternType;
         /// <summary>
-        /// Cell fill pattern style
+        /// Cell background color
         /// </summary>
-        public ExcelFillStyle PatternType
+        public ExcelColorXml BackgroundColor
         {
             get
             {
-                return _fillPatternType;
+                return _backgroundColor;
             }
-            set
+            internal set
             {
-                _fillPatternType=value;
+                _backgroundColor = value;
             }
         }
-        protected ExcelColorXml _patternColor = null;
-        const string _patternColorPath = "d:patternFill/d:bgColor";
+
         /// <summary>
         /// Pattern color
         /// </summary>
@@ -109,30 +98,29 @@ namespace OfficeOpenXml.Style.XmlAccess
                 _patternColor = value;
             }
         }
-        protected ExcelColorXml _backgroundColor = null;
-        const string _backgroundColorPath = "d:patternFill/d:fgColor";
+
         /// <summary>
-        /// Cell background color 
+        /// Cell fill pattern style
         /// </summary>
-        public ExcelColorXml BackgroundColor
+        public ExcelFillStyle PatternType
         {
             get
             {
-                return _backgroundColor;
+                return _fillPatternType;
             }
-            internal set
+            set
             {
-                _backgroundColor=value;
+                _fillPatternType = value;
             }
         }
-        #endregion
 
-
-        //internal Fill Copy()
-        //{
-        //    Fill newFill = new Fill(NameSpaceManager, TopNode.Clone());
-        //    return newFill;
-        //}
+        internal override string Id
+        {
+            get
+            {
+                return PatternType + PatternColor.Id + BackgroundColor.Id;
+            }
+        }
 
         internal virtual ExcelFillXml Copy()
         {
@@ -143,6 +131,11 @@ namespace OfficeOpenXml.Style.XmlAccess
             return newFill;
         }
 
+        //internal Fill Copy()
+        //{
+        //    Fill newFill = new Fill(NameSpaceManager, TopNode.Clone());
+        //    return newFill;
+        //}
         internal override XmlNode CreateXmlNode(XmlNode topNode)
         {
             TopNode = topNode;
@@ -162,6 +155,20 @@ namespace OfficeOpenXml.Style.XmlAccess
                 }
             }
             return topNode;
+        }
+
+        private ExcelFillStyle GetPatternType(string patternType)
+        {
+            if (patternType == "") return ExcelFillStyle.None;
+            patternType = patternType.Substring(0, 1).ToUpper(CultureInfo.InvariantCulture) + patternType.Substring(1, patternType.Length - 1);
+            try
+            {
+                return (ExcelFillStyle)Enum.Parse(typeof(ExcelFillStyle), patternType);
+            }
+            catch
+            {
+                return ExcelFillStyle.None;
+            }
         }
 
         private string SetPatternString(ExcelFillStyle pattern)

@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace OfficeOpenXml.Utils
 {
     public class ValidationResult : IValidationResult
     {
+        private string _errorMessage;
+
+        private bool _result;
+
         public ValidationResult(bool result)
-            : this(result, null)
+                            : this(result, null)
         {
-            
         }
 
         public ValidationResult(bool result, string errorMessage)
@@ -19,16 +19,12 @@ namespace OfficeOpenXml.Utils
             _errorMessage = errorMessage;
         }
 
-        private bool _result;
-        private string _errorMessage;
-
-        private void Throw()
+        void IValidationResult.IsFalse()
         {
-            if(string.IsNullOrEmpty(_errorMessage))
+            if (_result)
             {
-                throw new InvalidOperationException();
+                Throw();
             }
-            throw new InvalidOperationException(_errorMessage);
         }
 
         void IValidationResult.IsTrue()
@@ -39,12 +35,13 @@ namespace OfficeOpenXml.Utils
             }
         }
 
-        void IValidationResult.IsFalse()
+        private void Throw()
         {
-            if (_result)
+            if(string.IsNullOrEmpty(_errorMessage))
             {
-                Throw();
+                throw new InvalidOperationException();
             }
+            throw new InvalidOperationException(_errorMessage);
         }
     }
 }

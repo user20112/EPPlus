@@ -1,9 +1,7 @@
-﻿using System;
+﻿using OfficeOpenXml.FormulaParsing.Excel.Functions;
+using OfficeOpenXml.FormulaParsing.Exceptions;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.Excel.Functions;
-using OfficeOpenXml.FormulaParsing.Exceptions;
 
 namespace OfficeOpenXml.FormulaParsing.ExpressionGraph.FunctionCompilers
 {
@@ -12,7 +10,6 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph.FunctionCompilers
         public IfNaFunctionCompiler(ExcelFunction function, ParsingContext context)
             :base(function, context)
         {
-            
         }
 
         public override CompileResult Compile(IEnumerable<Expression> children)
@@ -34,7 +31,6 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph.FunctionCompilers
                 {
                     args.Add(new FunctionArgument(result.Result));
                 }
-
             }
             catch (ExcelErrorValueException)
             {

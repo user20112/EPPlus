@@ -13,48 +13,48 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2013-03-01 (Prior file history on https://github.com/swmal/ExcelFormulaParser)
  *******************************************************************************/
+
+using OfficeOpenXml.FormulaParsing.Excel.Functions;
+using OfficeOpenXml.FormulaParsing.ExcelUtilities;
+using OfficeOpenXml.FormulaParsing.Exceptions;
+using OfficeOpenXml.FormulaParsing.ExpressionGraph;
+using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
+using OfficeOpenXml.FormulaParsing.Logging;
+using OfficeOpenXml.FormulaParsing.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.ExpressionGraph;
-using OfficeOpenXml.FormulaParsing;
-using OfficeOpenXml.FormulaParsing.Excel.Operators;
-using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
-using OfficeOpenXml.FormulaParsing.Excel;
-using OfficeOpenXml.FormulaParsing.Excel.Functions;
-using OfficeOpenXml.FormulaParsing.ExcelUtilities;
-using OfficeOpenXml.FormulaParsing.Logging;
-using OfficeOpenXml.FormulaParsing.Utilities;
-using System.Diagnostics;
-using OfficeOpenXml.FormulaParsing.Exceptions;
 
 namespace OfficeOpenXml.FormulaParsing
 {
     public class FormulaParser : IDisposable
     {
-        private readonly ParsingContext _parsingContext;
         private readonly ExcelDataProvider _excelDataProvider;
+        private readonly ParsingContext _parsingContext;
+        private IExpressionCompiler _compiler;
+
+        private IExpressionGraphBuilder _graphBuilder;
+
+        private ILexer _lexer;
 
         public FormulaParser(ExcelDataProvider excelDataProvider)
-            : this(excelDataProvider, ParsingContext.Create())
+                                    : this(excelDataProvider, ParsingContext.Create())
         {
-           
         }
 
         public FormulaParser(ExcelDataProvider excelDataProvider, ParsingContext parsingContext)
@@ -75,6 +75,15 @@ namespace OfficeOpenXml.FormulaParsing
             });
         }
 
+        public IEnumerable<string> FunctionNames { get { return _parsingContext.Configuration.FunctionRepository.FunctionNames; } }
+
+        public ILexer Lexer { get { return _lexer; } }
+
+        public IFormulaParserLogger Logger
+        {
+            get { return _parsingContext.Configuration.Logger; }
+        }
+
         public void Configure(Action<ParsingConfiguration> configMethod)
         {
             configMethod.Invoke(_parsingContext.Configuration);
@@ -83,12 +92,58 @@ namespace OfficeOpenXml.FormulaParsing
             _compiler = _parsingContext.Configuration.ExpressionCompiler ?? _compiler;
         }
 
-        private ILexer _lexer;
-        private IExpressionGraphBuilder _graphBuilder;
-        private IExpressionCompiler _compiler;
+        public void Dispose()
+        {
+            if (_parsingContext.Debug)
+            {
+                _parsingContext.Configuration.Logger.Dispose();
+            }
+        }
 
-        public ILexer Lexer { get { return _lexer; } }
-        public IEnumerable<string> FunctionNames { get { return _parsingContext.Configuration.FunctionRepository.FunctionNames; } } 
+        public virtual object Parse(string formula, string address)
+        {
+            return Parse(formula, _parsingContext.RangeAddressFactory.Create(address));
+        }
+
+        public virtual object Parse(string formula)
+        {
+            return Parse(formula, RangeAddress.Empty);
+        }
+
+        public virtual object ParseAt(string address)
+        {
+            Require.That(address).Named("address").IsNotNullOrEmpty();
+            var rangeAddress = _parsingContext.RangeAddressFactory.Create(address);
+            return ParseAt(rangeAddress.Worksheet, rangeAddress.FromRow, rangeAddress.FromCol);
+        }
+
+        public virtual object ParseAt(string worksheetName, int row, int col)
+        {
+            var f = _excelDataProvider.GetRangeFormula(worksheetName, row, col);
+            if (string.IsNullOrEmpty(f))
+            {
+                return _excelDataProvider.GetRangeValue(worksheetName, row, col);
+            }
+            else
+            {
+                return Parse(f, _parsingContext.RangeAddressFactory.Create(worksheetName, col, row));
+            }
+            //var dataItem = _excelDataProvider.GetRangeValues(address).FirstOrDefault();
+            //if (dataItem == null /*|| (dataItem.Value == null && dataItem.Formula == null)*/) return null;
+            //if (!string.IsNullOrEmpty(dataItem.Formula))
+            //{
+            //    return Parse(dataItem.Formula, _parsingContext.RangeAddressFactory.Create(address));
+            //}
+            //return Parse(dataItem.Value.ToString(), _parsingContext.RangeAddressFactory.Create(address));
+        }
+
+        internal void InitNewCalc()
+        {
+            if (_excelDataProvider != null)
+            {
+                _excelDataProvider.Reset();
+            }
+        }
 
         internal virtual object Parse(string formula, RangeAddress rangeAddress)
         {
@@ -117,6 +172,7 @@ namespace OfficeOpenXml.FormulaParsing
                 return _compiler.Compile(graph.Expressions).Result;
             }
         }
+
         internal virtual object ParseCell(IEnumerable<Token> tokens, string worksheet, int row, int column)
         {
             var rangeAddress = _parsingContext.RangeAddressFactory.Create(worksheet, column, row);
@@ -169,65 +225,6 @@ namespace OfficeOpenXml.FormulaParsing
                     }
                     return ex.ErrorValue;
                 }
-            }
-        }
-
-        public virtual object Parse(string formula, string address)
-        {
-            return Parse(formula, _parsingContext.RangeAddressFactory.Create(address));
-        }
-        
-        public virtual object Parse(string formula)
-        {
-            return Parse(formula, RangeAddress.Empty);
-        }
-
-        public virtual object ParseAt(string address)
-        {
-            Require.That(address).Named("address").IsNotNullOrEmpty();
-            var rangeAddress = _parsingContext.RangeAddressFactory.Create(address);
-            return ParseAt(rangeAddress.Worksheet, rangeAddress.FromRow, rangeAddress.FromCol);
-        }
-
-        public virtual object ParseAt(string worksheetName, int row, int col)
-        {
-            var f = _excelDataProvider.GetRangeFormula(worksheetName, row, col);
-            if (string.IsNullOrEmpty(f))
-            {
-                return _excelDataProvider.GetRangeValue(worksheetName, row, col);
-            }
-            else
-            {
-                return Parse(f, _parsingContext.RangeAddressFactory.Create(worksheetName,col,row));
-            }
-            //var dataItem = _excelDataProvider.GetRangeValues(address).FirstOrDefault();
-            //if (dataItem == null /*|| (dataItem.Value == null && dataItem.Formula == null)*/) return null;
-            //if (!string.IsNullOrEmpty(dataItem.Formula))
-            //{
-            //    return Parse(dataItem.Formula, _parsingContext.RangeAddressFactory.Create(address));
-            //}
-            //return Parse(dataItem.Value.ToString(), _parsingContext.RangeAddressFactory.Create(address));
-        }
-
-
-        internal void InitNewCalc()
-        {
-            if(_excelDataProvider!=null)
-            {
-                _excelDataProvider.Reset();
-            }
-        }
-
-        public IFormulaParserLogger Logger
-        {
-            get { return _parsingContext.Configuration.Logger; }
-        }
-
-        public void Dispose()
-        {
-            if (_parsingContext.Debug)
-            {
-                _parsingContext.Configuration.Logger.Dispose();
             }
         }
     }

@@ -26,13 +26,11 @@
 //
 // ------------------------------------------------------------------
 
-
 using System;
 using System.Collections.Generic;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
-
     partial class ZipEntry
     {
         /// <summary>
@@ -42,7 +40,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             get { return ((_InternalFileAttrs == 0) && ((_ExternalFileAttrs & 0x0010) == 0x0010)); }
         }
-
 
         internal void ResetDirEntry()
         {
@@ -109,7 +106,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         // workitem 10330
         private class CopyHelper
         {
@@ -164,8 +160,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return f;
             }
         }
-
-
 
         /// <summary>
         ///   Reads one entry from the zip directory structure in the zip file.
@@ -355,7 +349,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return zde;
         }
 
-
         /// <summary>
         /// Returns true if the passed-in value is a valid signature for a ZipDirEntry.
         /// </summary>
@@ -366,16 +359,14 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return (signature != ZipConstants.ZipDirEntrySignature);
         }
 
-
         private Int16 _VersionMadeBy;
         private Int16 _InternalFileAttrs;
         private Int32 _ExternalFileAttrs;
 
         //private Int32 _LengthOfDirEntry;
         private Int16 _filenameLength;
+
         private Int16 _extraFieldLength;
         private Int16 _commentLength;
     }
-
-
 }

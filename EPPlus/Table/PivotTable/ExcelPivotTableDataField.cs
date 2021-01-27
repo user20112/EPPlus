@@ -13,28 +13,27 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Added		21-MAR-2011
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
-using System.Xml;
+
 using OfficeOpenXml.Style.XmlAccess;
+using System;
+using System.Globalization;
+using System.Xml;
 
 namespace OfficeOpenXml.Table.PivotTable
 {
@@ -52,49 +51,10 @@ namespace OfficeOpenXml.Table.PivotTable
                 BaseField = 0;
                 BaseItem = 0;
             }
-            
+
             Field = field;
         }
-        /// <summary>
-        /// The field
-        /// </summary>
-        public ExcelPivotTableField Field
-        {
-            get;
-            private set;
-        }
-        /// <summary>
-        /// The index of the datafield
-        /// </summary>
-        public int Index 
-        { 
-            get
-            {
-                return GetXmlNodeInt("@fld");
-            }
-            internal set
-            {
-                SetXmlNodeString("@fld",value.ToString());
-            }
-        }
-        /// <summary>
-        /// The name of the datafield
-        /// </summary>
-        public string Name
-        {
-            get
-            {
-                return GetXmlNodeString("@name");
-            }
-            set
-            {
-                if (Field._table.DataFields.ExistsDfName(value, this))
-                {
-                    throw (new InvalidOperationException("Duplicate datafield name"));
-                }
-                SetXmlNodeString("@name", value);
-            }
-        }
+
         /// <summary>
         /// Field index. Reference to the field collection
         /// </summary>
@@ -109,6 +69,7 @@ namespace OfficeOpenXml.Table.PivotTable
                 SetXmlNodeString("@baseField", value.ToString());
             }
         }
+
         /// <summary>
         /// Specifies the index to the base item when the ShowDataAs calculation is in use
         /// </summary>
@@ -123,20 +84,16 @@ namespace OfficeOpenXml.Table.PivotTable
                 SetXmlNodeString("@baseItem", value.ToString());
             }
         }
+
         /// <summary>
-        /// Number format id. 
+        /// The field
         /// </summary>
-        internal int NumFmtId
+        public ExcelPivotTableField Field
         {
-            get
-            {
-                return GetXmlNodeInt("@numFmtId");
-            }
-            set
-            {
-                SetXmlNodeString("@numFmtId", value.ToString());
-            }
+            get;
+            private set;
         }
+
         /// <summary>
         /// Number format for the data column
         /// </summary>
@@ -166,6 +123,7 @@ namespace OfficeOpenXml.Table.PivotTable
                 NumFmtId = nf.NumFmtId;
             }
         }
+
         /// <summary>
         /// Type of aggregate function
         /// </summary>
@@ -173,8 +131,8 @@ namespace OfficeOpenXml.Table.PivotTable
         {
             get
             {
-                string s=GetXmlNodeString("@subtotal");
-                if(s=="")
+                string s = GetXmlNodeString("@subtotal");
+                if (s == "")
                 {
                     return DataFieldFunctions.None;
                 }
@@ -186,27 +144,81 @@ namespace OfficeOpenXml.Table.PivotTable
             set
             {
                 string v;
-                switch(value)
+                switch (value)
                 {
                     case DataFieldFunctions.None:
                         DeleteNode("@subtotal");
                         return;
+
                     case DataFieldFunctions.CountNums:
-                        v="CountNums";
+                        v = "CountNums";
                         break;
+
                     case DataFieldFunctions.StdDev:
-                        v="stdDev";
+                        v = "stdDev";
                         break;
+
                     case DataFieldFunctions.StdDevP:
-                        v="stdDevP";
+                        v = "stdDevP";
                         break;
+
                     default:
-                        v=value.ToString().ToLower(CultureInfo.InvariantCulture);
+                        v = value.ToString().ToLower(CultureInfo.InvariantCulture);
                         break;
-                }                
+                }
                 SetXmlNodeString("@subtotal", v);
             }
         }
+
+        /// <summary>
+        /// The index of the datafield
+        /// </summary>
+        public int Index
+        {
+            get
+            {
+                return GetXmlNodeInt("@fld");
+            }
+            internal set
+            {
+                SetXmlNodeString("@fld",value.ToString());
+            }
+        }
+
+        /// <summary>
+        /// The name of the datafield
+        /// </summary>
+        public string Name
+        {
+            get
+            {
+                return GetXmlNodeString("@name");
+            }
+            set
+            {
+                if (Field._table.DataFields.ExistsDfName(value, this))
+                {
+                    throw (new InvalidOperationException("Duplicate datafield name"));
+                }
+                SetXmlNodeString("@name", value);
+            }
+        }
+
+        /// <summary>
+        /// Number format id.
+        /// </summary>
+        internal int NumFmtId
+        {
+            get
+            {
+                return GetXmlNodeInt("@numFmtId");
+            }
+            set
+            {
+                SetXmlNodeString("@numFmtId", value.ToString());
+            }
+        }
+
         /////Since we have no items, Excel will crash when we use showDataAs options that require baseItem's
         //public eShowDataAs ShowDataAs
         //{

@@ -13,26 +13,25 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		12-APR-2012
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace OfficeOpenXml.VBA
 {
@@ -41,30 +40,37 @@ namespace OfficeOpenXml.VBA
     /// </summary>
     public class ExcelVbaProtection
     {
-        ExcelVbaProject _project;
+        private ExcelVbaProject _project;
+
         internal ExcelVbaProtection(ExcelVbaProject project)
         {
             _project = project;
             VisibilityState = true;
         }
-        /// <summary>
-        /// Specifies whether access to the VBA project was restricted by the user
-        /// </summary>
-        public bool UserProtected { get; internal set; }
+
         /// <summary>
         /// Specifies whether access to the VBA project was restricted by the VBA host application
         /// </summary>
         public bool HostProtected { get; internal set; }
+
+        /// <summary>
+        /// Specifies whether access to the VBA project was restricted by the user
+        /// </summary>
+        public bool UserProtected { get; internal set; }
+
         /// <summary>
         /// Specifies whether access to the VBA project was restricted by the VBA project editor
         /// </summary>
         public bool VbeProtected { get; internal set; }
+
         /// <summary>
         /// Specifies whether the VBA project is visible.
         /// </summary>
         public bool VisibilityState { get; internal set; }
+
         internal byte[] PasswordHash { get; set; }
         internal byte[] PasswordKey { get; set; }
+
         /// <summary>
         /// Password protect the VBA project.
         /// An empty string or null will remove the password protection
@@ -72,7 +78,6 @@ namespace OfficeOpenXml.VBA
         /// <param name="Password">The password</param>
         public void SetPassword(string Password)
         {
-
             if (string.IsNullOrEmpty(Password))
             {
                 PasswordHash = null;
@@ -104,9 +109,9 @@ namespace OfficeOpenXml.VBA
                 _project.ProjectID = "{00000000-0000-0000-0000-000000000000}";
             }
         }
-        //public void ValidatePassword(string Password)                     
-        //{
 
-        //}        
+        //public void ValidatePassword(string Password)
+        //{
+        //}
     }
 }

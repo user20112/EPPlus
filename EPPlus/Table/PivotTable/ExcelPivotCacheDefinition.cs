@@ -13,29 +13,29 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Added		21-MAR-2011
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
+using OfficeOpenXml.Utils;
 using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Security;
 using System.Text;
 using System.Xml;
-using System.Linq;
-using OfficeOpenXml.Utils;
-using System.Security;
 
 namespace OfficeOpenXml.Table.PivotTable
 {
@@ -45,26 +45,38 @@ namespace OfficeOpenXml.Table.PivotTable
         /// Indicates that the cache contains data that consolidates ranges.
         /// </summary>
         Consolidation,
+
         /// <summary>
         /// Indicates that the cache contains data from an external data source.
         /// </summary>
         External,
+
         /// <summary>
         /// Indicates that the cache contains a scenario summary report
         /// </summary>
         Scenario,
+
         /// <summary>
         /// Indicates that the cache contains worksheet data
         /// </summary>
         Worksheet
     }
+
     /// <summary>
     /// Cache definition. This class defines the source data. Note that one cache definition can be shared between many pivot tables.
     /// </summary>
     public class ExcelPivotCacheDefinition : XmlHelper
     {
+        internal const string _sourceAddressPath = "d:cacheSource/d:worksheetSource/@ref";
+
+        internal const string _sourceNamePath = "d:cacheSource/d:worksheetSource/@name";
+
+        internal ExcelRangeBase _sourceRange = null;
+
+        private const string _sourceWorksheetPath = "d:cacheSource/d:worksheetSource/@sheet";
+
         internal ExcelPivotCacheDefinition(XmlNamespaceManager ns, ExcelPivotTable pivotTable) :
-            base(ns, null)
+                                            base(ns, null)
         {
             foreach (var r in pivotTable.Part.GetRelationshipsByType(ExcelPackage.schemaRelationships + "/pivotCacheDefinition"))
             {
@@ -88,22 +100,23 @@ namespace OfficeOpenXml.Table.PivotTable
                 }
             }
         }
+
         internal ExcelPivotCacheDefinition(XmlNamespaceManager ns, ExcelPivotTable pivotTable, ExcelRangeBase sourceAddress, int tblId) :
             base(ns, null)
         {
             PivotTable = pivotTable;
 
             var pck = pivotTable.WorkSheet._package.Package;
-            
+
             //CacheDefinition
             CacheDefinitionXml = new XmlDocument();
             LoadXmlSafe(CacheDefinitionXml, GetStartXml(sourceAddress), Encoding.UTF8);
-            CacheDefinitionUri = GetNewUri(pck, "/xl/pivotCache/pivotCacheDefinition{0}.xml", ref tblId); 
+            CacheDefinitionUri = GetNewUri(pck, "/xl/pivotCache/pivotCacheDefinition{0}.xml", ref tblId);
             Part = pck.CreatePart(CacheDefinitionUri, ExcelPackage.schemaPivotCacheDefinition);
             TopNode = CacheDefinitionXml.DocumentElement;
 
             //CacheRecord. Create an empty one.
-            CacheRecordUri = GetNewUri(pck, "/xl/pivotCache/pivotCacheRecords{0}.xml", ref tblId); 
+            CacheRecordUri = GetNewUri(pck, "/xl/pivotCache/pivotCacheRecords{0}.xml", ref tblId);
             var cacheRecord = new XmlDocument();
             cacheRecord.LoadXml("<pivotCacheRecords xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" count=\"0\" />");
             var recPart = pck.CreatePart(CacheRecordUri, ExcelPackage.schemaPivotCacheRecords);
@@ -113,19 +126,8 @@ namespace OfficeOpenXml.Table.PivotTable
             RecordRelationshipID = RecordRelationship.Id;
 
             CacheDefinitionXml.Save(Part.GetStream());
-        }        
-        /// <summary>
-        /// Reference to the internal package part
-        /// </summary>
-        internal Packaging.ZipPackagePart Part
-        {
-            get;
-            set;
         }
-        /// <summary>
-        /// Provides access to the XML data representing the cache definition in the package.
-        /// </summary>
-        public XmlDocument CacheDefinitionXml { get; private set; }
+
         /// <summary>
         /// The package internal URI to the pivottable cache definition Xml Document.
         /// </summary>
@@ -134,32 +136,31 @@ namespace OfficeOpenXml.Table.PivotTable
             get;
             internal set;
         }
-        internal Uri CacheRecordUri
-        {
-            get;
-            set;
-        }
-        internal Packaging.ZipPackageRelationship Relationship
-        {
-            get;
-            set;
-        }
-        internal Packaging.ZipPackageRelationship RecordRelationship
-        {
-            get;
-            set;
-        }
-        internal string RecordRelationshipID 
+
+        /// <summary>
+        /// Provides access to the XML data representing the cache definition in the package.
+        /// </summary>
+        public XmlDocument CacheDefinitionXml { get; private set; }
+
+        /// <summary>
+        /// Type of source data
+        /// </summary>
+        public eSourceType CacheSource
         {
             get
             {
-                return GetXmlNodeString("@r:id");
-            }
-            set
-            {
-                SetXmlNodeString("@r:id", value);
+                var s = GetXmlNodeString("d:cacheSource/@type");
+                if (s == "")
+                {
+                    return eSourceType.Worksheet;
+                }
+                else
+                {
+                    return (eSourceType)Enum.Parse(typeof(eSourceType), s, true);
+                }
             }
         }
+
         /// <summary>
         /// Referece to the PivoTable object
         /// </summary>
@@ -168,13 +169,9 @@ namespace OfficeOpenXml.Table.PivotTable
             get;
             private set;
         }
-        
-        const string _sourceWorksheetPath="d:cacheSource/d:worksheetSource/@sheet";
-        internal const string _sourceNamePath = "d:cacheSource/d:worksheetSource/@name";
-        internal const string _sourceAddressPath = "d:cacheSource/d:worksheetSource/@ref";
-        internal ExcelRangeBase _sourceRange = null;
+
         /// <summary>
-        /// The source data range when the pivottable has a worksheet datasource. 
+        /// The source data range when the pivottable has a worksheet datasource.
         /// The number of columns in the range must be intact if this property is changed.
         /// The range must be in the same workbook as the pivottable.
         /// </summary>
@@ -192,7 +189,7 @@ namespace OfficeOpenXml.Table.PivotTable
                             var name = GetXmlNodeString(_sourceNamePath);
                             foreach (var n in PivotTable.WorkSheet.Workbook.Names)
                             {
-                                if(name.Equals(n.Name,StringComparison.OrdinalIgnoreCase))
+                                if (name.Equals(n.Name, StringComparison.OrdinalIgnoreCase))
                                 {
                                     _sourceRange = n;
                                     return _sourceRange;
@@ -234,7 +231,7 @@ namespace OfficeOpenXml.Table.PivotTable
                     throw (new ArgumentException("Range must be in the same package as the pivottable"));
                 }
 
-                var sr=SourceRange;
+                var sr = SourceRange;
                 if (value.End.Column - value.Start.Column != sr.End.Column - sr.Start.Column)
                 {
                     throw (new ArgumentException("Can not change the number of columns(fields) in the SourceRange"));
@@ -245,24 +242,46 @@ namespace OfficeOpenXml.Table.PivotTable
                 _sourceRange = value;
             }
         }
+
+        internal Uri CacheRecordUri
+        {
+            get;
+            set;
+        }
+
         /// <summary>
-        /// Type of source data
+        /// Reference to the internal package part
         /// </summary>
-        public eSourceType CacheSource
+        internal Packaging.ZipPackagePart Part
+        {
+            get;
+            set;
+        }
+
+        internal Packaging.ZipPackageRelationship RecordRelationship
+        {
+            get;
+            set;
+        }
+
+        internal string RecordRelationshipID
         {
             get
             {
-                var s=GetXmlNodeString("d:cacheSource/@type");
-                if (s == "")
-                {
-                    return eSourceType.Worksheet;
-                }
-                else
-                {
-                    return (eSourceType)Enum.Parse(typeof(eSourceType), s, true);
-                }
+                return GetXmlNodeString("@r:id");
+            }
+            set
+            {
+                SetXmlNodeString("@r:id", value);
             }
         }
+
+        internal Packaging.ZipPackageRelationship Relationship
+        {
+            get;
+            set;
+        }
+
         private string GetStartXml(ExcelRangeBase sourceAddress)
         {
             string xml="<pivotCacheDefinition xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" r:id=\"\" refreshOnLoad=\"1\" refreshedBy=\"SomeUser\" refreshedDate=\"40504.582403125001\" createdVersion=\"1\" refreshedVersion=\"3\" recordCount=\"5\" upgradeOnRefresh=\"1\">";

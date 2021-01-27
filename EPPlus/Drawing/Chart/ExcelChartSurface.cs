@@ -13,27 +13,25 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		2009-12-30
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Xml;
-using OfficeOpenXml.Style;
 
 namespace OfficeOpenXml.Drawing.Chart
 {
@@ -42,16 +40,51 @@ namespace OfficeOpenXml.Drawing.Chart
     /// </summary>
     public class ExcelChartSurface : XmlHelper
     {
+        private const string THICKNESS_PATH = "c:thickness/@val";
+
+        private ExcelDrawingBorder _border = null;
+
+        private ExcelDrawingFill _fill = null;
+
         internal ExcelChartSurface(XmlNamespaceManager ns, XmlNode node)
-           : base(ns,node)
+                                   : base(ns,node)
        {
            SchemaNodeOrder = new string[] { "thickness", "spPr", "pictureOptions" };
        }
-       #region "Public properties"
-        const string THICKNESS_PATH = "c:thickness/@val";
-       /// <summary>
-       /// Show the values 
-       /// </summary>
+
+        /// <summary>
+        /// Access border properties
+        /// </summary>
+        public ExcelDrawingBorder Border
+        {
+            get
+            {
+                if (_border == null)
+                {
+                    _border = new ExcelDrawingBorder(NameSpaceManager, TopNode, "c:spPr/a:ln");
+                }
+                return _border;
+            }
+        }
+
+        /// <summary>
+        /// Access fill properties
+        /// </summary>
+        public ExcelDrawingFill Fill
+        {
+            get
+            {
+                if (_fill == null)
+                {
+                    _fill = new ExcelDrawingFill(NameSpaceManager, TopNode, "c:spPr");
+                }
+                return _fill;
+            }
+        }
+
+        /// <summary>
+        /// Show the values
+        /// </summary>
         public int Thickness
        {
            get
@@ -67,36 +100,5 @@ namespace OfficeOpenXml.Drawing.Chart
                SetXmlNodeString(THICKNESS_PATH, value.ToString());
            }
        }
-       ExcelDrawingFill _fill = null;
-       /// <summary>
-       /// Access fill properties
-       /// </summary>
-       public ExcelDrawingFill Fill
-       {
-           get
-           {
-               if (_fill == null)
-               {
-                   _fill = new ExcelDrawingFill(NameSpaceManager, TopNode, "c:spPr");
-               }
-               return _fill;
-           }
-       }
-       ExcelDrawingBorder _border = null;
-       /// <summary>
-       /// Access border properties
-       /// </summary>
-       public ExcelDrawingBorder Border
-       {
-           get
-           {
-               if (_border == null)
-               {
-                   _border = new ExcelDrawingBorder(NameSpaceManager, TopNode, "c:spPr/a:ln");
-               }
-               return _border;
-           }
-       }
-       #endregion
     }
 }

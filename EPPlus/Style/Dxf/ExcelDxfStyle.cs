@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using SkiaSharp;
+using System;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Xml;
-using System.Drawing;
 
 namespace OfficeOpenXml.Style.Dxf
 {
     public class ExcelDxfStyleConditionalFormatting : DxfStyleBase<ExcelDxfStyleConditionalFormatting>
     {
-        XmlHelperInstance _helper;
+        private XmlHelperInstance _helper;
+
         internal ExcelDxfStyleConditionalFormatting(XmlNamespaceManager nameSpaceManager, XmlNode topNode, ExcelStyles styles) : base(styles)
         {
             NumberFormat = new ExcelDxfNumberFormat(_styles);
@@ -21,7 +19,7 @@ namespace OfficeOpenXml.Style.Dxf
             {
                 _helper = new XmlHelperInstance(nameSpaceManager, topNode);
                 NumberFormat.NumFmtID = _helper.GetXmlNodeInt("d:numFmt/@numFmtId");
-                NumberFormat.Format = _helper.GetXmlNodeString("d:numFmt/@formatCode"); 
+                NumberFormat.Format = _helper.GetXmlNodeString("d:numFmt/@formatCode");
                 if (NumberFormat.NumFmtID < 164 && string.IsNullOrEmpty(NumberFormat.Format))
                 {
                     NumberFormat.Format = ExcelNumberFormat.GetFromBuildInFromID(NumberFormat.NumFmtID);
@@ -48,13 +46,57 @@ namespace OfficeOpenXml.Style.Dxf
             }
             _helper.SchemaNodeOrder = new string[] { "font", "numFmt", "fill", "border" };
         }
+
+        public ExcelDxfBorderBase Border { get; set; }
+
+        public ExcelDxfFill Fill { get; set; }
+
+        public ExcelDxfFontBase Font { get; set; }
+
+        public ExcelDxfNumberFormat NumberFormat { get; set; }
+
+        internal int DxfId { get; set; }
+
+        protected internal override bool HasValue
+        {
+            get { return Font.HasValue || NumberFormat.HasValue || Fill.HasValue || Border.HasValue; }
+        }
+
+        protected internal override string Id
+        {
+            get
+            {
+                return NumberFormat.Id + Font.Id + Border.Id + Fill.Id +
+                    (AllowChange ? "" : DxfId.ToString());//If allowchange is false we add the dxfID to ensure it's not used when conditional formatting is updated);
+            }
+        }
+
+        protected internal override ExcelDxfStyleConditionalFormatting Clone()
+        {
+            var s = new ExcelDxfStyleConditionalFormatting(_helper.NameSpaceManager, null, _styles);
+            s.Font = Font.Clone();
+            s.NumberFormat = NumberFormat.Clone();
+            s.Fill = Fill.Clone();
+            s.Border = Border.Clone();
+            return s;
+        }
+
+        protected internal override void CreateNodes(XmlHelper helper, string path)
+        {
+            if (Font.HasValue) Font.CreateNodes(helper, "d:font");
+            if (NumberFormat.HasValue) NumberFormat.CreateNodes(helper, "d:numFmt");
+            if (Fill.HasValue) Fill.CreateNodes(helper, "d:fill");
+            if (Border.HasValue) Border.CreateNodes(helper, "d:border");
+        }
+
         private ExcelDxfBorderItem GetBorderItem(XmlHelperInstance helper, string path)
         {
             ExcelDxfBorderItem bi = new ExcelDxfBorderItem(_styles);
-            bi.Style = GetBorderStyleEnum(helper.GetXmlNodeString(path+"/@style"));
-            bi.Color = GetColor(helper, path+"/d:color");
+            bi.Style = GetBorderStyleEnum(helper.GetXmlNodeString(path + "/@style"));
+            bi.Color = GetColor(helper, path + "/d:color");
             return bi;
         }
+
         private ExcelBorderStyle GetBorderStyleEnum(string style)
         {
             if (style == "") return ExcelBorderStyle.None;
@@ -67,8 +109,26 @@ namespace OfficeOpenXml.Style.Dxf
             {
                 return ExcelBorderStyle.None;
             }
-
         }
+
+        private ExcelDxfColor GetColor(XmlHelperInstance helper, string path)
+        {
+            ExcelDxfColor ret = new ExcelDxfColor(_styles);
+            ret.Theme = helper.GetXmlNodeIntNull(path + "/@theme");
+            ret.Index = helper.GetXmlNodeIntNull(path + "/@indexed");
+            string rgb = helper.GetXmlNodeString(path + "/@rgb");
+            if (rgb != "")
+            {
+                ret.Color = new SKColor((byte)int.Parse(rgb.Substring(0, 2), System.Globalization.NumberStyles.AllowHexSpecifier),
+                                            (byte)int.Parse(rgb.Substring(2, 2), System.Globalization.NumberStyles.AllowHexSpecifier),
+                                            (byte)int.Parse(rgb.Substring(4, 2), System.Globalization.NumberStyles.AllowHexSpecifier),
+                                            (byte)int.Parse(rgb.Substring(6, 2), System.Globalization.NumberStyles.AllowHexSpecifier));
+            }
+            ret.Auto = helper.GetXmlNodeBoolNullable(path + "/@auto");
+            ret.Tint = helper.GetXmlNodeDoubleNull(path + "/@tint");
+            return ret;
+        }
+
         private ExcelFillStyle GetPatternTypeEnum(string patternType)
         {
             if (patternType == "") return ExcelFillStyle.None;
@@ -82,72 +142,26 @@ namespace OfficeOpenXml.Style.Dxf
                 return ExcelFillStyle.None;
             }
         }
-        private ExcelDxfColor GetColor(XmlHelperInstance helper, string path)
-        {            
-            ExcelDxfColor ret = new ExcelDxfColor(_styles);
-            ret.Theme = helper.GetXmlNodeIntNull(path + "/@theme");
-            ret.Index = helper.GetXmlNodeIntNull(path + "/@indexed");
-            string rgb=helper.GetXmlNodeString(path + "/@rgb");
-            if(rgb!="")
-            {
-                ret.Color = Color.FromArgb( int.Parse(rgb.Substring(0, 2), System.Globalization.NumberStyles.AllowHexSpecifier),
-                                            int.Parse(rgb.Substring(2, 2), System.Globalization.NumberStyles.AllowHexSpecifier),
-                                            int.Parse(rgb.Substring(4, 2), System.Globalization.NumberStyles.AllowHexSpecifier),
-                                            int.Parse(rgb.Substring(6, 2), System.Globalization.NumberStyles.AllowHexSpecifier));
-            }
-            ret.Auto = helper.GetXmlNodeBoolNullable(path + "/@auto");
-            ret.Tint = helper.GetXmlNodeDoubleNull(path + "/@tint");
-            return ret;
-        }
+
         private ExcelUnderLineType? GetUnderLineEnum(string value)
         {
-            switch(value.ToLower(CultureInfo.InvariantCulture))
+            switch (value.ToLower(CultureInfo.InvariantCulture))
             {
                 case "single":
                     return ExcelUnderLineType.Single;
+
                 case "double":
                     return ExcelUnderLineType.Double;
+
                 case "singleaccounting":
                     return ExcelUnderLineType.SingleAccounting;
+
                 case "doubleaccounting":
                     return ExcelUnderLineType.DoubleAccounting;
+
                 default:
                     return null;
             }
-        }
-        internal int DxfId { get; set; }
-        public ExcelDxfFontBase Font { get; set; }
-        public ExcelDxfNumberFormat NumberFormat { get; set; }
-        public ExcelDxfFill Fill { get; set; }
-        public ExcelDxfBorderBase Border { get; set; }
-        protected internal override string Id
-        {
-            get
-            {
-                return NumberFormat.Id + Font.Id + Border.Id + Fill.Id +
-                    (AllowChange ? "" : DxfId.ToString());//If allowchange is false we add the dxfID to ensure it's not used when conditional formatting is updated);
-            }
-        }
-        protected internal override ExcelDxfStyleConditionalFormatting Clone()
-        {
- 	       var s=new ExcelDxfStyleConditionalFormatting(_helper.NameSpaceManager, null, _styles);
-           s.Font = Font.Clone();
-           s.NumberFormat = NumberFormat.Clone();
-           s.Fill = Fill.Clone();
-           s.Border = Border.Clone();
-           return s;
-        }
-
-        protected internal override void CreateNodes(XmlHelper helper, string path)
-        {
-            if(Font.HasValue) Font.CreateNodes(helper, "d:font");
-            if (NumberFormat.HasValue) NumberFormat.CreateNodes(helper, "d:numFmt");            
-            if (Fill.HasValue) Fill.CreateNodes(helper, "d:fill");
-            if (Border.HasValue) Border.CreateNodes(helper, "d:border");
-        }
-        protected internal override bool HasValue
-        {
-            get { return Font.HasValue || NumberFormat.HasValue || Fill.HasValue || Border.HasValue; }
         }
     }
 }

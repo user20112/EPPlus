@@ -24,10 +24,8 @@
 //
 // ------------------------------------------------------------------
 
-
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
-
     // For some weird reason, the method with the DispId(-4) attribute, which is used as
     // the _NewEnum() method, and which is required to get enumeration to work from COM
     // environments like VBScript and Javascript (etc) must be the LAST MEMBER in the
@@ -37,14 +35,8 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
     // here in this oddly-named module, for this reason.
     //
 
-
-
     internal partial class ZipFile
     {
-
-
-
-
         /// <summary>
         /// Generic IEnumerator support, for use of a ZipFile in an enumeration.
         /// </summary>
@@ -129,7 +121,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return GetEnumerator();
         }
 
-
         /// <summary>
         /// An IEnumerator, for use of a ZipFile in a foreach construct.
         /// </summary>
@@ -149,6 +140,5 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             return GetEnumerator();
         }
-
     }
 }

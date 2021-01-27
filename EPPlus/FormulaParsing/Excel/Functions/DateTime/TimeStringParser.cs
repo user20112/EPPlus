@@ -7,50 +7,36 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Mats Alm   		                Added		                2013-12-03
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
 {
     public class TimeStringParser
     {
-        private const string RegEx24 = @"^[0-9]{1,2}(\:[0-9]{1,2}){0,2}$";
         private const string RegEx12 = @"^[0-9]{1,2}(\:[0-9]{1,2}){0,2}( PM| AM)$";
+        private const string RegEx24 = @"^[0-9]{1,2}(\:[0-9]{1,2}){0,2}$";
 
-        private double GetSerialNumber(int hour, int minute, int second)
+        public virtual bool CanParse(string input)
         {
-            var secondsInADay = 24d * 60d * 60d;
-            return ((double)hour * 60 * 60 + (double)minute * 60 + (double)second) / secondsInADay;
-        }
-
-        private void ValidateValues(int hour, int minute, int second)
-        {
-            if (second < 0 || second > 59)
-            {
-                throw new FormatException("Illegal value for second: " + second);
-            }
-            if (minute < 0 || minute > 59)
-            {
-                throw new FormatException("Illegal value for minute: " + minute);
-            }
+            System.DateTime dt;
+            return Regex.IsMatch(input, RegEx24) || Regex.IsMatch(input, RegEx12) || System.DateTime.TryParse(input, out dt);
         }
 
         public virtual double Parse(string input)
@@ -58,10 +44,30 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
             return InternalParse(input);
         }
 
-        public virtual bool CanParse(string input)
+        private static void GetValuesFromString(string input, out int hour, out int minute, out int second)
         {
-            System.DateTime dt;
-            return Regex.IsMatch(input, RegEx24) || Regex.IsMatch(input, RegEx12) || System.DateTime.TryParse(input, out dt);
+            hour = 0;
+            minute = 0;
+            second = 0;
+
+            var items = input.Split(':');
+            hour = int.Parse(items[0]);
+            if (items.Length > 1)
+            {
+                minute = int.Parse(items[1]);
+            }
+            if (items.Length > 2)
+            {
+                var val = items[2];
+                val = Regex.Replace(val, "[^0-9]+$", string.Empty);
+                second = int.Parse(val);
+            }
+        }
+
+        private double GetSerialNumber(int hour, int minute, int second)
+        {
+            var secondsInADay = 24d * 60d * 60d;
+            return ((double)hour * 60 * 60 + (double)minute * 60 + (double)second) / secondsInADay;
         }
 
         private double InternalParse(string input)
@@ -105,23 +111,15 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
             return GetSerialNumber(hour, minute, second);
         }
 
-        private static void GetValuesFromString(string input, out int hour, out int minute, out int second)
+        private void ValidateValues(int hour, int minute, int second)
         {
-            hour = 0;
-            minute = 0;
-            second = 0;
-
-            var items = input.Split(':');
-            hour = int.Parse(items[0]);
-            if (items.Length > 1)
+            if (second < 0 || second > 59)
             {
-                minute = int.Parse(items[1]);
+                throw new FormatException("Illegal value for second: " + second);
             }
-            if (items.Length > 2)
+            if (minute < 0 || minute > 59)
             {
-                var val = items[2];
-                val = Regex.Replace(val, "[^0-9]+$", string.Empty);
-                second = int.Parse(val);
+                throw new FormatException("Illegal value for minute: " + minute);
             }
         }
     }

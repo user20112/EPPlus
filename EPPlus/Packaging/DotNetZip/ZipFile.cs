@@ -37,13 +37,11 @@
 // Thu, 08 Oct 2009  17:04
 //
 
-
-using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Reflection;
-using Interop = System.Runtime.InteropServices;
 using OfficeOpenXml.Packaging.Ionic.Zlib;
+using System;
+using System.Collections.Generic;
+using System.IO;
+
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
     /// <summary>
@@ -122,19 +120,16 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
     /// </para>
     ///
     /// </remarks>
-//    [Interop.GuidAttribute("ebc25cf6-9120-4283-b972-0e5520d00005")]
-//    [Interop.ComVisible(true)]
-//#if !NETCF
-//    [Interop.ClassInterface(Interop.ClassInterfaceType.AutoDispatch)]
-//#endif
+    //    [Interop.GuidAttribute("ebc25cf6-9120-4283-b972-0e5520d00005")]
+    //    [Interop.ComVisible(true)]
+    //#if !NETCF
+    //    [Interop.ClassInterface(Interop.ClassInterfaceType.AutoDispatch)]
+    //#endif
     internal partial class ZipFile :
     System.Collections.IEnumerable,
     System.Collections.Generic.IEnumerable<ZipEntry>,
     IDisposable
     {
-
-        #region public properties
-
         /// <summary>
         /// Indicates whether to perform a full scan of the zip file when reading it.
         /// </summary>
@@ -196,7 +191,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             set;
         }
 
-
         /// <summary>
         ///   Whether to sort the ZipEntries before saving the file.
         /// </summary>
@@ -231,8 +225,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             set;
         }
 
-
-
         /// <summary>
         ///   Indicates whether NTFS Reparse Points, like junctions, should be
         ///   traversed during calls to <c>AddDirectory()</c>.
@@ -257,7 +249,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         /// </code>
         /// </example>
         public bool AddDirectoryWillTraverseReparsePoints { get; set; }
-
 
         /// <summary>
         ///   Size of the IO buffer used while saving.
@@ -386,7 +377,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             set;
         }
 
-
         /// <summary>
         ///   The compression strategy to use for all entries.
         /// </summary>
@@ -405,7 +395,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get { return _Strategy; }
             set { _Strategy = value; }
         }
-
 
         /// <summary>
         ///   The name of the <c>ZipFile</c>, on disk.
@@ -436,7 +425,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get { return _name; }
             set { _name = value; }
         }
-
 
         /// <summary>
         ///   Sets the compression level to be used for entries subsequently added to
@@ -498,8 +486,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
-
         /// <summary>
         ///   A comment attached to the zip archive.
         /// </summary>
@@ -559,9 +545,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _contentsChanged = true;
             }
         }
-
-
-
 
         /// <summary>
         ///   Specifies whether the Creation, Access, and Modified times for entries
@@ -683,7 +666,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         /// Specifies whether the Creation, Access, and Modified times
         /// for entries added to the zip file will be emitted in "Unix(tm)
@@ -774,8 +756,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
-
         /// <summary>
         ///   Indicates whether verbose output is sent to the <see
         ///   cref="StatusMessageTextWriter"/> during <c>AddXxx()</c> and
@@ -791,7 +771,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get { return (_StatusMessageTextWriter != null); }
         }
 
-
         /// <summary>
         ///   Returns true if an entry by the given name exists in the ZipFile.
         /// </summary>
@@ -804,8 +783,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             // workitem 12534
             return _entries.ContainsKey(SharedUtilities.NormalizePathForUseInZipFile(name));
         }
-
-
 
         /// <summary>
         ///   Indicates whether to perform case-sensitive matching on the filename when
@@ -837,7 +814,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 }
             }
         }
-
 
         /// <summary>
         ///   Indicates whether to encode entry filenames and entry comments using Unicode
@@ -968,7 +944,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 {
                     _alternateEncoding = System.Text.Encoding.GetEncoding("UTF-8");
                     _alternateEncodingUsage = ZipOption.AsNecessary;
-
                 }
                 else
                 {
@@ -977,7 +952,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 }
             }
         }
-
 
         /// <summary>
         ///   Specify whether to use ZIP64 extensions when saving a zip archive.
@@ -1030,8 +1004,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _zip64 = value;
             }
         }
-
-
 
         /// <summary>
         ///   Indicates whether the archive requires ZIP64 extensions.
@@ -1098,7 +1070,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   Indicates whether the most recent <c>Save()</c> operation used ZIP64 extensions.
         /// </summary>
@@ -1144,7 +1115,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   Indicates whether the most recent <c>Read()</c> operation read a zip file that uses
         ///   ZIP64 extensions.
@@ -1172,7 +1142,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return false;
             }
         }
-
 
         /// <summary>
         ///   The text encoding to use when writing new entries to the <c>ZipFile</c>,
@@ -1333,7 +1302,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   A Text Encoding to use when encoding the filenames and comments for
         ///   all the ZipEntry items, during a ZipFile.Save() operation.
@@ -1356,7 +1324,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   A flag that tells if and when this instance should apply
         ///   AlternateEncoding to encode the filenames and comments associated to
@@ -1374,7 +1341,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         /// The default text encoding used in zip archives.  It is numeric 437, also
         /// known as IBM437.
@@ -1387,7 +1353,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _defaultEncoding;
             }
         }
-
 
         /// <summary>
         /// Gets or sets the <c>TextWriter</c> to which status messages are delivered
@@ -1461,9 +1426,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             set { _StatusMessageTextWriter = value; }
         }
 
-
-
-
         /// <summary>
         ///   Gets or sets the name for the folder to store the temporary file
         ///   this library writes when saving a zip archive.
@@ -1525,7 +1487,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
                 if (!Directory.Exists(value))
                     throw new FileNotFoundException(String.Format("That directory ({0}) does not exist.", value));
-
             }
         }
 
@@ -1689,10 +1650,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
-
-
-
         /// <summary>
         ///   The action the library should take when extracting a file that already
         ///   exists.
@@ -1718,7 +1675,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get;
             set;
         }
-
 
         /// <summary>
         ///   The action the library should take when an error is encountered while
@@ -1827,7 +1783,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                     ZipError = null;
             }
         }
-
 
         /// <summary>
         ///   The Encryption to use for entries added to the <c>ZipFile</c>.
@@ -1960,8 +1915,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
-
         /// <summary>
         ///   A callback that allows the application to specify the compression level
         ///   to use for entries subsequently added to the zip archive.
@@ -2012,7 +1965,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get;
             set;
         }
-
 
         /// <summary>
         /// The maximum size of an output segment, when saving a split Zip file.
@@ -2104,7 +2056,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   Returns the number of segments used in the most recent Save() operation.
         /// </summary>
@@ -2131,8 +2082,8 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
 #if !NETCF
+
         /// <summary>
         ///   The size threshold for an entry, above which a parallel deflate is used.
         /// </summary>
@@ -2294,8 +2245,8 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _maxBufferPairs = value;
             }
         }
-#endif
 
+#endif
 
         /// <summary>Provides a string representation of the instance.</summary>
         /// <returns>a string representation of the instance.</returns>
@@ -2303,7 +2254,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             return String.Format("ZipFile::{0}", Name);
         }
-
 
         /// <summary>
         /// Returns the version number on the DotNetZip assembly.
@@ -2334,7 +2284,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _contentsChanged = true;
         }
 
-
         internal Stream StreamForDiskNumber(uint diskNumber)
         {
             if (diskNumber + 1 == this._diskNumberWithCd ||
@@ -2346,8 +2295,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return ZipSegmentedStream.ForReading(this._readName ?? this._name,
                                                  diskNumber, _diskNumberWithCd);
         }
-
-
 
         // called by ZipEntry in ZipEntry.Extract(), when there is no stream set for the
         // ZipEntry.
@@ -2382,11 +2329,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _JustSaved = false;
             }
         }
-
-
-#endregion
-
-#region Constructors
 
         /// <summary>
         ///   Creates a new <c>ZipFile</c> instance, using the specified filename.
@@ -2490,7 +2432,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   Creates a new <c>ZipFile</c> instance, using the specified name for the
         ///   filename, and the specified Encoding.
@@ -2541,8 +2482,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 throw new ZipException(String.Format("{0} is not a valid zip file", fileName), e1);
             }
         }
-
-
 
         /// <summary>
         ///   Create a zip file, without specifying a target filename or stream to save to.
@@ -2603,7 +2542,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _InitInstance(null, null);
         }
 
-
         /// <summary>
         ///   Create a zip file, specifying a text Encoding, but without specifying a
         ///   target filename or stream to save to.
@@ -2628,7 +2566,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             AlternateEncodingUsage = ZipOption.Always;
             _InitInstance(null, null);
         }
-
 
         /// <summary>
         ///   Creates a new <c>ZipFile</c> instance, using the specified name for the
@@ -2710,7 +2647,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   Creates a new <c>ZipFile</c> instance, using the specified name for the
         ///   filename, the specified status message writer, and the specified Encoding.
@@ -2784,9 +2720,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
-
-
         /// <summary>
         ///   Initialize a <c>ZipFile</c> instance by reading in a zip file.
         /// </summary>
@@ -2821,8 +2754,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
-
         private void _initEntriesDictionary()
         {
             // workitem 9868
@@ -2831,7 +2762,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 ? new Dictionary<String, ZipEntry>(sc)
                 : new Dictionary<String, ZipEntry>(_entries, sc);
         }
-
 
         private void _InitInstance(string zipFileName, TextWriter statusMessageWriter)
         {
@@ -2858,11 +2788,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             return;
         }
-#endregion
-
-
-
-#region Indexers and Collections
 
         private List<ZipEntry> ZipEntriesAsList
         {
@@ -2918,7 +2843,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return ZipEntriesAsList[ix];
             }
         }
-
 
         /// <summary>
         ///   This is a name-based indexer into the Zip archive.
@@ -3034,7 +2958,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                             if (fileName.Replace("\\", "/") == fileNameNoSlash) return e;
                             if (fileNameNoSlash.Replace("\\", "/") == fileName) return e;
                         }
-
                     }
                     else
                     {
@@ -3053,18 +2976,14 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                             // also check for equivalence
                             if (String.Compare(fileName.Replace("\\", "/"), fileNameNoSlash, StringComparison.CurrentCultureIgnoreCase) == 0) return e;
                             if (String.Compare(fileNameNoSlash.Replace("\\", "/"), fileName, StringComparison.CurrentCultureIgnoreCase) == 0) return e;
-
                         }
-
                     }
-
                 }
                 return null;
 
 #endif
             }
         }
-
 
         /// <summary>
         ///   The list of filenames for the entries contained within the zip archive.
@@ -3127,7 +3046,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   Returns the readonly collection of entries in the Zip archive.
         /// </summary>
@@ -3153,7 +3071,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _entries.Values;
             }
         }
-
 
         /// <summary>
         ///   Returns a readonly collection of entries in the Zip archive, sorted by FileName.
@@ -3215,7 +3132,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         /// Returns the number of entries in the Zip archive.
         /// </summary>
@@ -3226,8 +3142,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _entries.Count;
             }
         }
-
-
 
         /// <summary>
         ///   Removes the given <c>ZipEntry</c> from the zip archive.
@@ -3342,9 +3256,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _contentsChanged = true;
         }
 
-
-
-
         /// <summary>
         /// Removes the <c>ZipEntry</c> with the given filename from the zip archive.
         /// </summary>
@@ -3414,11 +3325,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             RemoveEntry(e);
         }
-
-
-#endregion
-
-#region Destructors and Disposers
 
         //         /// <summary>
         //         /// This is the class Destructor, which gets called implicitly when the instance
@@ -3539,10 +3445,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 this._disposed = true;
             }
         }
-#endregion
-
-
-#region private properties
 
         internal Stream ReadStream
         {
@@ -3562,8 +3464,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _readstream;
             }
         }
-
-
 
         private Stream WriteStream
         {
@@ -3591,9 +3491,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _writestream = null;
             }
         }
-#endregion
 
-#region private fields
         private TextWriter _StatusMessageTextWriter;
         private bool _CaseSensitiveRetrieval;
         private Stream _readstream;
@@ -3605,8 +3503,10 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         private UInt32 _numberOfSegmentsForMostRecentSave;
         private ZipErrorAction _zipErrorAction;
         private bool _disposed;
+
         //private System.Collections.Generic.List<ZipEntry> _entries;
         private System.Collections.Generic.Dictionary<String, ZipEntry> _entries;
+
         private List<ZipEntry> _zipEntriesAsList;
         private string _name;
         private string _readName;
@@ -3634,9 +3534,9 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         private Nullable<bool> _OutputUsesZip64;
         internal bool _inExtractAll;
 #if (Core)
-        private System.Text.Encoding _alternateEncoding = System.Text.Encoding.GetEncoding("UTF-8"); 
+        private System.Text.Encoding _alternateEncoding = System.Text.Encoding.GetEncoding("UTF-8");
 #else
-        private System.Text.Encoding _alternateEncoding = System.Text.Encoding.GetEncoding("IBM437"); 
+        private System.Text.Encoding _alternateEncoding = System.Text.Encoding.GetEncoding("IBM437");
 #endif
         private ZipOption _alternateEncodingUsage = ZipOption.Never;
 #if (Core)
@@ -3662,8 +3562,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         ///   Default size of the buffer used for IO.
         /// </summary>
         public static readonly int BufferSizeDefault = 32768;
-
-#endregion
     }
 
     /// <summary>
@@ -3738,11 +3636,13 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         /// (For COM clients, this is a 0 (zero).)
         /// </summary>
         Default = 0,
+
         /// <summary>
         /// Do not use ZIP64 extensions when writing zip archives.
         /// (For COM clients, this is a 0 (zero).)
         /// </summary>
         Never = 0,
+
         /// <summary>
         /// Use ZIP64 extensions when writing zip archives, as necessary.
         /// For example, when a single entry exceeds 0xFFFFFFFF in size, or when the archive as a whole
@@ -3750,13 +3650,13 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         /// (For COM clients, this is a 1.)
         /// </summary>
         AsNecessary = 1,
+
         /// <summary>
         /// Always use ZIP64 extensions when writing zip archives, even when unnecessary.
         /// (For COM clients, this is a 2.)
         /// </summary>
         Always
     }
-
 
     /// <summary>
     ///  An enum representing the values on a three-way toggle switch
@@ -3771,16 +3671,19 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         /// (For COM clients, this is a 0 (zero).)
         /// </summary>
         Default = 0,
+
         /// <summary>
         /// Never use the associated option.
         /// (For COM clients, this is a 0 (zero).)
         /// </summary>
         Never = 0,
+
         /// <summary>
         /// Use the associated behavior "as necessary."
         /// (For COM clients, this is a 1.)
         /// </summary>
         AsNecessary = 1,
+
         /// <summary>
         /// Use the associated behavior Always, whether necessary or not.
         /// (For COM clients, this is a 2.)
@@ -3788,16 +3691,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         Always
     }
 
-
-    enum AddOrUpdateAction
+    internal enum AddOrUpdateAction
     {
         AddOnly = 0,
         AddOrUpdate
     }
-
 }
-
-
 
 // ==================================================================
 //
@@ -3915,4 +3814,3 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 //            9-15 year (since 1980)
 //
 // see http://msdn.microsoft.com/en-us/library/ms724274(VS.85).aspx
-

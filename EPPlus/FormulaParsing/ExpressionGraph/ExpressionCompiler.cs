@@ -13,40 +13,37 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2013-03-01 (Prior file history on https://github.com/swmal/ExcelFormulaParser)
  *******************************************************************************/
-using System;
+
+using OfficeOpenXml.FormulaParsing.ExpressionGraph.CompileStrategy;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.Excel.Operators;
-using OfficeOpenXml.FormulaParsing.ExpressionGraph.CompileStrategy;
 
 namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
 {
     public class ExpressionCompiler : IExpressionCompiler
     {
-        private IEnumerable<Expression> _expressions;
-        private IExpressionConverter _expressionConverter;
         private ICompileStrategyFactory _compileStrategyFactory;
+        private IExpressionConverter _expressionConverter;
+        private IEnumerable<Expression> _expressions;
 
         public ExpressionCompiler()
             : this(new ExpressionConverter(), new CompileStrategyFactory())
         {
- 
         }
 
         public ExpressionCompiler(IExpressionConverter expressionConverter, ICompileStrategyFactory compileStrategyFactory)
@@ -60,25 +57,16 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
             _expressions = expressions;
             return PerformCompilation();
         }
+
         public CompileResult Compile(string worksheet, int row, int column, IEnumerable<Expression> expressions)
         {
             _expressions = expressions;
             return PerformCompilation(worksheet, row, column);
         }
 
-        private CompileResult PerformCompilation(string worksheet="", int row=-1, int column=-1)
+        private int FindLowestPrecedence()
         {
-            var compiledExpressions = HandleGroupedExpressions();
-            while(compiledExpressions.Any(x => x.Operator != null))
-            {
-                var prec = FindLowestPrecedence();
-                compiledExpressions = HandlePrecedenceLevel(prec);
-            }
-            if (_expressions.Any())
-            {
-                return compiledExpressions.First().Compile();
-            }
-            return CompileResult.Empty;
+            return _expressions.Where(x => x.Operator != null).Min(x => x.Operator.Precedence);
         }
 
         private IEnumerable<Expression> HandleGroupedExpressions()
@@ -86,7 +74,7 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
             if (!_expressions.Any()) return Enumerable.Empty<Expression>();
             var first = _expressions.First();
             var groupedExpressions = _expressions.Where(x => x.IsGroupedExpression);
-            foreach(var groupedExpression in groupedExpressions)
+            foreach (var groupedExpression in groupedExpressions)
             {
                 var result = groupedExpression.Compile();
                 if (result == CompileResult.Empty) continue;
@@ -120,7 +108,7 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
             {
                 var strategy = _compileStrategyFactory.Create(expression);
                 var compiledExpression = strategy.Compile();
-                if(compiledExpression is ExcelErrorExpression)
+                if (compiledExpression is ExcelErrorExpression)
                 {
                     return RefreshList(compiledExpression);
                 }
@@ -135,9 +123,19 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
             return RefreshList(first);
         }
 
-        private int FindLowestPrecedence()
+        private CompileResult PerformCompilation(string worksheet = "", int row = -1, int column = -1)
         {
-            return _expressions.Where(x => x.Operator != null).Min(x => x.Operator.Precedence);
+            var compiledExpressions = HandleGroupedExpressions();
+            while(compiledExpressions.Any(x => x.Operator != null))
+            {
+                var prec = FindLowestPrecedence();
+                compiledExpressions = HandlePrecedenceLevel(prec);
+            }
+            if (_expressions.Any())
+            {
+                return compiledExpressions.First().Compile();
+            }
+            return CompileResult.Empty;
         }
 
         private IEnumerable<Expression> RefreshList(Expression first)

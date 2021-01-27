@@ -13,22 +13,22 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2013-03-01 (Prior file history on https://github.com/swmal/ExcelFormulaParser)
  *******************************************************************************/
-using System;
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -37,6 +37,12 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
 {
     public class TokenizerContext
     {
+        private char[] _chars;
+
+        private StringBuilder _currentToken;
+
+        private List<Token> _result;
+
         public TokenizerContext(string formula)
         {
             if (!string.IsNullOrEmpty(formula))
@@ -45,48 +51,6 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             }
             _result = new List<Token>();
             _currentToken = new StringBuilder();
-        }
-
-        private char[] _chars;
-        private List<Token> _result;
-        private StringBuilder _currentToken;
-
-        public char[] FormulaChars
-        {
-            get { return _chars; }
-        }
-
-        public IList<Token> Result
-        {
-            get { return _result; }
-        }
-
-        public bool IsInString
-        {
-            get;
-            private set;
-        }
-
-        public bool IsInSheetName
-        {
-            get;
-            private set;
-        }
-
-        public void ToggleIsInString()
-        {
-            IsInString = !IsInString;
-        }
-
-        public void ToggleIsInSheetName()
-        {
-            IsInSheetName = !IsInSheetName;
-        }
-
-        internal int BracketCount
-        {
-            get;
-            set;
         }
 
         public string CurrentToken
@@ -99,9 +63,37 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             get { return !string.IsNullOrEmpty(IsInString ? CurrentToken : CurrentToken.Trim()); }
         }
 
-        public void NewToken()
+        public char[] FormulaChars
         {
-            _currentToken = new StringBuilder();
+            get { return _chars; }
+        }
+
+        public bool IsInSheetName
+        {
+            get;
+            private set;
+        }
+
+        public bool IsInString
+        {
+            get;
+            private set;
+        }
+
+        public Token LastToken
+        {
+            get { return _result.Count > 0 ? _result.Last() : null; }
+        }
+
+        public IList<Token> Result
+        {
+            get { return _result; }
+        }
+
+        internal int BracketCount
+        {
+            get;
+            set;
         }
 
         public void AddToken(Token token)
@@ -119,9 +111,9 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             _result.Last().Append(stringToAppend);
         }
 
-        public void SetLastTokenType(TokenType type)
+        public void NewToken()
         {
-            _result.Last().TokenType = type;
+            _currentToken = new StringBuilder();
         }
 
         public void ReplaceLastToken(Token newToken)
@@ -129,15 +121,24 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             var count = _result.Count;
             if (count > 0)
             {
-                _result.RemoveAt(count - 1);   
+                _result.RemoveAt(count - 1);
             }
             _result.Add(newToken);
         }
 
-        public Token LastToken
+        public void SetLastTokenType(TokenType type)
         {
-            get { return _result.Count > 0 ? _result.Last() : null; }
+            _result.Last().TokenType = type;
         }
 
+        public void ToggleIsInSheetName()
+        {
+            IsInSheetName = !IsInSheetName;
+        }
+
+        public void ToggleIsInString()
+        {
+            IsInString = !IsInString;
+        }
     }
 }

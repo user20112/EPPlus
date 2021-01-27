@@ -1,17 +1,16 @@
 ﻿using OfficeOpenXml.Utils;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using System.Xml;
 
 namespace OfficeOpenXml
 {
     public class ExcelProtectedRangeCollection : XmlHelper, IEnumerable<ExcelProtectedRange>
     {
+        private List<ExcelProtectedRange> _baseList = new List<ExcelProtectedRange>();
+
         internal ExcelProtectedRangeCollection(XmlNamespaceManager nsm, XmlNode topNode, ExcelWorksheet ws)
-            : base(nsm, topNode)
+                    : base(nsm, topNode)
         {
             SchemaNodeOrder = ws.SchemaNodeOrder; //Fixed issue 15385
             foreach (XmlNode protectedRangeNode in topNode.SelectNodes("d:protectedRanges/d:protectedRange", nsm))
@@ -22,7 +21,18 @@ namespace OfficeOpenXml
             }
         }
 
-        private List<ExcelProtectedRange> _baseList = new List<ExcelProtectedRange>();
+        public int Count
+        {
+            get { return _baseList.Count; }
+        }
+
+        public ExcelProtectedRange this[int index]
+        {
+            get
+            {
+                return _baseList[index];
+            }
+        }
 
         public ExcelProtectedRange Add(string name, ExcelAddress address)
         {
@@ -60,9 +70,19 @@ namespace OfficeOpenXml
             _baseList.CopyTo(array, arrayIndex);
         }
 
-        public int Count
+        IEnumerator<ExcelProtectedRange> IEnumerable<ExcelProtectedRange>.GetEnumerator()
         {
-            get { return _baseList.Count; }
+            return _baseList.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return _baseList.GetEnumerator();
+        }
+
+        public int IndexOf(ExcelProtectedRange item)
+        {
+            return _baseList.IndexOf(item);
         }
 
         public bool Remove(ExcelProtectedRange item)
@@ -73,32 +93,9 @@ namespace OfficeOpenXml
             return _baseList.Remove(item);
         }
 
-        public int IndexOf(ExcelProtectedRange item)
-        {
-            return _baseList.IndexOf(item);
-        }
-
         public void RemoveAt(int index)
         {
             _baseList.RemoveAt(index);
-        }
-
-        public ExcelProtectedRange this[int index]
-        {
-            get
-            {
-                return _baseList[index];
-            }
-        }
-
-        IEnumerator<ExcelProtectedRange> IEnumerable<ExcelProtectedRange>.GetEnumerator()
-        {
-            return _baseList.GetEnumerator();
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return _baseList.GetEnumerator();
         }
     }
 }

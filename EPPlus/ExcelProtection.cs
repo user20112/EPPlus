@@ -13,59 +13,64 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		    Added		10-AUG-2010
  * Jan Källman		    License changed GPL-->LGPL 2011-12-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using OfficeOpenXml.Utils;
+
 using OfficeOpenXml.Encryption;
+using System.Xml;
+
 namespace OfficeOpenXml
 {
     /// <summary>
     /// Sets protection on the workbook level
-    ///<seealso cref="ExcelEncryption"/> 
-    ///<seealso cref="ExcelSheetProtection"/> 
+    ///<seealso cref="ExcelEncryption"/>
+    ///<seealso cref="ExcelSheetProtection"/>
     /// </summary>
     public class ExcelProtection : XmlHelper
     {
+        private const string lockRevisionPath = "d:workbookProtection/@lockRevision";
+
+        private const string lockStructurePath = "d:workbookProtection/@lockStructure";
+
+        private const string lockWindowsPath = "d:workbookProtection/@lockWindows";
+
+        private const string workbookPasswordPath = "d:workbookProtection/@workbookPassword";
+
         internal ExcelProtection(XmlNamespaceManager ns, XmlNode topNode, ExcelWorkbook wb) :
-            base(ns, topNode)
+                                            base(ns, topNode)
         {
             SchemaNodeOrder = wb.SchemaNodeOrder;
         }
-        const string workbookPasswordPath = "d:workbookProtection/@workbookPassword";
+
         /// <summary>
-        /// Sets a password for the workbook. This does not encrypt the workbook. 
+        /// Lock the workbook for revision
         /// </summary>
-        /// <param name="Password">The password. </param>
-        public void SetPassword(string Password)
+        public bool LockRevision
         {
-            if(string.IsNullOrEmpty(Password))
+            get
             {
-                DeleteNode(workbookPasswordPath);
+                return GetXmlNodeBool(lockRevisionPath, false);
             }
-            else
+            set
             {
-                SetXmlNodeString(workbookPasswordPath, ((int)EncryptedPackageHandler.CalculatePasswordHash(Password)).ToString("x"));
+                SetXmlNodeBool(lockRevisionPath, value, false);
             }
         }
-        const string lockStructurePath = "d:workbookProtection/@lockStructure";
+
         /// <summary>
         /// Locks the structure,which prevents users from adding or deleting worksheets or from displaying hidden worksheets.
         /// </summary>
@@ -77,10 +82,10 @@ namespace OfficeOpenXml
             }
             set
             {
-                SetXmlNodeBool(lockStructurePath, value,  false);
+                SetXmlNodeBool(lockStructurePath, value, false);
             }
         }
-        const string lockWindowsPath = "d:workbookProtection/@lockWindows";
+
         /// <summary>
         /// Locks the position of the workbook window.
         /// </summary>
@@ -95,20 +100,20 @@ namespace OfficeOpenXml
                 SetXmlNodeBool(lockWindowsPath, value, false);
             }
         }
-        const string lockRevisionPath = "d:workbookProtection/@lockRevision";
 
         /// <summary>
-        /// Lock the workbook for revision
+        /// Sets a password for the workbook. This does not encrypt the workbook.
         /// </summary>
-        public bool LockRevision
+        /// <param name="Password">The password. </param>
+        public void SetPassword(string Password)
         {
-            get
+            if(string.IsNullOrEmpty(Password))
             {
-                return GetXmlNodeBool(lockRevisionPath, false);
+                DeleteNode(workbookPasswordPath);
             }
-            set
+            else
             {
-                SetXmlNodeBool(lockRevisionPath, value, false);
+                SetXmlNodeString(workbookPasswordPath, ((int)EncryptedPackageHandler.CalculatePasswordHash(Password)).ToString("x"));
             }
         }
     }

@@ -8,30 +8,28 @@
 //
 // ------------------------------------------------------------------
 //
-// This code is licensed under the Microsoft Public License. 
+// This code is licensed under the Microsoft Public License.
 // See the file License.txt for the license details.
 // More info on: http://dotnetzip.codeplex.com
 //
 // ------------------------------------------------------------------
 //
-// last saved (in emacs): 
+// last saved (in emacs):
 // Time-stamp: <2009-August-25 08:44:37>
 //
 // ------------------------------------------------------------------
 //
 // This module defines the ExtractExistingFileAction enum
 //
-// 
+//
 // ------------------------------------------------------------------
-
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
-
     /// <summary>
-    /// An enum for the options when extracting an entry would overwrite an existing file. 
+    /// An enum for the options when extracting an entry would overwrite an existing file.
     /// </summary>
-    /// 
+    ///
     /// <remarks>
     ///   <para>
     ///     This enum describes the actions that the library can take when an
@@ -57,7 +55,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         OverwriteSilently,
 
         /// <summary>
-        /// When extraction would overwrite an existing file, don't overwrite the file, silently. 
+        /// When extraction would overwrite an existing file, don't overwrite the file, silently.
         /// (For COM clients, this is a 2.)
         /// </summary>
         DoNotOverwrite,
@@ -81,5 +79,4 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         /// </summary>
         InvokeExtractProgressEvent,
     }
-
 }

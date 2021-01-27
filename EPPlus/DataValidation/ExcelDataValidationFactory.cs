@@ -13,29 +13,27 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2011-01-01
  * Jan Källman		                License changed GPL-->LGPL  2011-12-27
  * Raziq York 		                Added support for Any type  2014-08-08
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml;
+
 using OfficeOpenXml.Utils;
+using System;
+using System.Xml;
 
 namespace OfficeOpenXml.DataValidation
 {
@@ -59,19 +57,26 @@ namespace OfficeOpenXml.DataValidation
             {
                 case eDataValidationType.Any:
                     return new ExcelDataValidationAny(worksheet, address, type, itemElementNode);
+
                 case eDataValidationType.TextLength:
                 case eDataValidationType.Whole:
                     return new ExcelDataValidationInt(worksheet, address, type, itemElementNode);
+
                 case eDataValidationType.Decimal:
                     return new ExcelDataValidationDecimal(worksheet, address, type, itemElementNode);
+
                 case eDataValidationType.List:
                     return new ExcelDataValidationList(worksheet, address, type, itemElementNode);
+
                 case eDataValidationType.DateTime:
                     return new ExcelDataValidationDateTime(worksheet, address, type, itemElementNode);
+
                 case eDataValidationType.Time:
                     return new ExcelDataValidationTime(worksheet, address, type, itemElementNode);
+
                 case eDataValidationType.Custom:
                     return new ExcelDataValidationCustom(worksheet, address, type, itemElementNode);
+
                 default:
                     throw new InvalidOperationException("Non supported validationtype: " + type.Type.ToString());
             }

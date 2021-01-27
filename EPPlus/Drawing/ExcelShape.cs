@@ -13,30 +13,392 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
+using OfficeOpenXml.Style;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Xml;
-using OfficeOpenXml.Style.XmlAccess;
-using OfficeOpenXml.Drawing;
-using OfficeOpenXml.Style;
+
+namespace OfficeOpenXml.Drawing
+{
+    /// <summary>
+    /// An Excel shape.
+    /// </summary>
+    public sealed class ExcelShape : ExcelDrawing
+    {
+        private const string INDENT_ALIGN_PATH = "xdr:sp/xdr:txBody/a:p/a:pPr/@lvl";
+
+        private const string PARAGRAPH_PATH = "xdr:sp/xdr:txBody/a:p";
+
+        private const string ShapeStylePath = "xdr:sp/xdr:spPr/a:prstGeom/@prst";
+
+        private const string TEXT_ALIGN_PATH = "xdr:sp/xdr:txBody/a:p/a:pPr/@algn";
+
+        private const string TextAnchoringCtlPath = "xdr:sp/xdr:txBody/a:bodyPr/@anchorCtr";
+
+        private const string TextAnchoringPath = "xdr:sp/xdr:txBody/a:bodyPr/@anchor";
+
+        private const string TextPath = "xdr:sp/xdr:txBody/a:p/a:r/a:t";
+
+        private const string TextVerticalPath = "xdr:sp/xdr:txBody/a:bodyPr/@vert";
+
+        private ExcelDrawingBorder _border = null;
+
+        private ExcelDrawingLineEnd _ends = null;
+
+        private ExcelDrawingFill _fill = null;
+
+        private ExcelTextFont _font = null;
+
+        private ExcelParagraphCollection _richText = null;
+
+        private string lockTextPath = "xdr:sp/@fLocksText";
+
+        private string[] paragraphNodeOrder = new string[] { "pPr", "defRPr", "solidFill", "uFill", "latin", "cs", "r", "rPr", "t" };
+
+        internal ExcelShape(ExcelDrawings drawings, XmlNode node) :
+                                                                                                                                    base(drawings, node, "xdr:sp/xdr:nvSpPr/xdr:cNvPr/@name")
+        {
+            init();
+        }
+
+        internal ExcelShape(ExcelDrawings drawings, XmlNode node, eShapeStyle style) :
+            base(drawings, node, "xdr:sp/xdr:nvSpPr/xdr:cNvPr/@name")
+        {
+            init();
+            XmlElement shapeNode = node.OwnerDocument.CreateElement("xdr", "sp", ExcelPackage.schemaSheetDrawings);
+            shapeNode.SetAttribute("macro", "");
+            shapeNode.SetAttribute("textlink", "");
+            node.AppendChild(shapeNode);
+
+            shapeNode.InnerXml = ShapeStartXml();
+            node.AppendChild(shapeNode.OwnerDocument.CreateElement("xdr", "clientData", ExcelPackage.schemaSheetDrawings));
+        }
+
+        /// <summary>
+        /// Border
+        /// </summary>
+        public ExcelDrawingBorder Border
+        {
+            get
+            {
+                if (_border == null)
+                {
+                    _border = new ExcelDrawingBorder(NameSpaceManager, TopNode, "xdr:sp/xdr:spPr/a:ln");
+                }
+                return _border;
+            }
+        }
+
+        /// <summary>
+        /// Fill
+        /// </summary>
+        public ExcelDrawingFill Fill
+        {
+            get
+            {
+                if (_fill == null)
+                {
+                    _fill = new ExcelDrawingFill(NameSpaceManager, TopNode, "xdr:sp/xdr:spPr");
+                }
+                return _fill;
+            }
+        }
+
+        public ExcelTextFont Font
+        {
+            get
+            {
+                if (_font == null)
+                {
+                    XmlNode node = TopNode.SelectSingleNode(PARAGRAPH_PATH, NameSpaceManager);
+                    if (node == null)
+                    {
+                        Text = "";    //Creates the node p element
+                        node = TopNode.SelectSingleNode(PARAGRAPH_PATH, NameSpaceManager);
+                    }
+                    _font = new ExcelTextFont(NameSpaceManager, TopNode, "xdr:sp/xdr:txBody/a:p/a:pPr/a:defRPr", paragraphNodeOrder);
+                }
+                return _font;
+            }
+        }
+
+        /// <summary>
+        /// Indentation
+        /// </summary>
+        public int Indent
+        {
+            get
+            {
+                return GetXmlNodeInt(INDENT_ALIGN_PATH);
+            }
+            set
+            {
+                if (value < 0 || value > 8)
+                {
+                    throw (new ArgumentOutOfRangeException("Indent level must be between 0 and 8"));
+                }
+                SetXmlNodeString(INDENT_ALIGN_PATH, value.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Line Ends
+        /// </summary>
+        public ExcelDrawingLineEnd LineEnds
+        {
+            get
+            {
+                if (_ends == null)
+                {
+                    _ends = new ExcelDrawingLineEnd(NameSpaceManager, TopNode, "xdr:sp/xdr:spPr/a:ln");
+                }
+                return _ends;
+            }
+        }
+
+        /// <summary>
+        /// Lock drawing
+        /// </summary>
+        public bool LockText
+        {
+            get
+            {
+                return GetXmlNodeBool(lockTextPath, true);
+            }
+            set
+            {
+                SetXmlNodeBool(lockTextPath, value);
+            }
+        }
+
+        /// <summary>
+        /// Richtext collection. Used to format specific parts of the text
+        /// </summary>
+        public ExcelParagraphCollection RichText
+        {
+            get
+            {
+                if (_richText == null)
+                {
+                    //XmlNode node=TopNode.SelectSingleNode(PARAGRAPH_PATH, NameSpaceManager);
+                    //if (node == null)
+                    //{
+                    //    CreateNode(PARAGRAPH_PATH);
+                    //}
+                    _richText = new ExcelParagraphCollection(NameSpaceManager, TopNode, PARAGRAPH_PATH, paragraphNodeOrder);
+                }
+                return _richText;
+            }
+        }
+
+        /// <summary>
+        /// Shape style
+        /// </summary>
+        public eShapeStyle Style
+        {
+            get
+            {
+                string v = GetXmlNodeString(ShapeStylePath);
+                try
+                {
+                    return (eShapeStyle)Enum.Parse(typeof(eShapeStyle), v, true);
+                }
+                catch
+                {
+                    throw (new Exception(string.Format("Invalid shapetype {0}", v)));
+                }
+            }
+            set
+            {
+                string v = value.ToString();
+                v = v.Substring(0, 1).ToLower(CultureInfo.InvariantCulture) + v.Substring(1, v.Length - 1);
+                SetXmlNodeString(ShapeStylePath, v);
+            }
+        }
+
+        /// <summary>
+        /// Text inside the shape
+        /// </summary>
+        public string Text
+        {
+            get
+            {
+                return GetXmlNodeString(TextPath);
+            }
+            set
+            {
+                SetXmlNodeString(TextPath, value);
+            }
+        }
+
+        /// <summary>
+        /// How the text is aligned
+        /// </summary>
+        public eTextAlignment TextAlignment
+        {
+            get
+            {
+                switch (GetXmlNodeString(TEXT_ALIGN_PATH))
+                {
+                    case "ctr":
+                        return eTextAlignment.Center;
+
+                    case "r":
+                        return eTextAlignment.Right;
+
+                    case "dist":
+                        return eTextAlignment.Distributed;
+
+                    case "just":
+                        return eTextAlignment.Justified;
+
+                    case "justLow":
+                        return eTextAlignment.JustifiedLow;
+
+                    case "thaiDist":
+                        return eTextAlignment.ThaiDistributed;
+
+                    default:
+                        return eTextAlignment.Left;
+                }
+            }
+            set
+            {
+                switch (value)
+                {
+                    case eTextAlignment.Right:
+                        SetXmlNodeString(TEXT_ALIGN_PATH, "r");
+                        break;
+
+                    case eTextAlignment.Center:
+                        SetXmlNodeString(TEXT_ALIGN_PATH, "ctr");
+                        break;
+
+                    case eTextAlignment.Distributed:
+                        SetXmlNodeString(TEXT_ALIGN_PATH, "dist");
+                        break;
+
+                    case eTextAlignment.Justified:
+                        SetXmlNodeString(TEXT_ALIGN_PATH, "just");
+                        break;
+
+                    case eTextAlignment.JustifiedLow:
+                        SetXmlNodeString(TEXT_ALIGN_PATH, "justLow");
+                        break;
+
+                    case eTextAlignment.ThaiDistributed:
+                        SetXmlNodeString(TEXT_ALIGN_PATH, "thaiDist");
+                        break;
+
+                    default:
+                        DeleteNode(TEXT_ALIGN_PATH);
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Text Anchoring
+        /// </summary>
+        public eTextAnchoringType TextAnchoring
+        {
+            get
+            {
+                return GetTextAchoringEnum(GetXmlNodeString(TextAnchoringPath));
+            }
+            set
+            {
+                SetXmlNodeString(TextAnchoringPath, GetTextAchoringText(value));
+            }
+        }
+
+        /// <summary>
+        /// Specifies the centering of the text box.
+        /// </summary>
+        public bool TextAnchoringControl
+        {
+            get
+            {
+                return GetXmlNodeBool(TextAnchoringCtlPath);
+            }
+            set
+            {
+                if (value)
+                {
+                    SetXmlNodeString(TextAnchoringCtlPath, "1");
+                }
+                else
+                {
+                    SetXmlNodeString(TextAnchoringCtlPath, "0");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Vertical text
+        /// </summary>
+        public eTextVerticalType TextVertical
+        {
+            get
+            {
+                return GetTextVerticalEnum(GetXmlNodeString(TextVerticalPath));
+            }
+            set
+            {
+                SetXmlNodeString(TextVerticalPath, GetTextVerticalText(value));
+            }
+        }
+
+        internal new string Id
+        {
+            get { return Name + Text; }
+        }
+
+        private void init()
+        {
+            SchemaNodeOrder = new string[] { "prstGeom", "ln", "pPr", "defRPr", "solidFill", "uFill", "latin", "cs", "r", "rPr", "t" };
+        }
+
+        private string ShapeStartXml()
+        {
+            StringBuilder xml = new StringBuilder();
+            xml.AppendFormat("<xdr:nvSpPr><xdr:cNvPr id=\"{0}\" name=\"{1}\" /><xdr:cNvSpPr /></xdr:nvSpPr><xdr:spPr><a:prstGeom prst=\"rect\"><a:avLst /></a:prstGeom></xdr:spPr><xdr:style><a:lnRef idx=\"2\"><a:schemeClr val=\"accent1\"><a:shade val=\"50000\" /></a:schemeClr></a:lnRef><a:fillRef idx=\"1\"><a:schemeClr val=\"accent1\" /></a:fillRef><a:effectRef idx=\"0\"><a:schemeClr val=\"accent1\" /></a:effectRef><a:fontRef idx=\"minor\"><a:schemeClr val=\"lt1\" /></a:fontRef></xdr:style><xdr:txBody><a:bodyPr vertOverflow=\"clip\" rtlCol=\"0\" anchor=\"ctr\" /><a:lstStyle /><a:p></a:p></xdr:txBody>", _id, Name);
+            return xml.ToString();
+        }
+    }
+}
+
+/// <summary>
+/// Fillstyle.
+/// </summary>
+public enum eFillStyle
+{
+    NoFill,
+    SolidFill,
+    GradientFill,
+    PatternFill,
+    BlipFill,
+    GroupFill
+}
+
 /// <summary>
 /// Shape style
 /// </summary>
@@ -230,6 +592,7 @@ public enum eShapeStyle
     WedgeRoundRectCallout,
     VerticalScroll
 }
+
 /// <summary>
 /// Text alignment
 /// </summary>
@@ -242,327 +605,4 @@ public enum eTextAlignment
     Justified,
     JustifiedLow,
     ThaiDistributed
-}
-/// <summary>
-/// Fillstyle.
-/// </summary>
-public enum eFillStyle
-{
-    NoFill,
-    SolidFill,
-    GradientFill,
-    PatternFill,
-    BlipFill,
-    GroupFill
-}
-namespace OfficeOpenXml.Drawing
-{
-    /// <summary>
-    /// An Excel shape.
-    /// </summary>
-    public sealed class ExcelShape : ExcelDrawing
-    {
-        internal ExcelShape(ExcelDrawings drawings, XmlNode node) :
-            base(drawings, node, "xdr:sp/xdr:nvSpPr/xdr:cNvPr/@name")
-        {
-            init();
-        }
-        internal ExcelShape(ExcelDrawings drawings, XmlNode node, eShapeStyle style) :
-            base(drawings, node, "xdr:sp/xdr:nvSpPr/xdr:cNvPr/@name")
-        {
-            init();
-            XmlElement shapeNode = node.OwnerDocument.CreateElement("xdr", "sp", ExcelPackage.schemaSheetDrawings);
-            shapeNode.SetAttribute("macro", "");
-            shapeNode.SetAttribute("textlink", "");
-            node.AppendChild(shapeNode);
-
-            shapeNode.InnerXml = ShapeStartXml();
-            node.AppendChild(shapeNode.OwnerDocument.CreateElement("xdr", "clientData", ExcelPackage.schemaSheetDrawings));
-        }
-        private void init()
-        {
-            SchemaNodeOrder = new string[] { "prstGeom", "ln", "pPr", "defRPr", "solidFill", "uFill", "latin", "cs", "r", "rPr", "t" };
-        }
-        #region "public methods"
-        const string ShapeStylePath = "xdr:sp/xdr:spPr/a:prstGeom/@prst";
-        /// <summary>
-        /// Shape style
-        /// </summary>
-        public eShapeStyle Style
-        {
-            get
-            {
-                string v = GetXmlNodeString(ShapeStylePath);
-                try
-                {
-                    return (eShapeStyle)Enum.Parse(typeof(eShapeStyle), v, true);
-                }
-                catch
-                {
-                    throw (new Exception(string.Format("Invalid shapetype {0}", v)));
-                }
-            }
-            set
-            {
-                string v = value.ToString();
-                v = v.Substring(0, 1).ToLower(CultureInfo.InvariantCulture) + v.Substring(1, v.Length - 1);
-                SetXmlNodeString(ShapeStylePath, v);
-            }
-        }
-        ExcelDrawingFill _fill = null;
-        /// <summary>
-        /// Fill
-        /// </summary>
-        public ExcelDrawingFill Fill
-        {
-            get
-            {
-                if (_fill == null)
-                {
-                    _fill = new ExcelDrawingFill(NameSpaceManager, TopNode, "xdr:sp/xdr:spPr");
-                }
-                return _fill;
-            }
-        }
-        ExcelDrawingBorder _border = null;
-        /// <summary>
-        /// Border
-        /// </summary>
-        public ExcelDrawingBorder Border        
-        {
-            get
-            {
-                if (_border == null)
-                {
-                    _border = new ExcelDrawingBorder(NameSpaceManager, TopNode, "xdr:sp/xdr:spPr/a:ln");
-                }
-                return _border;
-            }
-        }
-        ExcelDrawingLineEnd _ends = null;
-        /// <summary>
-        /// Line Ends
-        /// </summary>
-        public ExcelDrawingLineEnd LineEnds
-        {
-            get
-            {
-                if (_ends == null)
-                {
-                    _ends = new ExcelDrawingLineEnd(NameSpaceManager, TopNode, "xdr:sp/xdr:spPr/a:ln");
-                }
-                return _ends;
-            }
-        }
-        string[] paragraphNodeOrder = new string[] { "pPr", "defRPr", "solidFill", "uFill", "latin", "cs", "r", "rPr", "t" };
-        const string PARAGRAPH_PATH = "xdr:sp/xdr:txBody/a:p";
-        ExcelTextFont _font=null;
-        public ExcelTextFont Font
-        {
-            get
-            {
-                if (_font == null)
-                {
-                    XmlNode node = TopNode.SelectSingleNode(PARAGRAPH_PATH, NameSpaceManager);
-                    if(node==null)
-                    {
-                        Text="";    //Creates the node p element
-                        node = TopNode.SelectSingleNode(PARAGRAPH_PATH, NameSpaceManager);
-                    }
-                    _font = new ExcelTextFont(NameSpaceManager, TopNode, "xdr:sp/xdr:txBody/a:p/a:pPr/a:defRPr", paragraphNodeOrder);
-                }
-                return _font;
-            }
-        }
-        const string TextPath = "xdr:sp/xdr:txBody/a:p/a:r/a:t";
-        /// <summary>
-        /// Text inside the shape
-        /// </summary>
-        public string Text
-        {
-            get
-            {
-                return GetXmlNodeString(TextPath);
-            }
-            set
-            {
-                SetXmlNodeString(TextPath, value);
-            }
-
-        }
-        string lockTextPath = "xdr:sp/@fLocksText";
-        /// <summary>
-        /// Lock drawing
-        /// </summary>
-        public bool LockText
-        {
-            get
-            {
-                return GetXmlNodeBool(lockTextPath, true);
-            }
-            set
-            {
-                SetXmlNodeBool(lockTextPath, value);
-            }
-        }
-        ExcelParagraphCollection _richText = null;
-        /// <summary>
-        /// Richtext collection. Used to format specific parts of the text
-        /// </summary>
-        public ExcelParagraphCollection RichText
-        {
-            get
-            {
-                if (_richText == null)
-                {
-                    //XmlNode node=TopNode.SelectSingleNode(PARAGRAPH_PATH, NameSpaceManager);
-                    //if (node == null)
-                    //{
-                    //    CreateNode(PARAGRAPH_PATH);
-                    //}
-                        _richText = new ExcelParagraphCollection(NameSpaceManager, TopNode, PARAGRAPH_PATH, paragraphNodeOrder);
-                }
-                return _richText;
-            }
-        }
-        const string TextAnchoringPath = "xdr:sp/xdr:txBody/a:bodyPr/@anchor";
-        /// <summary>
-        /// Text Anchoring
-        /// </summary>
-        public eTextAnchoringType TextAnchoring
-        {
-            get
-            {
-                return GetTextAchoringEnum(GetXmlNodeString(TextAnchoringPath));
-            }
-            set
-            {
-                SetXmlNodeString(TextAnchoringPath, GetTextAchoringText(value));
-            }
-        }
-        const string TextAnchoringCtlPath = "xdr:sp/xdr:txBody/a:bodyPr/@anchorCtr";
-        /// <summary>
-        /// Specifies the centering of the text box.
-        /// </summary>
-        public bool TextAnchoringControl
-        {
-            get
-            {
-                return GetXmlNodeBool(TextAnchoringCtlPath);
-            }
-            set
-            {
-                if (value)
-                {
-                    SetXmlNodeString(TextAnchoringCtlPath, "1");
-                }
-                else
-                {
-                    SetXmlNodeString(TextAnchoringCtlPath, "0");
-                }
-            }
-        }
-        const string TEXT_ALIGN_PATH = "xdr:sp/xdr:txBody/a:p/a:pPr/@algn";
-        /// <summary>
-        /// How the text is aligned
-        /// </summary>
-        public eTextAlignment TextAlignment
-        {
-            get
-            {
-               switch(GetXmlNodeString(TEXT_ALIGN_PATH))
-               {
-                   case "ctr":
-                       return eTextAlignment.Center;
-                   case "r":
-                       return eTextAlignment.Right;
-                   case "dist":
-                       return eTextAlignment.Distributed;
-                   case "just":
-                       return eTextAlignment.Justified;
-                   case "justLow":
-                       return eTextAlignment.JustifiedLow;
-                   case "thaiDist":
-                       return eTextAlignment.ThaiDistributed;
-                   default: 
-                       return eTextAlignment.Left;
-               }
-            }
-            set
-            {
-                switch (value)
-                {
-                    case eTextAlignment.Right:
-                        SetXmlNodeString(TEXT_ALIGN_PATH, "r");
-                        break;
-                    case eTextAlignment.Center:
-                        SetXmlNodeString(TEXT_ALIGN_PATH, "ctr");
-                        break;
-                    case eTextAlignment.Distributed:
-                        SetXmlNodeString(TEXT_ALIGN_PATH, "dist");
-                        break;
-                    case eTextAlignment.Justified:
-                        SetXmlNodeString(TEXT_ALIGN_PATH, "just");
-                        break;
-                    case eTextAlignment.JustifiedLow:
-                        SetXmlNodeString(TEXT_ALIGN_PATH, "justLow");
-                        break;
-                    case eTextAlignment.ThaiDistributed:
-                        SetXmlNodeString(TEXT_ALIGN_PATH, "thaiDist");
-                        break;
-                    default:
-                        DeleteNode(TEXT_ALIGN_PATH);
-                        break;
-                }                
-            }
-        }
-        const string INDENT_ALIGN_PATH = "xdr:sp/xdr:txBody/a:p/a:pPr/@lvl";
-        /// <summary>
-        /// Indentation
-        /// </summary>
-        public int Indent
-        {
-            get
-            {
-                return GetXmlNodeInt(INDENT_ALIGN_PATH);
-            }
-            set
-            {
-                if (value < 0 || value > 8)
-                {
-                    throw(new ArgumentOutOfRangeException("Indent level must be between 0 and 8"));
-                }
-                SetXmlNodeString(INDENT_ALIGN_PATH, value.ToString());
-            }
-        }
-        const string TextVerticalPath = "xdr:sp/xdr:txBody/a:bodyPr/@vert";
-        /// <summary>
-        /// Vertical text
-        /// </summary>
-        public eTextVerticalType TextVertical
-        {
-            get
-            {
-                return GetTextVerticalEnum(GetXmlNodeString(TextVerticalPath));
-            }
-            set
-            {
-                SetXmlNodeString(TextVerticalPath, GetTextVerticalText(value));
-            }
-        }
-
-        #endregion
-        #region "Private Methods"
-        private string ShapeStartXml()
-        {
-            StringBuilder xml = new StringBuilder();
-            xml.AppendFormat("<xdr:nvSpPr><xdr:cNvPr id=\"{0}\" name=\"{1}\" /><xdr:cNvSpPr /></xdr:nvSpPr><xdr:spPr><a:prstGeom prst=\"rect\"><a:avLst /></a:prstGeom></xdr:spPr><xdr:style><a:lnRef idx=\"2\"><a:schemeClr val=\"accent1\"><a:shade val=\"50000\" /></a:schemeClr></a:lnRef><a:fillRef idx=\"1\"><a:schemeClr val=\"accent1\" /></a:fillRef><a:effectRef idx=\"0\"><a:schemeClr val=\"accent1\" /></a:effectRef><a:fontRef idx=\"minor\"><a:schemeClr val=\"lt1\" /></a:fontRef></xdr:style><xdr:txBody><a:bodyPr vertOverflow=\"clip\" rtlCol=\"0\" anchor=\"ctr\" /><a:lstStyle /><a:p></a:p></xdr:txBody>", _id, Name);
-            return xml.ToString();
-        }
-        #endregion
-        internal new string Id
-        {
-            get { return Name + Text; }
-        }
-    }
 }

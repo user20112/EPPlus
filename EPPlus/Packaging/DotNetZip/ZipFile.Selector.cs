@@ -31,16 +31,14 @@
 //
 // ------------------------------------------------------------------
 
-
-using System;
-using System.IO;
-using System.Collections.Generic;
 using OfficeOpenXml.Packaging.Ionic.Zip;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
-
     partial class ZipFile
     {
         /// <summary>
@@ -369,7 +367,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             this.AddSelectedFiles(selectionCriteria, directoryOnDisk, null, false);
         }
 
-
         /// <summary>
         ///   Adds to the ZipFile a set of files from the specified directory on disk,
         ///   that conform to the specified criteria.
@@ -444,7 +441,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             this.AddSelectedFiles(selectionCriteria, directoryOnDisk, null, recurseDirectories);
         }
-
 
         /// <summary>
         ///   Adds to the ZipFile a selection of files from the specified directory on
@@ -637,7 +633,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                                       true);
         }
 
-
         private string EnsureendInSlash(string s)
         {
             if (s.EndsWith("\\")) return s;
@@ -699,7 +694,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             OnAddCompleted();
         }
-
 
         // workitem 12260
         private static string ReplaceLeadingDirectory(string original,
@@ -805,7 +799,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return ff.SelectEntries(this);
         }
 
-
         /// <summary>
         /// Retrieve entries from the zipfile by specified criteria.
         /// </summary>
@@ -878,8 +871,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return ff.SelectEntries(this, directoryPathInArchive);
         }
 
-
-
         /// <summary>
         /// Remove entries from the zipfile by specified criteria.
         /// </summary>
@@ -939,7 +930,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             this.RemoveEntries(selection);
             return selection.Count;
         }
-
 
         /// <summary>
         /// Remove entries from the zipfile by specified criteria, and within the specified
@@ -1006,7 +996,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return selection.Count;
         }
 
-
         /// <summary>
         /// Selects and Extracts a set of Entries from the ZipFile.
         /// </summary>
@@ -1050,7 +1039,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         /// Selects and Extracts a set of Entries from the ZipFile.
         /// </summary>
@@ -1093,7 +1081,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 e.Extract(extractExistingFile);
             }
         }
-
 
         /// <summary>
         /// Selects and Extracts a set of Entries from the ZipFile.
@@ -1146,7 +1133,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         /// Selects and Extracts a set of Entries from the ZipFile.
         /// </summary>
@@ -1181,7 +1167,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 e.Extract(extractDirectory);
             }
         }
-
 
         /// <summary>
         /// Selects and Extracts a set of Entries from the ZipFile.
@@ -1238,12 +1223,8 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 e.Extract(extractDirectory, extractExistingFile);
             }
         }
-
     }
-
 }
-
-
 
 namespace OfficeOpenXml.Packaging.Ionic
 {
@@ -1251,7 +1232,6 @@ namespace OfficeOpenXml.Packaging.Ionic
     {
         internal abstract bool Evaluate(ZipEntry entry);
     }
-
 
     internal partial class NameCriterion : SelectionCriterion
     {
@@ -1263,7 +1243,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             return _Evaluate(transformedFileName);
         }
     }
-
 
     internal partial class SizeCriterion : SelectionCriterion
     {
@@ -1283,18 +1262,20 @@ namespace OfficeOpenXml.Packaging.Ionic
                 case WhichTime.atime:
                     x = entry.AccessedTime;
                     break;
+
                 case WhichTime.mtime:
                     x = entry.ModifiedTime;
                     break;
+
                 case WhichTime.ctime:
                     x = entry.CreationTime;
                     break;
+
                 default: throw new ArgumentException("??time");
             }
             return _Evaluate(x);
         }
     }
-
 
     internal partial class TypeCriterion : SelectionCriterion
     {
@@ -1311,6 +1292,7 @@ namespace OfficeOpenXml.Packaging.Ionic
     }
 
 #if !SILVERLIGHT
+
     internal partial class AttributesCriterion : SelectionCriterion
     {
         internal override bool Evaluate(ZipEntry entry)
@@ -1319,6 +1301,7 @@ namespace OfficeOpenXml.Packaging.Ionic
             return _Evaluate(fileAttrs);
         }
     }
+
 #endif
 
     internal partial class CompoundCriterion : SelectionCriterion
@@ -1332,10 +1315,12 @@ namespace OfficeOpenXml.Packaging.Ionic
                     if (result)
                         result = Right.Evaluate(entry);
                     break;
+
                 case LogicalConjunction.OR:
                     if (!result)
                         result = Right.Evaluate(entry);
                     break;
+
                 case LogicalConjunction.XOR:
                     result ^= Right.Evaluate(entry);
                     break;
@@ -1343,8 +1328,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             return result;
         }
     }
-
-
 
     internal partial class FileSelector
     {
@@ -1397,7 +1380,6 @@ namespace OfficeOpenXml.Packaging.Ionic
 
             return list;
         }
-
 
         /// <summary>
         /// Retrieve the ZipEntry items in the ZipFile that conform to the specified criteria.
@@ -1461,6 +1443,5 @@ namespace OfficeOpenXml.Packaging.Ionic
 
             return list;
         }
-
     }
 }

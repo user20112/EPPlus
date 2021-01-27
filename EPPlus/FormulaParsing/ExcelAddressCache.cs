@@ -11,14 +11,13 @@
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author Change                      Date
  *******************************************************************************
  * Mats Alm Added		                2018-12-27
  *******************************************************************************/
-using System;
+
 using System.Collections.Generic;
-using System.Text;
 
 namespace OfficeOpenXml.FormulaParsing
 {
@@ -27,22 +26,18 @@ namespace OfficeOpenXml.FormulaParsing
     /// </summary>
     public class ExcelAddressCache
     {
-        private readonly object _myLock = new object();
+        private const bool EnableLookupCache = false;
         private readonly Dictionary<int, string> _addressCache = new Dictionary<int, string>();
         private readonly Dictionary<string, int> _lookupCache = new Dictionary<string, int>();
+        private readonly object _myLock = new object();
         private int _nextId = 1;
-        private const bool EnableLookupCache = false;
 
         /// <summary>
-        /// Returns an id to use for caching (when the <see cref="Add"/> method is called)
+        /// Number of items in the cache
         /// </summary>
-        /// <returns></returns>
-        public int GetNewId()
+        public int Count
         {
-            lock(_myLock)
-            {
-                return _nextId++;
-            }
+            get { return _addressCache.Count; }
         }
 
         /// <summary>
@@ -53,23 +48,27 @@ namespace OfficeOpenXml.FormulaParsing
         /// <returns></returns>
         public bool Add(int id, string address)
         {
-            lock(_myLock)
+            lock (_myLock)
             {
                 if (_addressCache.ContainsKey(id)) return false;
                 _addressCache.Add(id, address);
-                if(EnableLookupCache && !_lookupCache.ContainsKey(address))
+                if (EnableLookupCache && !_lookupCache.ContainsKey(address))
                     _lookupCache.Add(address, id);
                 return true;
             }
-            
         }
 
         /// <summary>
-        /// Number of items in the cache
+        /// Clears the cache
         /// </summary>
-        public int Count
+        public void Clear()
         {
-            get { return _addressCache.Count; }
+            lock (_myLock)
+            {
+                _addressCache.Clear();
+                _lookupCache.Clear();
+                _nextId = 1;
+            }
         }
 
         /// <summary>
@@ -84,17 +83,15 @@ namespace OfficeOpenXml.FormulaParsing
         }
 
         /// <summary>
-        /// Clears the cache
+        /// Returns an id to use for caching (when the <see cref="Add"/> method is called)
         /// </summary>
-        public void Clear()
+        /// <returns></returns>
+        public int GetNewId()
         {
             lock(_myLock)
             {
-                _addressCache.Clear();
-                _lookupCache.Clear();
-                _nextId = 1;
-            }  
+                return _nextId++;
+            }
         }
-
     }
 }

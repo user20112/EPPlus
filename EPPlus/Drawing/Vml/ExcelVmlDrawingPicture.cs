@@ -13,29 +13,27 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Initial Release		        2010-06-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using System.Globalization;
-using System.Drawing;
 
+using SkiaSharp;
+using System;
+using System.Globalization;
+using System.Xml;
 
 namespace OfficeOpenXml.Drawing.Vml
 {
@@ -44,127 +42,14 @@ namespace OfficeOpenXml.Drawing.Vml
     /// </summary>
     public class ExcelVmlDrawingPicture : ExcelVmlDrawingBase
     {
-        ExcelWorksheet _worksheet;
+        private ExcelWorksheet _worksheet;
+
         internal ExcelVmlDrawingPicture(XmlNode topNode, XmlNamespaceManager ns, ExcelWorksheet ws) :
             base(topNode, ns)
         {
             _worksheet = ws;
         }
-        /// <summary>
-        /// Position ID
-        /// </summary>
-        public string Position
-        {
-            get
-            {
-                return GetXmlNodeString("@id");
-            }
-        }
-        /// <summary>
-        /// The width in points
-        /// </summary>
-        public double Width
-        {
-            get
-            {
-                return GetStyleProp("width");
-            }
-            set
-            {
-                SetStyleProp("width",value.ToString(CultureInfo.InvariantCulture) + "pt");
-            }
-        }
-        /// <summary>
-        /// The height in points
-        /// </summary>
-        public double Height
-        {
-            get
-            {
-                return GetStyleProp("height");
-            }
-            set
-            {
-                SetStyleProp("height", value.ToString(CultureInfo.InvariantCulture) + "pt");
-            }
-        }
-        /// <summary>
-        /// Margin Left in points
-        /// </summary>
-        public double Left
-        {
-            get
-            {
-                return GetStyleProp("left");
-            }
-            set
-            {
-                SetStyleProp("left", value.ToString(CultureInfo.InvariantCulture));
-            }
-        }
-        /// <summary>
-        /// Margin top in points
-        /// </summary>
-        public double Top
-        {
-            get
-            {
-                return GetStyleProp("top");
-            }
-            set
-            {
-                SetStyleProp("top", value.ToString(CultureInfo.InvariantCulture));
-            }
-        }
-        /// <summary>
-        /// The Title of the image
-        /// </summary>
-        public string Title
-        {
-            get
-            {
-                return GetXmlNodeString("v:imagedata/@o:title");
-            }
-            set
-            {
-                SetXmlNodeString("v:imagedata/@o:title",value);
-            }
-        }
-        /// <summary>
-        /// The image
-        /// </summary>
-        public Image Image
-        {
-            get
-            {
-                var pck = _worksheet._package.Package;
-                if (pck.PartExists(ImageUri))
-                {
-                    var part = pck.GetPart(ImageUri);
-                    return Image.FromStream(part.GetStream());
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-        internal Uri ImageUri
-        {
-            get;
-            set;
-        }
-        internal string RelId
-        {
-            get
-            {
-                return GetXmlNodeString("v:imagedata/@o:relid");
-            }
-            set
-            {
-                SetXmlNodeString("v:imagedata/@o:relid",value);
-            }
-        }        
+
         /// <summary>
         /// Determines whether an image will be displayed in black and white
         /// </summary>
@@ -172,7 +57,7 @@ namespace OfficeOpenXml.Drawing.Vml
         {
             get
             {
-                return GetXmlNodeString("v:imagedata/@bilevel")=="t";
+                return GetXmlNodeString("v:imagedata/@bilevel") == "t";
             }
             set
             {
@@ -186,77 +71,7 @@ namespace OfficeOpenXml.Drawing.Vml
                 }
             }
         }
-        /// <summary>
-        /// Determines whether a picture will be displayed in grayscale mode
-        /// </summary>
-        public bool GrayScale
-        {
-            get
-            {
-                return GetXmlNodeString("v:imagedata/@grayscale")=="t";
-            }
-            set
-            {
-                if (value)
-                {
-                    SetXmlNodeString("v:imagedata/@grayscale", "t");
-                }
-                else
-                {
-                    DeleteNode("v:imagedata/@grayscale");
-                }
-            }
-        }
-        /// <summary>
-        /// Defines the intensity of all colors in an image
-        /// Default value is 1
-        /// </summary>
-        public double Gain
-        {
-            get
-            {
-                string v = GetXmlNodeString("v:imagedata/@gain");
-                return GetFracDT(v,1);
-            }
-            set
-            {
-                if (value < 0)
-                {
-                    throw (new ArgumentOutOfRangeException("Value must be positive"));
-                }
-                if (value == 1)
-                {
-                    DeleteNode("v:imagedata/@gamma");
-                }
-                else
-                {
-                    SetXmlNodeString("v:imagedata/@gain", value.ToString("#.0#", CultureInfo.InvariantCulture));
-                }
-            }
-        }
-        /// <summary>
-        /// Defines the amount of contrast for an image
-        /// Default value is 0;
-        /// </summary>
-        public double Gamma
-        {
-            get
-            {
-                string v = GetXmlNodeString("v:imagedata/@gamma");
-                return GetFracDT(v,0);
-            }
-            set
-            {
-                if (value == 0) //Default
-                {
-                    DeleteNode("v:imagedata/@gamma");
-                }
-                else
-                {
-                    SetXmlNodeString("v:imagedata/@gamma", value.ToString("#.0#", CultureInfo.InvariantCulture));
-                }
-            }
-        }
+
         /// <summary>
         /// Defines the intensity of black in an image
         /// Default value is 0
@@ -281,7 +96,204 @@ namespace OfficeOpenXml.Drawing.Vml
             }
         }
 
-        #region Private Methods
+        /// <summary>
+        /// Defines the intensity of all colors in an image
+        /// Default value is 1
+        /// </summary>
+        public double Gain
+        {
+            get
+            {
+                string v = GetXmlNodeString("v:imagedata/@gain");
+                return GetFracDT(v, 1);
+            }
+            set
+            {
+                if (value < 0)
+                {
+                    throw (new ArgumentOutOfRangeException("Value must be positive"));
+                }
+                if (value == 1)
+                {
+                    DeleteNode("v:imagedata/@gamma");
+                }
+                else
+                {
+                    SetXmlNodeString("v:imagedata/@gain", value.ToString("#.0#", CultureInfo.InvariantCulture));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Defines the amount of contrast for an image
+        /// Default value is 0;
+        /// </summary>
+        public double Gamma
+        {
+            get
+            {
+                string v = GetXmlNodeString("v:imagedata/@gamma");
+                return GetFracDT(v, 0);
+            }
+            set
+            {
+                if (value == 0) //Default
+                {
+                    DeleteNode("v:imagedata/@gamma");
+                }
+                else
+                {
+                    SetXmlNodeString("v:imagedata/@gamma", value.ToString("#.0#", CultureInfo.InvariantCulture));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Determines whether a picture will be displayed in grayscale mode
+        /// </summary>
+        public bool GrayScale
+        {
+            get
+            {
+                return GetXmlNodeString("v:imagedata/@grayscale") == "t";
+            }
+            set
+            {
+                if (value)
+                {
+                    SetXmlNodeString("v:imagedata/@grayscale", "t");
+                }
+                else
+                {
+                    DeleteNode("v:imagedata/@grayscale");
+                }
+            }
+        }
+
+        /// <summary>
+        /// The height in points
+        /// </summary>
+        public double Height
+        {
+            get
+            {
+                return GetStyleProp("height");
+            }
+            set
+            {
+                SetStyleProp("height", value.ToString(CultureInfo.InvariantCulture) + "pt");
+            }
+        }
+
+        /// <summary>
+        /// The image
+        /// </summary>
+        public SKImage Image
+        {
+            get
+            {
+                var pck = _worksheet._package.Package;
+                if (pck.PartExists(ImageUri))
+                {
+                    var part = pck.GetPart(ImageUri);
+                    return SKImage.FromEncodedData(part.GetStream());
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Margin Left in points
+        /// </summary>
+        public double Left
+        {
+            get
+            {
+                return GetStyleProp("left");
+            }
+            set
+            {
+                SetStyleProp("left", value.ToString(CultureInfo.InvariantCulture));
+            }
+        }
+
+        /// <summary>
+        /// Position ID
+        /// </summary>
+        public string Position
+        {
+            get
+            {
+                return GetXmlNodeString("@id");
+            }
+        }
+
+        /// <summary>
+        /// The Title of the image
+        /// </summary>
+        public string Title
+        {
+            get
+            {
+                return GetXmlNodeString("v:imagedata/@o:title");
+            }
+            set
+            {
+                SetXmlNodeString("v:imagedata/@o:title", value);
+            }
+        }
+
+        /// <summary>
+        /// Margin top in points
+        /// </summary>
+        public double Top
+        {
+            get
+            {
+                return GetStyleProp("top");
+            }
+            set
+            {
+                SetStyleProp("top", value.ToString(CultureInfo.InvariantCulture));
+            }
+        }
+
+        /// <summary>
+        /// The width in points
+        /// </summary>
+        public double Width
+        {
+            get
+            {
+                return GetStyleProp("width");
+            }
+            set
+            {
+                SetStyleProp("width",value.ToString(CultureInfo.InvariantCulture) + "pt");
+            }
+        }
+
+        internal Uri ImageUri
+        {
+            get;
+            set;
+        }
+
+        internal string RelId
+        {
+            get
+            {
+                return GetXmlNodeString("v:imagedata/@o:relid");
+            }
+            set
+            {
+                SetXmlNodeString("v:imagedata/@o:relid",value);
+            }
+        }
+
         private double GetFracDT(string v, double def)
         {
             double d;
@@ -306,6 +318,30 @@ namespace OfficeOpenXml.Drawing.Vml
             }
             return d;
         }
+
+        private double GetStyleProp(string propertyName)
+        {
+            string style = GetXmlNodeString("@style");
+            foreach (string prop in style.Split(';'))
+            {
+                string[] split = prop.Split(':');
+                if (split[0] == propertyName && split.Length > 1)
+                {
+                    string value = split[1].EndsWith("pt") ? split[1].Substring(0, split[1].Length - 2) : split[1];
+                    double ret;
+                    if (double.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out ret))
+                    {
+                        return ret;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+            }
+            return 0;
+        }
+
         private void SetStyleProp(string propertyName, string value)
         {
             string style = GetXmlNodeString("@style");
@@ -330,28 +366,5 @@ namespace OfficeOpenXml.Drawing.Vml
             }
             SetXmlNodeString("@style", newStyle.Substring(0, newStyle.Length - 1));
         }
-        private double GetStyleProp(string propertyName)
-        {
-            string style = GetXmlNodeString("@style");
-            foreach (string prop in style.Split(';'))
-            {
-                string[] split = prop.Split(':');
-                if (split[0] == propertyName && split.Length > 1)
-                {
-                    string value = split[1].EndsWith("pt") ? split[1].Substring(0, split[1].Length - 2) : split[1];
-                    double ret;
-                    if (double.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out ret))
-                    {
-                        return ret;
-                    }
-                    else
-                    {
-                        return 0;
-                    }
-                }
-            }
-            return 0;
-        }
-        #endregion
     }
 }

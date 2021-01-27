@@ -11,19 +11,15 @@
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author Change                      Date
  *******************************************************************************
  * Mats Alm Added		                2016-12-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
-using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
-using OfficeOpenXml.FormulaParsing.ExpressionGraph;
+
 using OfficeOpenXml.FormulaParsing.Excel.Functions;
+using OfficeOpenXml.FormulaParsing.ExpressionGraph;
+using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 using OfficeOpenXml.FormulaParsing.Logging;
 using OfficeOpenXml.FormulaParsing.Utilities;
 
@@ -31,43 +27,17 @@ namespace OfficeOpenXml.FormulaParsing
 {
     public class ParsingConfiguration
     {
-        public virtual ILexer Lexer { get; private set; }
-
-        public IFormulaParserLogger Logger { get; private set; }
-
-        public IExpressionGraphBuilder GraphBuilder { get; private set; }
-
-        public IExpressionCompiler ExpressionCompiler{ get; private set; }
-
-        public FunctionRepository FunctionRepository{ get; private set; }
-
-        private ParsingConfiguration() 
+        private ParsingConfiguration()
         {
             FunctionRepository = FunctionRepository.Create();
         }
 
-        internal static ParsingConfiguration Create()
-        {
-            return new ParsingConfiguration();
-        }
+        public IExpressionCompiler ExpressionCompiler { get; private set; }
+        public FunctionRepository FunctionRepository { get; private set; }
+        public IExpressionGraphBuilder GraphBuilder { get; private set; }
+        public virtual ILexer Lexer { get; private set; }
 
-        public ParsingConfiguration SetLexer(ILexer lexer)
-        {
-            Lexer = lexer;
-            return this;
-        }
-
-        public ParsingConfiguration SetGraphBuilder(IExpressionGraphBuilder graphBuilder)
-        {
-            GraphBuilder = graphBuilder;
-            return this;
-        }
-
-        public ParsingConfiguration SetExpresionCompiler(IExpressionCompiler expressionCompiler)
-        {
-            ExpressionCompiler = expressionCompiler;
-            return this;
-        }
+        public IFormulaParserLogger Logger { get; private set; }
 
         /// <summary>
         /// Attaches a logger, errors and log entries will be written to the logger during the parsing process.
@@ -89,6 +59,29 @@ namespace OfficeOpenXml.FormulaParsing
         {
             Logger = null;
             return this;
+        }
+
+        public ParsingConfiguration SetExpresionCompiler(IExpressionCompiler expressionCompiler)
+        {
+            ExpressionCompiler = expressionCompiler;
+            return this;
+        }
+
+        public ParsingConfiguration SetGraphBuilder(IExpressionGraphBuilder graphBuilder)
+        {
+            GraphBuilder = graphBuilder;
+            return this;
+        }
+
+        public ParsingConfiguration SetLexer(ILexer lexer)
+        {
+            Lexer = lexer;
+            return this;
+        }
+
+        internal static ParsingConfiguration Create()
+        {
+            return new ParsingConfiguration();
         }
     }
 }

@@ -13,34 +13,32 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Added this class		        2010-01-28
  * Jan Källman		License changed GPL-->LGPL 2011-12-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OfficeOpenXml
 {
     /// <summary>
-    /// A named range. 
+    /// A named range.
     /// </summary>
-    public sealed class ExcelNamedRange : ExcelRangeBase 
+    public sealed class ExcelNamedRange : ExcelRangeBase
     {
-        ExcelWorksheet _sheet;
+        private ExcelWorksheet _sheet;
+
         /// <summary>
         /// A named range
         /// </summary>
@@ -55,8 +53,8 @@ namespace OfficeOpenXml
             Name = name;
             _sheet = nameSheet;
             Index = index;
-
         }
+
         internal ExcelNamedRange(string name,ExcelWorkbook wb, ExcelWorksheet nameSheet, int index) :
             base(wb, nameSheet, name, true)
         {
@@ -66,15 +64,16 @@ namespace OfficeOpenXml
         }
 
         /// <summary>
-        /// Name of the range
+        /// Is the name hidden
         /// </summary>
-        public string Name
+        public bool IsNameHidden
         {
             get;
-            internal set;
+            set;
         }
+
         /// <summary>
-        /// Is the named range local for the sheet 
+        /// Is the named range local for the sheet
         /// </summary>
         public int LocalSheetId
         {
@@ -86,25 +85,20 @@ namespace OfficeOpenXml
                 }
                 else
                 {
-                    return _sheet.PositionID-_workbook._package._worksheetAdd;
+                    return _sheet.PositionID - _workbook._package._worksheetAdd;
                 }
             }
         }
-        internal ExcelWorksheet LocalSheet => _sheet;
 
-        internal int Index
-        {
-            get;
-            set;
-        }
         /// <summary>
-        /// Is the name hidden
+        /// Name of the range
         /// </summary>
-        public bool IsNameHidden
+        public string Name
         {
             get;
-            set;
+            internal set;
         }
+
         /// <summary>
         /// A comment for the Name
         /// </summary>
@@ -113,8 +107,17 @@ namespace OfficeOpenXml
             get;
             set;
         }
-        internal object NameValue { get; set; }
+
+        internal int Index
+        {
+            get;
+            set;
+        }
+
+        internal ExcelWorksheet LocalSheet => _sheet;
         internal string NameFormula { get; set; }
+        internal object NameValue { get; set; }
+
         public override string ToString()
         {
             return Name;

@@ -86,14 +86,10 @@
 //
 // -----------------------------------------------------------------------
 
-
-
-using System;
-using Interop=System.Runtime.InteropServices;
+using Interop = System.Runtime.InteropServices;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zlib
 {
-
     /// <summary>
     /// Describes how to flush the current deflate operation.
     /// </summary>
@@ -136,7 +132,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         Finish,
     }
 
-
     /// <summary>
     /// The compression level to be used when using a DeflateStream or ZlibStream with CompressionMode.Compress.
     /// </summary>
@@ -148,6 +143,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         /// cannot be opened with the default zip reader. Use a different CompressionLevel.
         /// </summary>
         None= 0,
+
         /// <summary>
         /// Same as None.
         /// </summary>
@@ -187,6 +183,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         /// The default compression level, with a good balance of speed and compression efficiency.
         /// </summary>
         Default = 6,
+
         /// <summary>
         /// A synonym for Default.
         /// </summary>
@@ -242,7 +239,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         HuffmanOnly = 2,
     }
 
-
     /// <summary>
     /// An enum to specify the direction of transcoding - whether to compress or decompress.
     /// </summary>
@@ -252,12 +248,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         /// Used to specify that the stream should compress the data.
         /// </summary>
         Compress= 0,
+
         /// <summary>
         /// Used to specify that the stream should decompress the data.
         /// </summary>
         Decompress = 1,
     }
-
 
     /// <summary>
     /// A general purpose exception class for exceptions in the Zlib library.
@@ -283,7 +279,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         {
         }
     }
-
 
     internal class SharedUtils
     {
@@ -343,12 +338,10 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             return bytesRead;
         }
 
-
         internal static byte[] ToByteArray(System.String sourceString)
         {
             return System.Text.UTF8Encoding.UTF8.GetBytes(sourceString);
         }
-
 
         internal static char[] ToCharArray(byte[] byteArray)
         {
@@ -376,7 +369,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
         // repeat a zero length 11-138 times  (7 bits of repeat count)
         internal static readonly int REPZ_11_138  = 18;
-
     }
 
     internal sealed class StaticTree
@@ -444,6 +436,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             this.elems = elems;
             this.maxLength = maxLength;
         }
+
         static StaticTree()
         {
             Literals = new StaticTree(lengthAndLiteralsTreeCodes, Tree.ExtraLengthBits, InternalConstants.LITERALS + 1, InternalConstants.L_CODES, InternalConstants.MAX_BITS);
@@ -451,8 +444,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             BitLengths = new StaticTree(null, Tree.extra_blbits, 0, InternalConstants.BL_CODES, InternalConstants.MAX_BL_BITS);
         }
     }
-
-
 
     /// <summary>
     /// Computes an Adler-32 checksum.
@@ -469,9 +460,9 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
     {
         // largest prime smaller than 65536
         private static readonly uint BASE = 65521;
+
         // NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1
         private static readonly int NMAX = 5552;
-
 
 #pragma warning disable 3001
 #pragma warning disable 3002
@@ -538,9 +529,8 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
             return (uint)((s2 << 16) | s1);
         }
+
 #pragma warning restore 3001
 #pragma warning restore 3002
-
     }
-
 }

@@ -24,11 +24,61 @@
 //
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
+    /// <summary>
+    ///   Delegate in which the application closes the stream, just-in-time, for the named entry.
+    /// </summary>
+    ///
+    /// <param name="entryName">
+    /// The name of the ZipEntry that the application should close the stream for.
+    /// </param>
+    ///
+    /// <param name="stream">The stream to be closed.</param>
+    ///
+    /// <remarks>
+    ///   When you add an entry via <see cref="Ionic.Zip.ZipFile.AddEntry(string,
+    ///   OpenDelegate, CloseDelegate)"/>, the application code provides the logic that
+    ///   opens and closes the stream for the given ZipEntry.
+    /// </remarks>
+    ///
+    /// <seealso cref="Ionic.Zip.ZipFile.AddEntry(string, OpenDelegate, CloseDelegate)"/>
+    public delegate void CloseDelegate(string entryName, System.IO.Stream stream);
+
+    /// <summary>
+    ///   Delegate in which the application opens the stream, just-in-time, for the named entry.
+    /// </summary>
+    ///
+    /// <param name="entryName">
+    /// The name of the ZipEntry that the application should open the stream for.
+    /// </param>
+    ///
+    /// <remarks>
+    ///   When you add an entry via <see cref="Ionic.Zip.ZipFile.AddEntry(string,
+    ///   OpenDelegate, CloseDelegate)"/>, the application code provides the logic that
+    ///   opens and closes the stream for the given ZipEntry.
+    /// </remarks>
+    ///
+    /// <seealso cref="Ionic.Zip.ZipFile.AddEntry(string, OpenDelegate, CloseDelegate)"/>
+    public delegate System.IO.Stream OpenDelegate(string entryName);
+
+    /// <summary>
+    ///   Delegate for the callback by which the application tells the
+    ///   library the CompressionLevel to use for a file.
+    /// </summary>
+    ///
+    /// <remarks>
+    /// <para>
+    ///   Using this callback, the application can, for example, specify that
+    ///   previously-compressed files (.mp3, .png, .docx, etc) should use a
+    ///   <c>CompressionLevel</c> of <c>None</c>, or can set the compression level based
+    ///   on any other factor.
+    /// </para>
+    /// </remarks>
+    /// <seealso cref="Ionic.Zip.ZipFile.SetCompression"/>
+    public delegate OfficeOpenXml.Packaging.Ionic.Zlib.CompressionLevel SetCompressionCallback(string localFileName, string fileNameInArchive);
+
     /// <summary>
     ///   Delegate in which the application writes the <c>ZipEntry</c> content for the named entry.
     /// </summary>
@@ -81,59 +131,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
     /// </example>
     /// <seealso cref="Ionic.Zip.ZipFile.AddEntry(string, WriteDelegate)"/>
     public delegate void WriteDelegate(string entryName, System.IO.Stream stream);
-
-
-    /// <summary>
-    ///   Delegate in which the application opens the stream, just-in-time, for the named entry.
-    /// </summary>
-    ///
-    /// <param name="entryName">
-    /// The name of the ZipEntry that the application should open the stream for.
-    /// </param>
-    ///
-    /// <remarks>
-    ///   When you add an entry via <see cref="Ionic.Zip.ZipFile.AddEntry(string,
-    ///   OpenDelegate, CloseDelegate)"/>, the application code provides the logic that
-    ///   opens and closes the stream for the given ZipEntry.
-    /// </remarks>
-    ///
-    /// <seealso cref="Ionic.Zip.ZipFile.AddEntry(string, OpenDelegate, CloseDelegate)"/>
-    public delegate System.IO.Stream OpenDelegate(string entryName);
-
-    /// <summary>
-    ///   Delegate in which the application closes the stream, just-in-time, for the named entry.
-    /// </summary>
-    ///
-    /// <param name="entryName">
-    /// The name of the ZipEntry that the application should close the stream for.
-    /// </param>
-    ///
-    /// <param name="stream">The stream to be closed.</param>
-    ///
-    /// <remarks>
-    ///   When you add an entry via <see cref="Ionic.Zip.ZipFile.AddEntry(string,
-    ///   OpenDelegate, CloseDelegate)"/>, the application code provides the logic that
-    ///   opens and closes the stream for the given ZipEntry.
-    /// </remarks>
-    ///
-    /// <seealso cref="Ionic.Zip.ZipFile.AddEntry(string, OpenDelegate, CloseDelegate)"/>
-    public delegate void CloseDelegate(string entryName, System.IO.Stream stream);
-
-    /// <summary>
-    ///   Delegate for the callback by which the application tells the
-    ///   library the CompressionLevel to use for a file.
-    /// </summary>
-    ///
-    /// <remarks>
-    /// <para>
-    ///   Using this callback, the application can, for example, specify that
-    ///   previously-compressed files (.mp3, .png, .docx, etc) should use a
-    ///   <c>CompressionLevel</c> of <c>None</c>, or can set the compression level based
-    ///   on any other factor.
-    /// </para>
-    /// </remarks>
-    /// <seealso cref="Ionic.Zip.ZipFile.SetCompression"/>
-    public delegate OfficeOpenXml.Packaging.Ionic.Zlib.CompressionLevel SetCompressionCallback(string localFileName, string fileNameInArchive);
 
     /// <summary>
     ///   In an EventArgs type, indicates which sort of progress event is being
@@ -284,158 +281,14 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         Error_Saving,
     }
 
-
-    /// <summary>
-    /// Provides information about the progress of a save, read, or extract operation.
-    /// This is a base class; you will probably use one of the classes derived from this one.
-    /// </summary>
-    internal class ZipProgressEventArgs : EventArgs
-    {
-        private int _entriesTotal;
-        private bool _cancel;
-        private ZipEntry _latestEntry;
-        private ZipProgressEventType _flavor;
-        private String _archiveName;
-        private Int64 _bytesTransferred;
-        private Int64 _totalBytesToTransfer;
-
-
-        internal ZipProgressEventArgs() { }
-
-        internal ZipProgressEventArgs(string archiveName, ZipProgressEventType flavor)
-        {
-            this._archiveName = archiveName;
-            this._flavor = flavor;
-        }
-
-        /// <summary>
-        /// The total number of entries to be saved or extracted.
-        /// </summary>
-        public int EntriesTotal
-        {
-            get { return _entriesTotal; }
-            set { _entriesTotal = value; }
-        }
-
-        /// <summary>
-        /// The name of the last entry saved or extracted.
-        /// </summary>
-        public ZipEntry CurrentEntry
-        {
-            get { return _latestEntry; }
-            set { _latestEntry = value; }
-        }
-
-        /// <summary>
-        /// In an event handler, set this to cancel the save or extract
-        /// operation that is in progress.
-        /// </summary>
-        public bool Cancel
-        {
-            get { return _cancel; }
-            set { _cancel = _cancel || value; }
-        }
-
-        /// <summary>
-        /// The type of event being reported.
-        /// </summary>
-        public ZipProgressEventType EventType
-        {
-            get { return _flavor; }
-            set { _flavor = value; }
-        }
-
-        /// <summary>
-        /// Returns the archive name associated to this event.
-        /// </summary>
-        public String ArchiveName
-        {
-            get { return _archiveName; }
-            set { _archiveName = value; }
-        }
-
-
-        /// <summary>
-        /// The number of bytes read or written so far for this entry.
-        /// </summary>
-        public Int64 BytesTransferred
-        {
-            get { return _bytesTransferred; }
-            set { _bytesTransferred = value; }
-        }
-
-
-
-        /// <summary>
-        /// Total number of bytes that will be read or written for this entry.
-        /// This number will be -1 if the value cannot be determined.
-        /// </summary>
-        public Int64 TotalBytesToTransfer
-        {
-            get { return _totalBytesToTransfer; }
-            set { _totalBytesToTransfer = value; }
-        }
-    }
-
-
-
-    /// <summary>
-    /// Provides information about the progress of a Read operation.
-    /// </summary>
-    internal class ReadProgressEventArgs : ZipProgressEventArgs
-    {
-
-        internal ReadProgressEventArgs() { }
-
-        private ReadProgressEventArgs(string archiveName, ZipProgressEventType flavor)
-            : base(archiveName, flavor)
-        { }
-
-        internal static ReadProgressEventArgs Before(string archiveName, int entriesTotal)
-        {
-            var x = new ReadProgressEventArgs(archiveName, ZipProgressEventType.Reading_BeforeReadEntry);
-            x.EntriesTotal = entriesTotal;
-            return x;
-        }
-
-        internal static ReadProgressEventArgs After(string archiveName, ZipEntry entry, int entriesTotal)
-        {
-            var x = new ReadProgressEventArgs(archiveName, ZipProgressEventType.Reading_AfterReadEntry);
-            x.EntriesTotal = entriesTotal;
-            x.CurrentEntry = entry;
-            return x;
-        }
-
-        internal static ReadProgressEventArgs Started(string archiveName)
-        {
-            var x = new ReadProgressEventArgs(archiveName, ZipProgressEventType.Reading_Started);
-            return x;
-        }
-
-        internal static ReadProgressEventArgs ByteUpdate(string archiveName, ZipEntry entry, Int64 bytesXferred, Int64 totalBytes)
-        {
-            var x = new ReadProgressEventArgs(archiveName, ZipProgressEventType.Reading_ArchiveBytesRead);
-            x.CurrentEntry = entry;
-            x.BytesTransferred = bytesXferred;
-            x.TotalBytesToTransfer = totalBytes;
-            return x;
-        }
-
-        internal static ReadProgressEventArgs Completed(string archiveName)
-        {
-            var x = new ReadProgressEventArgs(archiveName, ZipProgressEventType.Reading_Completed);
-            return x;
-        }
-
-    }
-
-
     /// <summary>
     /// Provides information about the progress of a Add operation.
     /// </summary>
     internal class AddProgressEventArgs : ZipProgressEventArgs
     {
-        internal AddProgressEventArgs() { }
+        internal AddProgressEventArgs()
+        {
+        }
 
         private AddProgressEventArgs(string archiveName, ZipProgressEventType flavor)
             : base(archiveName, flavor)
@@ -449,81 +302,18 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return x;
         }
 
-        internal static AddProgressEventArgs Started(string archiveName)
-        {
-            var x = new AddProgressEventArgs(archiveName, ZipProgressEventType.Adding_Started);
-            return x;
-        }
-
         internal static AddProgressEventArgs Completed(string archiveName)
         {
             var x = new AddProgressEventArgs(archiveName, ZipProgressEventType.Adding_Completed);
             return x;
         }
 
-    }
-
-    /// <summary>
-    /// Provides information about the progress of a save operation.
-    /// </summary>
-    internal class SaveProgressEventArgs : ZipProgressEventArgs
-    {
-        private int _entriesSaved;
-
-        /// <summary>
-        /// Constructor for the SaveProgressEventArgs.
-        /// </summary>
-        /// <param name="archiveName">the name of the zip archive.</param>
-        /// <param name="before">whether this is before saving the entry, or after</param>
-        /// <param name="entriesTotal">The total number of entries in the zip archive.</param>
-        /// <param name="entriesSaved">Number of entries that have been saved.</param>
-        /// <param name="entry">The entry involved in the event.</param>
-        internal SaveProgressEventArgs(string archiveName, bool before, int entriesTotal, int entriesSaved, ZipEntry entry)
-            : base(archiveName, (before) ? ZipProgressEventType.Saving_BeforeWriteEntry : ZipProgressEventType.Saving_AfterWriteEntry)
+        internal static AddProgressEventArgs Started(string archiveName)
         {
-            this.EntriesTotal = entriesTotal;
-            this.CurrentEntry = entry;
-            this._entriesSaved = entriesSaved;
-        }
-
-        internal SaveProgressEventArgs() { }
-
-        internal SaveProgressEventArgs(string archiveName, ZipProgressEventType flavor)
-            : base(archiveName, flavor)
-        { }
-
-
-        internal static SaveProgressEventArgs ByteUpdate(string archiveName, ZipEntry entry, Int64 bytesXferred, Int64 totalBytes)
-        {
-            var x = new SaveProgressEventArgs(archiveName, ZipProgressEventType.Saving_EntryBytesRead);
-            x.ArchiveName = archiveName;
-            x.CurrentEntry = entry;
-            x.BytesTransferred = bytesXferred;
-            x.TotalBytesToTransfer = totalBytes;
+            var x = new AddProgressEventArgs(archiveName, ZipProgressEventType.Adding_Started);
             return x;
-        }
-
-        internal static SaveProgressEventArgs Started(string archiveName)
-        {
-            var x = new SaveProgressEventArgs(archiveName, ZipProgressEventType.Saving_Started);
-            return x;
-        }
-
-        internal static SaveProgressEventArgs Completed(string archiveName)
-        {
-            var x = new SaveProgressEventArgs(archiveName, ZipProgressEventType.Saving_Completed);
-            return x;
-        }
-
-        /// <summary>
-        /// Number of entries saved so far.
-        /// </summary>
-        public int EntriesSaved
-        {
-            get { return _entriesSaved; }
         }
     }
-
 
     /// <summary>
     /// Provides information about the progress of the extract operation.
@@ -558,70 +348,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         internal ExtractProgressEventArgs()
         { }
 
-
-        internal static ExtractProgressEventArgs BeforeExtractEntry(string archiveName, ZipEntry entry, string extractLocation)
-        {
-            var x = new ExtractProgressEventArgs
-                {
-                    ArchiveName = archiveName,
-                    EventType = ZipProgressEventType.Extracting_BeforeExtractEntry,
-                    CurrentEntry = entry,
-                    _target = extractLocation,
-                };
-            return x;
-        }
-
-        internal static ExtractProgressEventArgs ExtractExisting(string archiveName, ZipEntry entry, string extractLocation)
-        {
-            var x = new ExtractProgressEventArgs
-                {
-                    ArchiveName = archiveName,
-                    EventType = ZipProgressEventType.Extracting_ExtractEntryWouldOverwrite,
-                    CurrentEntry = entry,
-                    _target = extractLocation,
-                };
-            return x;
-        }
-
-        internal static ExtractProgressEventArgs AfterExtractEntry(string archiveName, ZipEntry entry, string extractLocation)
-        {
-            var x = new ExtractProgressEventArgs
-                {
-                    ArchiveName = archiveName,
-                    EventType = ZipProgressEventType.Extracting_AfterExtractEntry,
-                    CurrentEntry = entry,
-                    _target = extractLocation,
-                };
-            return x;
-        }
-
-        internal static ExtractProgressEventArgs ExtractAllStarted(string archiveName, string extractLocation)
-        {
-            var x = new ExtractProgressEventArgs(archiveName, ZipProgressEventType.Extracting_BeforeExtractAll);
-            x._target = extractLocation;
-            return x;
-        }
-
-        internal static ExtractProgressEventArgs ExtractAllCompleted(string archiveName, string extractLocation)
-        {
-            var x = new ExtractProgressEventArgs(archiveName, ZipProgressEventType.Extracting_AfterExtractAll);
-            x._target = extractLocation;
-            return x;
-        }
-
-
-        internal static ExtractProgressEventArgs ByteUpdate(string archiveName, ZipEntry entry, Int64 bytesWritten, Int64 totalBytes)
-        {
-            var x = new ExtractProgressEventArgs(archiveName, ZipProgressEventType.Extracting_EntryBytesWritten);
-            x.ArchiveName = archiveName;
-            x.CurrentEntry = entry;
-            x.BytesTransferred = bytesWritten;
-            x.TotalBytesToTransfer = totalBytes;
-            return x;
-        }
-
-
-
         /// <summary>
         /// Number of entries extracted so far.  This is set only if the
         /// EventType is Extracting_BeforeExtractEntry or Extracting_AfterExtractEntry, and
@@ -640,9 +366,178 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get { return _target; }
         }
 
+        internal static ExtractProgressEventArgs AfterExtractEntry(string archiveName, ZipEntry entry, string extractLocation)
+        {
+            var x = new ExtractProgressEventArgs
+            {
+                ArchiveName = archiveName,
+                EventType = ZipProgressEventType.Extracting_AfterExtractEntry,
+                CurrentEntry = entry,
+                _target = extractLocation,
+            };
+            return x;
+        }
+
+        internal static ExtractProgressEventArgs BeforeExtractEntry(string archiveName, ZipEntry entry, string extractLocation)
+        {
+            var x = new ExtractProgressEventArgs
+            {
+                ArchiveName = archiveName,
+                EventType = ZipProgressEventType.Extracting_BeforeExtractEntry,
+                CurrentEntry = entry,
+                _target = extractLocation,
+            };
+            return x;
+        }
+
+        internal static ExtractProgressEventArgs ByteUpdate(string archiveName, ZipEntry entry, Int64 bytesWritten, Int64 totalBytes)
+        {
+            var x = new ExtractProgressEventArgs(archiveName, ZipProgressEventType.Extracting_EntryBytesWritten);
+            x.ArchiveName = archiveName;
+            x.CurrentEntry = entry;
+            x.BytesTransferred = bytesWritten;
+            x.TotalBytesToTransfer = totalBytes;
+            return x;
+        }
+
+        internal static ExtractProgressEventArgs ExtractAllCompleted(string archiveName, string extractLocation)
+        {
+            var x = new ExtractProgressEventArgs(archiveName, ZipProgressEventType.Extracting_AfterExtractAll);
+            x._target = extractLocation;
+            return x;
+        }
+
+        internal static ExtractProgressEventArgs ExtractAllStarted(string archiveName, string extractLocation)
+        {
+            var x = new ExtractProgressEventArgs(archiveName, ZipProgressEventType.Extracting_BeforeExtractAll);
+            x._target = extractLocation;
+            return x;
+        }
+
+        internal static ExtractProgressEventArgs ExtractExisting(string archiveName, ZipEntry entry, string extractLocation)
+        {
+            var x = new ExtractProgressEventArgs
+            {
+                ArchiveName = archiveName,
+                EventType = ZipProgressEventType.Extracting_ExtractEntryWouldOverwrite,
+                CurrentEntry = entry,
+                _target = extractLocation,
+            };
+            return x;
+        }
     }
 
+    /// <summary>
+    /// Provides information about the progress of a Read operation.
+    /// </summary>
+    internal class ReadProgressEventArgs : ZipProgressEventArgs
+    {
+        internal ReadProgressEventArgs()
+        {
+        }
 
+        private ReadProgressEventArgs(string archiveName, ZipProgressEventType flavor)
+            : base(archiveName, flavor)
+        { }
+
+        internal static ReadProgressEventArgs After(string archiveName, ZipEntry entry, int entriesTotal)
+        {
+            var x = new ReadProgressEventArgs(archiveName, ZipProgressEventType.Reading_AfterReadEntry);
+            x.EntriesTotal = entriesTotal;
+            x.CurrentEntry = entry;
+            return x;
+        }
+
+        internal static ReadProgressEventArgs Before(string archiveName, int entriesTotal)
+        {
+            var x = new ReadProgressEventArgs(archiveName, ZipProgressEventType.Reading_BeforeReadEntry);
+            x.EntriesTotal = entriesTotal;
+            return x;
+        }
+
+        internal static ReadProgressEventArgs ByteUpdate(string archiveName, ZipEntry entry, Int64 bytesXferred, Int64 totalBytes)
+        {
+            var x = new ReadProgressEventArgs(archiveName, ZipProgressEventType.Reading_ArchiveBytesRead);
+            x.CurrentEntry = entry;
+            x.BytesTransferred = bytesXferred;
+            x.TotalBytesToTransfer = totalBytes;
+            return x;
+        }
+
+        internal static ReadProgressEventArgs Completed(string archiveName)
+        {
+            var x = new ReadProgressEventArgs(archiveName, ZipProgressEventType.Reading_Completed);
+            return x;
+        }
+
+        internal static ReadProgressEventArgs Started(string archiveName)
+        {
+            var x = new ReadProgressEventArgs(archiveName, ZipProgressEventType.Reading_Started);
+            return x;
+        }
+    }
+
+    /// <summary>
+    /// Provides information about the progress of a save operation.
+    /// </summary>
+    internal class SaveProgressEventArgs : ZipProgressEventArgs
+    {
+        private int _entriesSaved;
+
+        /// <summary>
+        /// Constructor for the SaveProgressEventArgs.
+        /// </summary>
+        /// <param name="archiveName">the name of the zip archive.</param>
+        /// <param name="before">whether this is before saving the entry, or after</param>
+        /// <param name="entriesTotal">The total number of entries in the zip archive.</param>
+        /// <param name="entriesSaved">Number of entries that have been saved.</param>
+        /// <param name="entry">The entry involved in the event.</param>
+        internal SaveProgressEventArgs(string archiveName, bool before, int entriesTotal, int entriesSaved, ZipEntry entry)
+            : base(archiveName, (before) ? ZipProgressEventType.Saving_BeforeWriteEntry : ZipProgressEventType.Saving_AfterWriteEntry)
+        {
+            this.EntriesTotal = entriesTotal;
+            this.CurrentEntry = entry;
+            this._entriesSaved = entriesSaved;
+        }
+
+        internal SaveProgressEventArgs()
+        {
+        }
+
+        internal SaveProgressEventArgs(string archiveName, ZipProgressEventType flavor)
+            : base(archiveName, flavor)
+        { }
+
+        /// <summary>
+        /// Number of entries saved so far.
+        /// </summary>
+        public int EntriesSaved
+        {
+            get { return _entriesSaved; }
+        }
+
+        internal static SaveProgressEventArgs ByteUpdate(string archiveName, ZipEntry entry, Int64 bytesXferred, Int64 totalBytes)
+        {
+            var x = new SaveProgressEventArgs(archiveName, ZipProgressEventType.Saving_EntryBytesRead);
+            x.ArchiveName = archiveName;
+            x.CurrentEntry = entry;
+            x.BytesTransferred = bytesXferred;
+            x.TotalBytesToTransfer = totalBytes;
+            return x;
+        }
+
+        internal static SaveProgressEventArgs Completed(string archiveName)
+        {
+            var x = new SaveProgressEventArgs(archiveName, ZipProgressEventType.Saving_Completed);
+            return x;
+        }
+
+        internal static SaveProgressEventArgs Started(string archiveName)
+        {
+            var x = new SaveProgressEventArgs(archiveName, ZipProgressEventType.Saving_Started);
+            return x;
+        }
+    }
 
     /// <summary>
     /// Provides information about the an error that occurred while zipping.
@@ -650,17 +545,9 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
     internal class ZipErrorEventArgs : ZipProgressEventArgs
     {
         private Exception _exc;
-        private ZipErrorEventArgs() { }
-        internal static ZipErrorEventArgs Saving(string archiveName, ZipEntry entry, Exception exception)
+
+        private ZipErrorEventArgs()
         {
-            var x = new ZipErrorEventArgs
-                {
-                    EventType = ZipProgressEventType.Error_Saving,
-                    ArchiveName = archiveName,
-                    CurrentEntry = entry,
-                    _exc = exception
-                };
-            return x;
         }
 
         /// <summary>
@@ -678,7 +565,107 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             get { return CurrentEntry.LocalFileName; }
         }
+
+        internal static ZipErrorEventArgs Saving(string archiveName, ZipEntry entry, Exception exception)
+        {
+            var x = new ZipErrorEventArgs
+            {
+                EventType = ZipProgressEventType.Error_Saving,
+                ArchiveName = archiveName,
+                CurrentEntry = entry,
+                _exc = exception
+            };
+            return x;
+        }
     }
 
+    /// <summary>
+    /// Provides information about the progress of a save, read, or extract operation.
+    /// This is a base class; you will probably use one of the classes derived from this one.
+    /// </summary>
+    internal class ZipProgressEventArgs : EventArgs
+    {
+        private String _archiveName;
+        private Int64 _bytesTransferred;
+        private bool _cancel;
+        private int _entriesTotal;
+        private ZipProgressEventType _flavor;
+        private ZipEntry _latestEntry;
+        private Int64 _totalBytesToTransfer;
 
+        internal ZipProgressEventArgs()
+        {
+        }
+
+        internal ZipProgressEventArgs(string archiveName, ZipProgressEventType flavor)
+        {
+            this._archiveName = archiveName;
+            this._flavor = flavor;
+        }
+
+        /// <summary>
+        /// Returns the archive name associated to this event.
+        /// </summary>
+        public String ArchiveName
+        {
+            get { return _archiveName; }
+            set { _archiveName = value; }
+        }
+
+        /// <summary>
+        /// The number of bytes read or written so far for this entry.
+        /// </summary>
+        public Int64 BytesTransferred
+        {
+            get { return _bytesTransferred; }
+            set { _bytesTransferred = value; }
+        }
+
+        /// <summary>
+        /// In an event handler, set this to cancel the save or extract
+        /// operation that is in progress.
+        /// </summary>
+        public bool Cancel
+        {
+            get { return _cancel; }
+            set { _cancel = _cancel || value; }
+        }
+
+        /// <summary>
+        /// The name of the last entry saved or extracted.
+        /// </summary>
+        public ZipEntry CurrentEntry
+        {
+            get { return _latestEntry; }
+            set { _latestEntry = value; }
+        }
+
+        /// <summary>
+        /// The total number of entries to be saved or extracted.
+        /// </summary>
+        public int EntriesTotal
+        {
+            get { return _entriesTotal; }
+            set { _entriesTotal = value; }
+        }
+
+        /// <summary>
+        /// The type of event being reported.
+        /// </summary>
+        public ZipProgressEventType EventType
+        {
+            get { return _flavor; }
+            set { _flavor = value; }
+        }
+
+        /// <summary>
+        /// Total number of bytes that will be read or written for this entry.
+        /// This number will be -1 if the value cannot be determined.
+        /// </summary>
+        public Int64 TotalBytesToTransfer
+        {
+            get { return _totalBytesToTransfer; }
+            set { _totalBytesToTransfer = value; }
+        }
+    }
 }

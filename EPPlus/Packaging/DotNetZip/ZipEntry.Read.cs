@@ -24,7 +24,6 @@
 //
 // ------------------------------------------------------------------
 
-
 using System;
 using System.IO;
 
@@ -33,6 +32,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
     internal partial class ZipEntry
     {
         private int _readExtraDepth;
+
         private void ReadExtraField()
         {
             _readExtraDepth++;
@@ -61,7 +61,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             Ionic.Zip.SharedUtilities.Workaround_Ladybug318918(this.ArchiveStream);
             _readExtraDepth--;
         }
-
 
         private static bool ReadHeader(ZipEntry ze, System.Text.Encoding defaultEncoding)
         {
@@ -236,7 +235,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                         ze._UncompressedSize = (uint)(block[i++] + block[i++] * 256 + block[i++] * 256 * 256 + block[i++] * 256 * 256 * 256);
 
                         ze._LengthOfTrailer += 16;  // bytes including sig, CRC, Comp and Uncomp sizes
-
                     }
 
                     wantMore = (SizeOfDataRead != ze._CompressedSize);
@@ -264,7 +262,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
 
             ze._CompressedFileDataSize = ze._CompressedSize;
-
 
             // bit 0 set indicates that some kind of encryption is in use
             if ((ze._BitField & 0x01) == 0x01)
@@ -297,7 +294,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             ze._LengthOfHeader = bytesRead;
             ze._TotalEntrySize = ze._LengthOfHeader + ze._CompressedFileDataSize + ze._LengthOfTrailer;
 
-
             // We've read in the regular entry header, the extra field, and any
             // encryption header.  The pointer in the file is now at the start of the
             // filedata, which is potentially compressed and encrypted.  Just ahead in
@@ -308,8 +304,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             return true;
         }
-
-
 
         internal static int ReadWeakEncryptionHeader(Stream s, byte[] buffer)
         {
@@ -332,13 +326,10 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return additionalBytesRead;
         }
 
-
-
         private static bool IsNotValidSig(int signature)
         {
             return (signature != ZipConstants.ZipEntrySignature);
         }
-
 
         /// <summary>
         ///   Reads one <c>ZipEntry</c> from the given stream.  The content for
@@ -397,7 +388,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return entry;
         }
 
-
         internal static void HandlePK00Prefix(Stream s)
         {
             // in some cases, the zip file begins with "PK00".  This is a throwback and is rare,
@@ -410,8 +400,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 Ionic.Zip.SharedUtilities.Workaround_Ladybug318918(s);
             }
         }
-
-
 
         private static void HandleUnexpectedDataDescriptor(ZipEntry entry)
         {
@@ -458,7 +446,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   Finds a particular segment in the given extra field.
         ///   This is used when modifying a previously-generated
@@ -480,7 +467,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             return -1;
         }
-
 
         /// <summary>
         ///   At current cursor position in the stream, read the extra
@@ -578,7 +564,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return j;
         }
 
-
 #if AESCRYPTO
         private int ProcessExtraFieldWinZipAes(byte[] buffer, int j, Int16 dataSize, long posn)
         {
@@ -668,7 +653,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return j;
         }
 
-
         private int ProcessExtraFieldInfoZipTimes(byte[] buffer, int j, Int16 dataSize, long posn)
         {
             if (dataSize != 12 && dataSize != 8)
@@ -687,8 +671,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _ntfsTimesAreSet = true;
             _timestamp |= ZipEntryTimestamp.InfoZip1; return j;
         }
-
-
 
         private int ProcessExtraFieldUnixTimes(byte[] buffer, int j, Int16 dataSize, long posn)
         {
@@ -732,7 +714,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             return j;
         }
-
 
         private int ProcessExtraFieldWindowsTimes(byte[] buffer, int j, Int16 dataSize, long posn)
         {
@@ -793,11 +774,9 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
    	    else
 	    {
                 // An unknown NTFS tag so simply skip it.
-                j += dataSize;				
+                j += dataSize;
   	    }
             return j;
         }
-
-
     }
 }

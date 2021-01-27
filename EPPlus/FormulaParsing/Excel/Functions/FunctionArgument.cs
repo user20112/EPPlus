@@ -7,31 +7,31 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Mats Alm   		                Added		                2013-12-03
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
 using OfficeOpenXml.FormulaParsing.ExpressionGraph;
+using System;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions
 {
     public class FunctionArgument
     {
+        private ExcelCellState _excelCellState;
+
         public FunctionArgument(object val)
         {
             Value = val;
@@ -44,26 +44,7 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions
             DataType = dataType;
         }
 
-        private ExcelCellState _excelCellState;
-
-        public void SetExcelStateFlag(ExcelCellState state)
-        {
-            _excelCellState |= state;
-        }
-
-        public bool ExcelStateFlagIsSet(ExcelCellState state)
-        {
-            return (_excelCellState & state) != 0;
-        }
-
-        public object Value { get; private set; }
-
         public DataType DataType { get; }
-
-        public Type Type
-        {
-            get { return Value != null ? Value.GetType() : null; }
-        }
 
         public int ExcelAddressReferenceId { get; set; }
 
@@ -72,10 +53,12 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions
             get { return Value != null && Value is EpplusExcelDataProvider.IRangeInfo; }
         }
 
-        public bool ValueIsExcelError
+        public Type Type
         {
-            get { return ExcelErrorValue.Values.IsErrorValue(Value); }
+            get { return Value != null ? Value.GetType() : null; }
         }
+
+        public object Value { get; private set; }
 
         public ExcelErrorValue ValueAsExcelErrorValue
         {
@@ -86,6 +69,7 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions
         {
             get { return Value as EpplusExcelDataProvider.IRangeInfo; }
         }
+
         public object ValueFirst
         {
             get
@@ -95,7 +79,7 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions
                     Value = ((ExcelDataProvider.INameInfo)Value).Value;
                 }
                 var v = Value as ExcelDataProvider.IRangeInfo;
-                if (v==null)
+                if (v == null)
                 {
                     return Value;
                 }
@@ -106,5 +90,19 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions
             }
         }
 
+        public bool ValueIsExcelError
+        {
+            get { return ExcelErrorValue.Values.IsErrorValue(Value); }
+        }
+
+        public bool ExcelStateFlagIsSet(ExcelCellState state)
+        {
+            return (_excelCellState & state) != 0;
+        }
+
+        public void SetExcelStateFlag(ExcelCellState state)
+        {
+            _excelCellState |= state;
+        }
     }
 }

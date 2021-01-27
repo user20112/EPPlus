@@ -24,10 +24,9 @@
 // ------------------------------------------------------------------
 //
 
-
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
@@ -85,7 +84,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         public System.Text.Encoding @Encoding { get; set; }
     }
 
-
     internal partial class ZipFile
     {
         /// <summary>
@@ -119,7 +117,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             return ZipFile.Read(fileName, null, null, null);
         }
-
 
         /// <summary>
         ///   Reads a zip file archive from the named filesystem file using the
@@ -473,8 +470,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                         options.ReadProgress);
         }
 
-
-
         /// <summary>
         /// Reads a zip archive from a stream, using the specified text Encoding, the
         /// specified TextWriter for status messages,
@@ -544,8 +539,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return zf;
         }
 
-
-
         private static void ReadIntoInstance(ZipFile zf)
         {
             Stream s = zf.ReadStream;
@@ -569,7 +562,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
                 if (datum == ZipConstants.EndOfCentralDirectorySignature)
                     return;
-
 
                 // start at the end of the file...
                 // seek backwards a bit, then look for the EoCD signature.
@@ -665,8 +657,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             zf._contentsChanged = false;
         }
 
-
-
         private static void Zip64SeekToCentralDirectory(ZipFile zf)
         {
             Stream s = zf.ReadStream;
@@ -700,14 +690,11 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             //zf.SeekFromOrigin(Offset64);
         }
 
-
         private static uint ReadFirstFourBytes(Stream s)
         {
             uint datum = (uint)Ionic.Zip.SharedUtilities.ReadInt(s);
             return datum;
         }
-
-
 
         private static void ReadCentralDirectory(ZipFile zf)
         {
@@ -757,9 +744,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             zf.OnReadCompleted();
         }
-
-
-
 
         // build the TOC by reading each entry in the file.
         private static void ReadIntoInstance_Orig(ZipFile zf)
@@ -825,9 +809,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             zf.OnReadCompleted();
         }
-
-
-
 
         private static void ReadCentralDirectoryFooter(ZipFile zf)
         {
@@ -921,8 +902,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             ReadZipFileComment(zf);
         }
 
-
-
         private static void ReadZipFileComment(ZipFile zf)
         {
             // read the comment here
@@ -947,7 +926,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         // private static bool BlocksAreEqual(byte[] a, byte[] b)
         // {
         //     if (a.Length != b.Length) return false;
@@ -957,8 +935,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         //     }
         //     return true;
         // }
-
-
 
         /// <summary>
         /// Checks the given file to see if it appears to be a valid zip file.
@@ -977,7 +953,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             return IsZipFile(fileName, false);
         }
-
 
         /// <summary>
         /// Checks a file to see if it is a valid zip file.
@@ -1031,7 +1006,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             catch (ZipException) { }
             return result;
         }
-
 
         /// <summary>
         /// Checks a stream to see if it contains a valid zip archive.
@@ -1101,10 +1075,5 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             catch (ZipException) { }
             return result;
         }
-
-
-
-
     }
-
 }

@@ -13,30 +13,39 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
+
 using OfficeOpenXml.Style;
+using System;
 using System.Globalization;
+using System.Xml;
+
 namespace OfficeOpenXml.Drawing.Chart
 {
+    /// <summary>
+    /// Axis orientaion
+    /// </summary>
+    public enum eAxisOrientation
+    {
+        MaxMin,
+        MinMax
+    }
+
     /// <summary>
     /// Position of the axis.
     /// </summary>
@@ -47,84 +56,33 @@ namespace OfficeOpenXml.Drawing.Chart
         Right = 2,
         Top = 3
     }
-    /// <summary>
-    /// Position of the Y-Axis
-    /// </summary>
-    public enum eYAxisPosition
-    {
-        Left = 0,
-        Right = 2,
-    }
-    /// <summary>
-    /// Position of the X-Axis
-    /// </summary>
-    public enum eXAxisPosition
-    {
-        Bottom = 1,
-        Top = 3
-    }
-    /// <summary>
-    /// Axis orientaion
-    /// </summary>
-    public enum eAxisOrientation
-    {
-        MaxMin,
-        MinMax
-    }
-    /// <summary>
-    /// How the axis are crossed
-    /// </summary>
-    public enum eCrossBetween
-    {
-        /// <summary>
-        /// Specifies the value axis shall cross the category axis between data markers
-        /// </summary>
-        Between,
-        /// <summary>
-        /// Specifies the value axis shall cross the category axis at the midpoint of a category.
-        /// </summary>
-        MidCat
-    }
-    /// <summary>
-    /// Where the axis cross. 
-    /// </summary>
-    public enum eCrosses
-    {
-        /// <summary>
-        /// (Axis Crosses at Zero) The category axis crosses at the zero point of the valueaxis (if possible), or the minimum value (if theminimum is greater than zero) or the maximum (if the maximum is less than zero).
-        /// </summary>
-        AutoZero,
-        /// <summary>
-        /// The axis crosses at the maximum value
-        /// </summary>
-        Max,
-        /// <summary>
-        /// (Axis crosses at the minimum value of the chart.
-        /// </summary>
-        Min
-    }
+
     /// <summary>
     /// Tickmarks
     /// </summary>
     public enum eAxisTickMark
     {
         /// <summary>
-        /// Specifies the tick marks shall cross the axis. 
+        /// Specifies the tick marks shall cross the axis.
         /// </summary>
-        Cross,   
+        Cross,
+
         /// <summary>
-        /// Specifies the tick marks shall be inside the plot area. 
+        /// Specifies the tick marks shall be inside the plot area.
         /// </summary>
-        In,     
+        In,
+
         /// <summary>
         /// Specifies there shall be no tick marks.
         /// </summary>
-        None,    
+        None,
+
         /// <summary>
         /// Specifies the tick marks shall be outside the plot area.
         /// </summary>
         Out
     }
+
     public enum eBuildInUnits : long
     {
         hundreds = 100,
@@ -137,11 +95,125 @@ namespace OfficeOpenXml.Drawing.Chart
         billions = 1000000000,
         trillions = 1000000000000
     }
+
+    /// <summary>
+    /// How the axis are crossed
+    /// </summary>
+    public enum eCrossBetween
+    {
+        /// <summary>
+        /// Specifies the value axis shall cross the category axis between data markers
+        /// </summary>
+        Between,
+
+        /// <summary>
+        /// Specifies the value axis shall cross the category axis at the midpoint of a category.
+        /// </summary>
+        MidCat
+    }
+
+    /// <summary>
+    /// Where the axis cross.
+    /// </summary>
+    public enum eCrosses
+    {
+        /// <summary>
+        /// (Axis Crosses at Zero) The category axis crosses at the zero point of the valueaxis (if possible), or the minimum value (if theminimum is greater than zero) or the maximum (if the maximum is less than zero).
+        /// </summary>
+        AutoZero,
+
+        /// <summary>
+        /// The axis crosses at the maximum value
+        /// </summary>
+        Max,
+
+        /// <summary>
+        /// (Axis crosses at the minimum value of the chart.
+        /// </summary>
+        Min
+    }
+
+    /// <summary>
+    /// Position of the X-Axis
+    /// </summary>
+    public enum eXAxisPosition
+    {
+        Bottom = 1,
+        Top = 3
+    }
+
+    /// <summary>
+    /// Position of the Y-Axis
+    /// </summary>
+    public enum eYAxisPosition
+    {
+        Left = 0,
+        Right = 2,
+    }
+
     /// <summary>
     /// An axis for a chart
     /// </summary>
     public sealed class ExcelChartAxis : XmlHelper
     {
+        private const string _crossBetweenPath = "c:crossBetween/@val";
+
+        private const string _crossesAtPath = "c:crossesAt/@val";
+
+        private const string _crossesPath = "c:crosses/@val";
+
+        private const string _custUnitPath = "c:dispUnits/c:custUnit/@val";
+
+        private const string _displayUnitPath = "c:dispUnits/c:builtInUnit/@val";
+
+        private const string _formatPath = "c:numFmt/@formatCode";
+
+        private const string _lblPos = "c:tickLblPos/@val";
+
+        private const string _logbasePath = "c:scaling/c:logBase/@val";
+
+        //Pull request from aesalazar
+        private const string _majorGridlinesPath = "c:majorGridlines";
+
+        private const string _majorTickMark = "c:majorTickMark/@val";
+
+        private const string _majorTimeUnitPath = "c:majorTimeUnit/@val";
+        private const string _majorUnitCatPath = "c:tickLblSkip/@val";
+        private const string _majorUnitPath = "c:majorUnit/@val";
+        private const string _maxValuePath = "c:scaling/c:max/@val";
+        private const string _minorGridlinesPath = "c:minorGridlines";
+
+        private const string _minorTickMark = "c:minorTickMark/@val";
+
+        private const string _minorTimeUnitPath = "c:minorTimeUnit/@val";
+        private const string _minorUnitCatPath = "c:tickMarkSkip/@val";
+        private const string _minorUnitPath = "c:minorUnit/@val";
+        private const string _minValuePath = "c:scaling/c:min/@val";
+        private const string _orientationPath = "c:scaling/c:orientation/@val";
+        private const string _sourceLinkedPath = "c:numFmt/@sourceLinked";
+
+        private const string _ticLblPos_Path = "c:tickLblPos/@val";
+
+        private ExcelDrawingBorder _border = null;
+
+        private ExcelDrawingFill _fill = null;
+
+        private ExcelTextFont _font = null;
+
+        private ExcelDrawingBorder _majorGridlines = null;
+
+        private ExcelDrawingBorder _minorGridlines = null;
+
+        private ExcelChartTitle _title = null;
+
+        private string AXIS_POSITION_PATH = "c:axPos/@val";
+
+        internal ExcelChartAxis(XmlNamespaceManager nameSpaceManager, XmlNode topNode) :
+                    base(nameSpaceManager, topNode)
+        {
+            SchemaNodeOrder = new string[] { "axId", "scaling", "logBase", "orientation", "max", "min", "delete", "axPos", "majorGridlines", "minorGridlines", "title", "numFmt", "majorTickMark", "minorTickMark", "tickLblPos", "spPr", "txPr", "crossAx", "crossesAt", "crosses", "crossBetween", "auto", "lblOffset", "majorUnit", "majorTimeUnit", "minorUnit", "minorTimeUnit", "dispUnits", "spPr", "txPr" };
+        }
+
         /// <summary>
         /// Type of axis
         /// </summary>
@@ -151,170 +223,66 @@ namespace OfficeOpenXml.Drawing.Chart
             /// Value axis
             /// </summary>
             Val,
+
             /// <summary>
             /// Category axis
             /// </summary>
             Cat,
+
             /// <summary>
             /// Date axis
             /// </summary>
             Date,
+
             /// <summary>
             /// Series axis
             /// </summary>
             Serie
         }
-        internal ExcelChartAxis(XmlNamespaceManager nameSpaceManager, XmlNode topNode) :
-            base(nameSpaceManager, topNode)
-        {
-            SchemaNodeOrder = new string[] { "axId", "scaling", "logBase", "orientation", "max", "min", "delete", "axPos", "majorGridlines", "minorGridlines", "title", "numFmt", "majorTickMark", "minorTickMark", "tickLblPos", "spPr", "txPr", "crossAx", "crossesAt", "crosses", "crossBetween", "auto", "lblOffset", "majorUnit", "majorTimeUnit", "minorUnit", "minorTimeUnit", "dispUnits", "spPr", "txPr" };
-        }
-        internal string Id
-        {
-            get
-            {
-                return GetXmlNodeString("c:axId/@val");
-            }
-        }
-        const string _majorTickMark = "c:majorTickMark/@val";
-        /// <summary>
-        /// majorTickMark 
-        /// This element specifies the major tick marks for the axis. 
-        /// </summary>
-        public eAxisTickMark MajorTickMark
-        {
-            get
-            {
-                var v=GetXmlNodeString(_majorTickMark);
-                if(string.IsNullOrEmpty(v))
-                {
-                    return eAxisTickMark.Cross;
-                }
-                else
-                {
-                    try
-                    {
-                        return (eAxisTickMark)Enum.Parse( typeof( eAxisTickMark ), v );
-                    }
-                    catch
-                    {
-                        return eAxisTickMark.Cross;
-                    }
-                }
-            }
-            set
-            {
-                SetXmlNodeString( _majorTickMark, value.ToString().ToLower(CultureInfo.InvariantCulture) );
-            }
-        }
 
-        const string _minorTickMark = "c:minorTickMark/@val";
-        /// <summary>
-        /// minorTickMark 
-        /// This element specifies the minor tick marks for the axis. 
-        /// </summary>
-        public eAxisTickMark MinorTickMark
-        {
-            get
-            {
-                var v=GetXmlNodeString(_minorTickMark);
-                if(string.IsNullOrEmpty(v))
-                {
-                    return eAxisTickMark.Cross;
-                }
-                else
-                {
-                    try
-                    {
-                        return (eAxisTickMark)Enum.Parse(typeof(eAxisTickMark), v );
-                    }
-                    catch
-                    {
-                        return eAxisTickMark.Cross;
-                    }
-                }
-            }
-            set
-            {
-                SetXmlNodeString(_minorTickMark, value.ToString().ToLower(CultureInfo.InvariantCulture));
-            }
-        }
-         /// <summary>
-        /// Type of axis
-        /// </summary>
-        internal eAxisType AxisType
-        {
-            get
-            {
-                try
-                {
-                    return (eAxisType)Enum.Parse(typeof(eAxisType), TopNode.LocalName.Substring(0,3), true);
-                }
-                catch
-                {
-                    return eAxisType.Val;
-                }
-            }
-        }
-        private string AXIS_POSITION_PATH = "c:axPos/@val";
         /// <summary>
         /// Where the axis is located
         /// </summary>
         public eAxisPosition AxisPosition
         {
             get
-            {                
-                switch(GetXmlNodeString(AXIS_POSITION_PATH))
+            {
+                switch (GetXmlNodeString(AXIS_POSITION_PATH))
                 {
                     case "b":
                         return eAxisPosition.Bottom;
+
                     case "r":
                         return eAxisPosition.Right;
+
                     case "t":
                         return eAxisPosition.Top;
-                    default: 
+
+                    default:
                         return eAxisPosition.Left;
                 }
             }
             internal set
             {
-                SetXmlNodeString(AXIS_POSITION_PATH, value.ToString().ToLower(CultureInfo.InvariantCulture).Substring(0,1));
+                SetXmlNodeString(AXIS_POSITION_PATH, value.ToString().ToLower(CultureInfo.InvariantCulture).Substring(0, 1));
             }
         }
-        const string _crossesPath = "c:crosses/@val";
+
         /// <summary>
-        /// Where the axis cross
+        /// Access to border properties
         /// </summary>
-        public eCrosses Crosses
+        public ExcelDrawingBorder Border
         {
             get
             {
-                var v=GetXmlNodeString(_crossesPath);
-                if (string.IsNullOrEmpty(v))
+                if (_border == null)
                 {
-                    return eCrosses.AutoZero;
+                    _border = new ExcelDrawingBorder(NameSpaceManager, TopNode, "c:spPr/a:ln");
                 }
-                else
-                {
-                    try
-                    {
-                        return (eCrosses)Enum.Parse(typeof(eCrosses), v, true);
-                    }
-                    catch
-                    {
-                        return eCrosses.AutoZero;
-                    }
-                }
+                return _border;
             }
-            set
-            {
-                var v = value.ToString();
-                v = v.Substring(0, 1).ToLower(CultureInfo.InvariantCulture) + v.Substring(1, v.Length - 1);
-                SetXmlNodeString(_crossesPath, v);
-            }
-
         }
-        const string _crossBetweenPath = "c:crossBetween/@val";
+
         /// <summary>
         /// How the axis are crossed
         /// </summary>
@@ -322,8 +290,8 @@ namespace OfficeOpenXml.Drawing.Chart
         {
             get
             {
-                var v=GetXmlNodeString(_crossBetweenPath);
-                if(string.IsNullOrEmpty(v))
+                var v = GetXmlNodeString(_crossBetweenPath);
+                if (string.IsNullOrEmpty(v))
                 {
                     return eCrossBetween.Between;
                 }
@@ -346,9 +314,41 @@ namespace OfficeOpenXml.Drawing.Chart
                 SetXmlNodeString(_crossBetweenPath, v);
             }
         }
-        const string _crossesAtPath = "c:crossesAt/@val";
+
         /// <summary>
-        /// The value where the axis cross. 
+        /// Where the axis cross
+        /// </summary>
+        public eCrosses Crosses
+        {
+            get
+            {
+                var v = GetXmlNodeString(_crossesPath);
+                if (string.IsNullOrEmpty(v))
+                {
+                    return eCrosses.AutoZero;
+                }
+                else
+                {
+                    try
+                    {
+                        return (eCrosses)Enum.Parse(typeof(eCrosses), v, true);
+                    }
+                    catch
+                    {
+                        return eCrosses.AutoZero;
+                    }
+                }
+            }
+            set
+            {
+                var v = value.ToString();
+                v = v.Substring(0, 1).ToLower(CultureInfo.InvariantCulture) + v.Substring(1, v.Length - 1);
+                SetXmlNodeString(_crossesPath, v);
+            }
+        }
+
+        /// <summary>
+        /// The value where the axis cross.
         /// Null is automatic
         /// </summary>
         public double? CrossesAt
@@ -369,126 +369,11 @@ namespace OfficeOpenXml.Drawing.Chart
                 }
             }
         }
-        const string _formatPath = "c:numFmt/@formatCode";
-        /// <summary>
-        /// Numberformat
-        /// </summary>
-        public string Format 
-        {
-            get
-            {
-                return GetXmlNodeString(_formatPath);
-            }
-            set
-            {
-                SetXmlNodeString(_formatPath,value);
-                if(string.IsNullOrEmpty(value))
-                {
-                    SourceLinked = true;
-                }
-                else
-                {
-                    SourceLinked = false;
-                }
-            }
-        }
-        const string _sourceLinkedPath = "c:numFmt/@sourceLinked";
-        public bool SourceLinked
-        {
-            get
-            {
-                return GetXmlNodeBool(_sourceLinkedPath);
-            }
-            set
-            {
-                SetXmlNodeBool(_sourceLinkedPath, value);
-            }
-        }
-        const string _lblPos = "c:tickLblPos/@val";
-        /// <summary>
-        /// Position of the labels
-        /// </summary>
-        public eTickLabelPosition LabelPosition
-        {
-            get
-            {
-                var v=GetXmlNodeString(_lblPos);
-                if (string.IsNullOrEmpty(v))
-                {
-                    return eTickLabelPosition.NextTo;
-                }
-                else
-                {
-                    try
-                    {
-                        return (eTickLabelPosition)Enum.Parse(typeof(eTickLabelPosition), v, true);
-                    }
-                    catch
-                    {
-                        return eTickLabelPosition.NextTo;
-                    }
-                }
-            }
-            set
-            {
-                string lp = value.ToString();
-                SetXmlNodeString(_lblPos, lp.Substring(0, 1).ToLower(CultureInfo.InvariantCulture) + lp.Substring(1, lp.Length - 1));
-            }
-        }
-        ExcelDrawingFill _fill = null;
-        /// <summary>
-        /// Access to fill properties
-        /// </summary>
-        public ExcelDrawingFill Fill
-        {
-            get
-            {
-                if (_fill == null)
-                {
-                    _fill = new ExcelDrawingFill(NameSpaceManager, TopNode, "c:spPr");
-                }
-                return _fill;
-            }
-        }
-        ExcelDrawingBorder _border = null;
-        /// <summary>
-        /// Access to border properties
-        /// </summary>
-        public ExcelDrawingBorder Border
-        {
-            get
-            {
-                if (_border == null)
-                {
-                    _border = new ExcelDrawingBorder(NameSpaceManager, TopNode, "c:spPr/a:ln");
-                }
-                return _border;
-            }
-        }
-        ExcelTextFont _font = null;
-        /// <summary>
-        /// Access to font properties
-        /// </summary>
-        public ExcelTextFont Font
-        {
-            get
-            {
-                if (_font == null)
-                {
-                    if (TopNode.SelectSingleNode("c:txPr", NameSpaceManager) == null)
-                    {
-                        CreateNode("c:txPr/a:bodyPr");
-                        CreateNode("c:txPr/a:lstStyle");
-                    }
-                    _font = new ExcelTextFont(NameSpaceManager, TopNode, "c:txPr/a:p/a:pPr/a:defRPr", new string[] { "pPr", "defRPr", "solidFill", "uFill", "latin", "cs", "r", "rPr", "t" });
-                }
-                return _font;
-            }
-        }
+
         /// <summary>
         /// If the axis is deleted
         /// </summary>
-        public bool Deleted 
+        public bool Deleted
         {
             get
             {
@@ -499,33 +384,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 SetXmlNodeBool("c:delete/@val", value);
             }
         }
-        const string _ticLblPos_Path = "c:tickLblPos/@val";
-        /// <summary>
-        /// Position of the Lables
-        /// </summary>
-        public eTickLabelPosition TickLabelPosition 
-        {
-            get
-            {
-                string v = GetXmlNodeString(_ticLblPos_Path);
-                if (v == "")
-                {
-                    return eTickLabelPosition.None;
-                }
-                else
-                {
-                    return (eTickLabelPosition)Enum.Parse(typeof(eTickLabelPosition), v, true);
-                }
-            }
-            set
-            {
-                string v = value.ToString();
-                v=v.Substring(0, 1).ToLower(CultureInfo.InvariantCulture) + v.Substring(1, v.Length - 1);
-                SetXmlNodeString(_ticLblPos_Path,v);
-            }
-        }
-        const string _displayUnitPath = "c:dispUnits/c:builtInUnit/@val";
-        const string _custUnitPath = "c:dispUnits/c:custUnit/@val";
+
         public double DisplayUnit
         {
             get
@@ -557,11 +416,11 @@ namespace OfficeOpenXml.Drawing.Chart
             }
             set
             {
-                if (AxisType == eAxisType.Val && value>=0)
+                if (AxisType == eAxisType.Val && value >= 0)
                 {
-                    foreach(var v in Enum.GetValues(typeof(eBuildInUnits)))
+                    foreach (var v in Enum.GetValues(typeof(eBuildInUnits)))
                     {
-                        if((double)(long)v==value)
+                        if ((double)(long)v == value)
                         {
                             DeleteNode(_custUnitPath);
                             SetXmlNodeString(_displayUnitPath, ((eBuildInUnits)value).ToString());
@@ -569,84 +428,217 @@ namespace OfficeOpenXml.Drawing.Chart
                         }
                     }
                     DeleteNode(_displayUnitPath);
-                    if(value!=0)
+                    if (value != 0)
                     {
                         SetXmlNodeString(_custUnitPath, value.ToString(CultureInfo.InvariantCulture));
                     }
                 }
             }
-        }        
-        ExcelChartTitle _title = null;
+        }
+
         /// <summary>
-        /// Chart axis title
+        /// Access to fill properties
         /// </summary>
-        public ExcelChartTitle Title
+        public ExcelDrawingFill Fill
         {
             get
             {
-                if (_title == null)
+                if (_fill == null)
                 {
-                    var node = TopNode.SelectSingleNode("c:title", NameSpaceManager);
-                    if (node == null)
+                    _fill = new ExcelDrawingFill(NameSpaceManager, TopNode, "c:spPr");
+                }
+                return _fill;
+            }
+        }
+
+        /// <summary>
+        /// Access to font properties
+        /// </summary>
+        public ExcelTextFont Font
+        {
+            get
+            {
+                if (_font == null)
+                {
+                    if (TopNode.SelectSingleNode("c:txPr", NameSpaceManager) == null)
                     {
-                        CreateNode("c:title");
-                        node = TopNode.SelectSingleNode("c:title", NameSpaceManager);
-                        node.InnerXml = "<c:tx><c:rich><a:bodyPr /><a:lstStyle /><a:p><a:r><a:t /></a:r></a:p></c:rich></c:tx><c:layout /><c:overlay val=\"0\" />";
+                        CreateNode("c:txPr/a:bodyPr");
+                        CreateNode("c:txPr/a:lstStyle");
                     }
-                    _title = new ExcelChartTitle(NameSpaceManager, TopNode);
+                    _font = new ExcelTextFont(NameSpaceManager, TopNode, "c:txPr/a:p/a:pPr/a:defRPr", new string[] { "pPr", "defRPr", "solidFill", "uFill", "latin", "cs", "r", "rPr", "t" });
                 }
-                return _title;
-            }            
+                return _font;
+            }
         }
-        #region "Scaling"
-        const string _minValuePath = "c:scaling/c:min/@val";
+
         /// <summary>
-        /// Minimum value for the axis.
-        /// Null is automatic
+        /// Numberformat
         /// </summary>
-        public double? MinValue
+        public string Format
         {
             get
             {
-                return GetXmlNodeDoubleNull(_minValuePath);
+                return GetXmlNodeString(_formatPath);
+            }
+            set
+            {
+                SetXmlNodeString(_formatPath, value);
+                if (string.IsNullOrEmpty(value))
+                {
+                    SourceLinked = true;
+                }
+                else
+                {
+                    SourceLinked = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Position of the labels
+        /// </summary>
+        public eTickLabelPosition LabelPosition
+        {
+            get
+            {
+                var v = GetXmlNodeString(_lblPos);
+                if (string.IsNullOrEmpty(v))
+                {
+                    return eTickLabelPosition.NextTo;
+                }
+                else
+                {
+                    try
+                    {
+                        return (eTickLabelPosition)Enum.Parse(typeof(eTickLabelPosition), v, true);
+                    }
+                    catch
+                    {
+                        return eTickLabelPosition.NextTo;
+                    }
+                }
+            }
+            set
+            {
+                string lp = value.ToString();
+                SetXmlNodeString(_lblPos, lp.Substring(0, 1).ToLower(CultureInfo.InvariantCulture) + lp.Substring(1, lp.Length - 1));
+            }
+        }
+
+        /// <summary>
+        /// The base for a logaritmic scale
+        /// Null for a normal scale
+        /// </summary>
+        public double? LogBase
+        {
+            get
+            {
+                return GetXmlNodeDoubleNull(_logbasePath);
             }
             set
             {
                 if (value == null)
                 {
-                    DeleteNode(_minValuePath);
+                    DeleteNode(_logbasePath);
                 }
                 else
                 {
-                    SetXmlNodeString(_minValuePath, ((double)value).ToString(CultureInfo.InvariantCulture));
+                    double v = ((double)value);
+                    if (v < 2 || v > 1000)
+                    {
+                        throw (new ArgumentOutOfRangeException("Value must be between 2 and 1000"));
+                    }
+                    SetXmlNodeString(_logbasePath, v.ToString("0.0", CultureInfo.InvariantCulture));
                 }
             }
         }
-        const string _maxValuePath = "c:scaling/c:max/@val";
-        /// <summary>
-        /// Max value for the axis.
-        /// Null is automatic
-        /// </summary>
-        public double? MaxValue
+
+        /// <summary>
+                /// Major Gridlines for the Axis
+                /// </summary>
+        public ExcelDrawingBorder MajorGridlines
         {
             get
             {
-                return GetXmlNodeDoubleNull(_maxValuePath);
-            }
-            set
-            {
-                if (value == null)
+                if (_majorGridlines == null)
                 {
-                    DeleteNode(_maxValuePath);
+                    var node = TopNode.SelectSingleNode(_majorGridlinesPath, NameSpaceManager);
+                    if (node == null)
+                        CreateNode(_majorGridlinesPath);
+
+                    _majorGridlines = new ExcelDrawingBorder(NameSpaceManager, TopNode, $"{_majorGridlinesPath}/c:spPr/a:ln");
+                }
+                return _majorGridlines;
+            }
+        }
+
+        /// <summary>
+        /// majorTickMark
+        /// This element specifies the major tick marks for the axis.
+        /// </summary>
+        public eAxisTickMark MajorTickMark
+        {
+            get
+            {
+                var v = GetXmlNodeString(_majorTickMark);
+                if (string.IsNullOrEmpty(v))
+                {
+                    return eAxisTickMark.Cross;
                 }
                 else
                 {
-                    SetXmlNodeString(_maxValuePath, ((double)value).ToString(CultureInfo.InvariantCulture));
+                    try
+                    {
+                        return (eAxisTickMark)Enum.Parse(typeof(eAxisTickMark), v);
+                    }
+                    catch
+                    {
+                        return eAxisTickMark.Cross;
+                    }
+                }
+            }
+            set
+            {
+                SetXmlNodeString(_majorTickMark, value.ToString().ToLower(CultureInfo.InvariantCulture));
+            }
+        }
+
+        /// <summary>
+        /// Major time unit for the axis.
+        /// Null is automatic
+        /// </summary>
+        public eTimeUnit? MajorTimeUnit
+        {
+            get
+            {
+                switch (GetXmlNodeString(_majorTimeUnitPath))
+                {
+                    case "years":
+                        return eTimeUnit.Years;
+
+                    case "months":
+                        return eTimeUnit.Months;
+
+                    case "days":
+                        return eTimeUnit.Days;
+
+                    default:
+                        return null;
+                }
+            }
+            set
+            {
+                if (value.HasValue)
+                {
+                    SetXmlNodeString(_majorTimeUnitPath, value.ToString().ToLower());
+                }
+                else
+                {
+                    DeleteNode(_majorTimeUnitPath);
                 }
             }
         }
-        const string _majorUnitPath = "c:majorUnit/@val";
-        const string _majorUnitCatPath = "c:tickLblSkip/@val";
+
         /// <summary>
         /// Major unit for the axis.
         /// Null is automatic
@@ -684,24 +676,100 @@ namespace OfficeOpenXml.Drawing.Chart
                 }
             }
         }
-        const string _majorTimeUnitPath = "c:majorTimeUnit/@val";
+
         /// <summary>
-        /// Major time unit for the axis.
+        /// Max value for the axis.
         /// Null is automatic
         /// </summary>
-        public eTimeUnit? MajorTimeUnit
+        public double? MaxValue
         {
             get
             {
-                switch(GetXmlNodeString(_majorTimeUnitPath))
+                return GetXmlNodeDoubleNull(_maxValuePath);
+            }
+            set
+            {
+                if (value == null)
+                {
+                    DeleteNode(_maxValuePath);
+                }
+                else
+                {
+                    SetXmlNodeString(_maxValuePath, ((double)value).ToString(CultureInfo.InvariantCulture));
+                }
+            }
+        }
+
+        /// <summary>
+                /// Minor Gridlines for the Axis
+                /// </summary>
+        public ExcelDrawingBorder MinorGridlines
+        {
+            get
+            {
+                if (_minorGridlines == null)
+                {
+                    var node = TopNode.SelectSingleNode(_minorGridlinesPath, NameSpaceManager);
+                    if (node == null)
+                        CreateNode(_minorGridlinesPath);
+
+                    _minorGridlines = new ExcelDrawingBorder(NameSpaceManager, TopNode, $"{_minorGridlinesPath}/c:spPr/a:ln");
+                }
+                return _minorGridlines;
+            }
+        }
+
+        /// <summary>
+        /// minorTickMark
+        /// This element specifies the minor tick marks for the axis.
+        /// </summary>
+        public eAxisTickMark MinorTickMark
+        {
+            get
+            {
+                var v = GetXmlNodeString(_minorTickMark);
+                if (string.IsNullOrEmpty(v))
+                {
+                    return eAxisTickMark.Cross;
+                }
+                else
+                {
+                    try
+                    {
+                        return (eAxisTickMark)Enum.Parse(typeof(eAxisTickMark), v);
+                    }
+                    catch
+                    {
+                        return eAxisTickMark.Cross;
+                    }
+                }
+            }
+            set
+            {
+                SetXmlNodeString(_minorTickMark, value.ToString().ToLower(CultureInfo.InvariantCulture));
+            }
+        }
+
+        /// <summary>
+        /// Minor time unit for the axis.
+        /// Null is automatic
+        /// </summary>
+        public eTimeUnit? MinorTimeUnit
+        {
+            get
+            {
+                switch (GetXmlNodeString(_minorTimeUnitPath))
                 {
                     case "years":
                         return eTimeUnit.Years;
+
                     case "months":
                         return eTimeUnit.Months;
+
                     case "days":
                         return eTimeUnit.Days;
-                    default: 
+
+                    default:
                         return null;
                 }
             }
@@ -709,16 +777,15 @@ namespace OfficeOpenXml.Drawing.Chart
             {
                 if (value.HasValue)
                 {
-                    SetXmlNodeString(_majorTimeUnitPath, value.ToString().ToLower());
+                    SetXmlNodeString(_minorTimeUnitPath, value.ToString().ToLower());
                 }
                 else
                 {
-                    DeleteNode(_majorTimeUnitPath);
+                    DeleteNode(_minorTimeUnitPath);
                 }
             }
         }
-        const string _minorUnitPath = "c:minorUnit/@val";
-        const string _minorUnitCatPath = "c:tickMarkSkip/@val";
+
         /// <summary>
         /// Minor unit for the axis.
         /// Null is automatic
@@ -756,68 +823,30 @@ namespace OfficeOpenXml.Drawing.Chart
                 }
             }
         }
-        const string _minorTimeUnitPath = "c:minorTimeUnit/@val";
+
         /// <summary>
-        /// Minor time unit for the axis.
+        /// Minimum value for the axis.
         /// Null is automatic
         /// </summary>
-        public eTimeUnit? MinorTimeUnit
+        public double? MinValue
         {
             get
             {
-                switch(GetXmlNodeString(_minorTimeUnitPath))
-                {
-                    case "years":
-                        return eTimeUnit.Years;
-                    case "months":
-                        return eTimeUnit.Months;
-                    case "days":
-                        return eTimeUnit.Days;
-                    default: 
-                        return null;
-                }
-            }
-            set
-            {
-                if (value.HasValue)
-                {
-                    SetXmlNodeString(_minorTimeUnitPath, value.ToString().ToLower());
-                }
-                else
-                {
-                    DeleteNode(_minorTimeUnitPath);
-                }
-            }
-        }
-        const string _logbasePath = "c:scaling/c:logBase/@val";
-        /// <summary>
-        /// The base for a logaritmic scale
-        /// Null for a normal scale
-        /// </summary>
-        public double? LogBase
-        {
-            get
-            {
-                return GetXmlNodeDoubleNull(_logbasePath);
+                return GetXmlNodeDoubleNull(_minValuePath);
             }
             set
             {
                 if (value == null)
                 {
-                    DeleteNode(_logbasePath);
+                    DeleteNode(_minValuePath);
                 }
                 else
                 {
-                    double v = ((double)value);
-                    if (v < 2 || v > 1000)
-                    {
-                        throw(new ArgumentOutOfRangeException("Value must be between 2 and 1000"));
-                    }
-                    SetXmlNodeString(_logbasePath, v.ToString("0.0", CultureInfo.InvariantCulture));
+                    SetXmlNodeString(_minValuePath, ((double)value).ToString(CultureInfo.InvariantCulture));
                 }
             }
         }
-        const string _orientationPath = "c:scaling/c:orientation/@val";
+
         /// <summary>
         /// Axis orientation
         /// </summary>
@@ -837,84 +866,127 @@ namespace OfficeOpenXml.Drawing.Chart
             }
             set
             {
-                string s=value.ToString();
-                s=s.Substring(0,1).ToLower(CultureInfo.InvariantCulture) + s.Substring(1,s.Length-1);
+                string s = value.ToString();
+                s = s.Substring(0, 1).ToLower(CultureInfo.InvariantCulture) + s.Substring(1, s.Length - 1);
                 SetXmlNodeString(_orientationPath, s);
             }
         }
-        #endregion
 
-        #region GridLines 
-        //Pull request from aesalazar
-        const string _majorGridlinesPath = "c:majorGridlines"; 
-        ExcelDrawingBorder _majorGridlines = null; 
-  
-        /// <summary> 
-        /// Major Gridlines for the Axis 
-        /// </summary> 
-        public ExcelDrawingBorder MajorGridlines 
-        { 
-        get 
-            { 
-                if (_majorGridlines == null) 
-                { 
-                    var node = TopNode.SelectSingleNode(_majorGridlinesPath, NameSpaceManager); 
-                    if (node == null) 
-                        CreateNode(_majorGridlinesPath); 
-  
-                    _majorGridlines = new ExcelDrawingBorder(NameSpaceManager, TopNode,$"{_majorGridlinesPath}/c:spPr/a:ln"); 
-                } 
-                return _majorGridlines; 
-            } 
-        } 
-  
-        const string _minorGridlinesPath = "c:minorGridlines"; 
-        ExcelDrawingBorder _minorGridlines = null; 
-  
-        /// <summary> 
-        /// Minor Gridlines for the Axis 
-        /// </summary> 
-        public ExcelDrawingBorder MinorGridlines
-        { 
-            get 
-            { 
-                if (_minorGridlines == null) 
-                { 
-                    var node = TopNode.SelectSingleNode(_minorGridlinesPath, NameSpaceManager); 
-                    if (node == null) 
-                        CreateNode(_minorGridlinesPath); 
-  
-                    _minorGridlines = new ExcelDrawingBorder(NameSpaceManager, TopNode,$"{_minorGridlinesPath}/c:spPr/a:ln"); 
-                } 
-                return _minorGridlines; 
-            } 
-        } 
-        /// <summary> 
-        /// Removes Major and Minor gridlines from the Axis 
-        /// </summary> 
+        public bool SourceLinked
+        {
+            get
+            {
+                return GetXmlNodeBool(_sourceLinkedPath);
+            }
+            set
+            {
+                SetXmlNodeBool(_sourceLinkedPath, value);
+            }
+        }
+
+        /// <summary>
+        /// Position of the Lables
+        /// </summary>
+        public eTickLabelPosition TickLabelPosition
+        {
+            get
+            {
+                string v = GetXmlNodeString(_ticLblPos_Path);
+                if (v == "")
+                {
+                    return eTickLabelPosition.None;
+                }
+                else
+                {
+                    return (eTickLabelPosition)Enum.Parse(typeof(eTickLabelPosition), v, true);
+                }
+            }
+            set
+            {
+                string v = value.ToString();
+                v = v.Substring(0, 1).ToLower(CultureInfo.InvariantCulture) + v.Substring(1, v.Length - 1);
+                SetXmlNodeString(_ticLblPos_Path, v);
+            }
+        }
+
+        /// <summary>
+        /// Chart axis title
+        /// </summary>
+        public ExcelChartTitle Title
+        {
+            get
+            {
+                if (_title == null)
+                {
+                    var node = TopNode.SelectSingleNode("c:title", NameSpaceManager);
+                    if (node == null)
+                    {
+                        CreateNode("c:title");
+                        node = TopNode.SelectSingleNode("c:title", NameSpaceManager);
+                        node.InnerXml = "<c:tx><c:rich><a:bodyPr /><a:lstStyle /><a:p><a:r><a:t /></a:r></a:p></c:rich></c:tx><c:layout /><c:overlay val=\"0\" />";
+                    }
+                    _title = new ExcelChartTitle(NameSpaceManager, TopNode);
+                }
+                return _title;
+            }
+        }
+
+        /// <summary>
+        /// Type of axis
+        /// </summary>
+        internal eAxisType AxisType
+        {
+            get
+            {
+                try
+                {
+                    return (eAxisType)Enum.Parse(typeof(eAxisType), TopNode.LocalName.Substring(0, 3), true);
+                }
+                catch
+                {
+                    return eAxisType.Val;
+                }
+            }
+        }
+
+        internal string Id
+        {
+            get
+            {
+                return GetXmlNodeString("c:axId/@val");
+            }
+        }
+
+        #region GridLines
+
+        /// <summary>
+        /// Removes Major and Minor gridlines from the Axis
+        /// </summary>
         public void RemoveGridlines()
-        { 
-            RemoveGridlines(true,true); 
+        {
+            RemoveGridlines(true,true);
         }
+
         /// <summary>
         ///  Removes gridlines from the Axis
         /// </summary>
         /// <param name="removeMajor">Indicates if the Major gridlines should be removed</param>
         /// <param name="removeMinor">Indicates if the Minor gridlines should be removed</param>
         public void RemoveGridlines(bool removeMajor, bool removeMinor)
-        { 
-            if (removeMajor) 
-            { 
-                DeleteNode(_majorGridlinesPath); 
-                _majorGridlines = null; 
-            } 
-  
-            if (removeMinor) 
-            { 
-                DeleteNode(_minorGridlinesPath); 
-                _minorGridlines = null; 
-            } 
-        } 
-        #endregion 
+        {
+            if (removeMajor)
+            {
+                DeleteNode(_majorGridlinesPath);
+                _majorGridlines = null;
+            }
+ 
+            if (removeMinor)
+            {
+                DeleteNode(_minorGridlinesPath);
+                _minorGridlines = null;
+            }
+        }
+
+        #endregion
     }
 }

@@ -7,27 +7,25 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Mats Alm   		                Added		                2013-12-03
  *******************************************************************************/
+
+using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
 {
@@ -46,6 +44,22 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
             var nItems = 0d;
             Calculate(arguments, ref nItems, context, ItemContext.SingleArg);
             return CreateResult(nItems, DataType.Integer);
+        }
+
+        private void _CheckForAndHandleExcelError(FunctionArgument arg, ParsingContext context)
+        {
+            //if (context.Scopes.Current.IsSubtotal)
+            //{
+            //    CheckForAndHandleExcelError(arg);
+            //}
+        }
+
+        private void _CheckForAndHandleExcelError(ExcelDataProvider.ICellInfo cell, ParsingContext context)
+        {
+            //if (context.Scopes.Current.IsSubtotal)
+            //{
+            //    CheckForAndHandleExcelError(cell);
+            //}
         }
 
         private void Calculate(IEnumerable<FunctionArgument> items, ref double nItems, ParsingContext context, ItemContext itemContext)
@@ -83,32 +97,19 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
             }
         }
 
-        private void _CheckForAndHandleExcelError(FunctionArgument arg, ParsingContext context)
-        {
-            //if (context.Scopes.Current.IsSubtotal)
-            //{
-            //    CheckForAndHandleExcelError(arg);
-            //}
-        }
-
-        private void _CheckForAndHandleExcelError(ExcelDataProvider.ICellInfo cell, ParsingContext context)
-        {
-            //if (context.Scopes.Current.IsSubtotal)
-            //{
-            //    CheckForAndHandleExcelError(cell);
-            //}
-        }
-
         private bool ShouldCount(object value, ItemContext context)
         {
             switch (context)
             {
                 case ItemContext.SingleArg:
                     return IsNumeric(value) || IsNumericString(value);
+
                 case ItemContext.InRange:
                     return IsNumeric(value);
+
                 case ItemContext.InArray:
                     return IsNumeric(value) || IsNumericString(value);
+
                 default:
                     throw new ArgumentException("Unknown ItemContext:" + context.ToString());
             }

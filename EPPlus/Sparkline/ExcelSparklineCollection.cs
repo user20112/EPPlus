@@ -13,26 +13,24 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		2017-09-20
  *******************************************************************************/
-using System;
+
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Xml;
 
 namespace OfficeOpenXml.Sparkline
@@ -42,15 +40,17 @@ namespace OfficeOpenXml.Sparkline
     /// </summary>
     public class ExcelSparklineCollection : IEnumerable<ExcelSparkline>
     {
-        ExcelSparklineGroup _slg;
-        List<ExcelSparkline> _lst;
+        private const string _topPath = "x14:sparklines/x14:sparkline";
+        private List<ExcelSparkline> _lst;
+        private ExcelSparklineGroup _slg;
+
         internal ExcelSparklineCollection(ExcelSparklineGroup slg)
         {
             _slg = slg;
             _lst = new List<ExcelSparkline>();
             LoadSparklines();
         }
-        const string _topPath = "x14:sparklines/x14:sparkline";
+
         /// <summary>
         /// Number of sparklines in the collection
         /// </summary>
@@ -59,19 +59,11 @@ namespace OfficeOpenXml.Sparkline
             get
             {
                 return _lst.Count;
-            }            
-        }
-
-        private void LoadSparklines()
-        {
-            var grps=_slg.TopNode.SelectNodes(_topPath, _slg.NameSpaceManager);
-            foreach(XmlElement grp in grps)
-            {
-                _lst.Add(new ExcelSparkline(_slg.NameSpaceManager, grp));
             }
         }
+
         /// <summary>
-        /// Returns the sparklinegroup at the specified position.  
+        /// Returns the sparklinegroup at the specified position.
         /// </summary>
         /// <param name="index">The position of the Sparklinegroup. 0-base</param>
         /// <returns></returns>
@@ -95,7 +87,7 @@ namespace OfficeOpenXml.Sparkline
 
         internal void Add(ExcelCellAddress cell, string worksheetName, ExcelAddressBase sqref)
         {
-            var sparkline = _slg.TopNode.OwnerDocument.CreateElement("x14","sparkline", ExcelPackage.schemaMainX14);            
+            var sparkline = _slg.TopNode.OwnerDocument.CreateElement("x14", "sparkline", ExcelPackage.schemaMainX14);
             var sls = _slg.TopNode.SelectSingleNode("x14:sparklines", _slg.NameSpaceManager);
 
             sls.AppendChild(sparkline);
@@ -104,6 +96,15 @@ namespace OfficeOpenXml.Sparkline
             sl.Cell = cell;
             sl.RangeAddress = sqref;
             _lst.Add(sl);
+        }
+
+        private void LoadSparklines()
+        {
+            var grps=_slg.TopNode.SelectNodes(_topPath, _slg.NameSpaceManager);
+            foreach(XmlElement grp in grps)
+            {
+                _lst.Add(new ExcelSparkline(_slg.NameSpaceManager, grp));
+            }
         }
     }
 }

@@ -13,26 +13,25 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
+using SkiaSharp;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Drawing;
 
 namespace OfficeOpenXml.Style
 {
@@ -47,72 +46,7 @@ namespace OfficeOpenXml.Style
         {
             Index = index;
         }
-        /// <summary>
-        /// The name of the font
-        /// </summary>
-        public string Name
-        {
-            get
-            {
-                return _styles.Fonts[Index].Name;
-            }
-            set
-            {
-                _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.Name, value, _positionID, _address));
-            }
-        }
-        /// <summary>
-        /// The Size of the font
-        /// </summary>
-        public float Size
-        {
-            get
-            {
-                return _styles.Fonts[Index].Size;
-            }
-            set
-            {
-                _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.Size, value, _positionID, _address));
-            }
-        }
-        /// <summary>
-        /// Font family
-        /// </summary>
-        public int Family
-        {
-            get
-            {
-                return _styles.Fonts[Index].Family;
-            }
-            set
-            {
-                _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.Family, value, _positionID, _address));
-            }
-        }
-        /// <summary>
-        /// Cell color
-        /// </summary>
-        public ExcelColor Color
-        {
-            get
-            {
-                return new ExcelColor(_styles, _ChangedEvent, _positionID, _address, eStyleClass.Font, this);
-            }
-        }
-        /// <summary>
-        /// Scheme
-        /// </summary>
-        public string Scheme
-        {
-            get
-            {
-                return _styles.Fonts[Index].Scheme;
-            }
-            set
-            {
-                _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.Scheme, value, _positionID, _address));
-            }
-        }
+
         /// <summary>
         /// Font-bold
         /// </summary>
@@ -127,6 +61,33 @@ namespace OfficeOpenXml.Style
                 _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.Bold, value, _positionID, _address));
             }
         }
+
+        /// <summary>
+        /// Cell color
+        /// </summary>
+        public ExcelColor Color
+        {
+            get
+            {
+                return new ExcelColor(_styles, _ChangedEvent, _positionID, _address, eStyleClass.Font, this);
+            }
+        }
+
+        /// <summary>
+        /// Font family
+        /// </summary>
+        public int Family
+        {
+            get
+            {
+                return _styles.Fonts[Index].Family;
+            }
+            set
+            {
+                _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.Family, value, _positionID, _address));
+            }
+        }
+
         /// <summary>
         /// Font-italic
         /// </summary>
@@ -141,53 +102,52 @@ namespace OfficeOpenXml.Style
                 _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.Italic, value, _positionID, _address));
             }
         }
+
         /// <summary>
-        /// Font-Strikeout
+        /// The name of the font
         /// </summary>
-        public bool Strike
+        public string Name
         {
             get
             {
-                return _styles.Fonts[Index].Strike;
+                return _styles.Fonts[Index].Name;
             }
             set
             {
-                _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.Strike, value, _positionID, _address));
+                _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.Name, value, _positionID, _address));
             }
         }
+
         /// <summary>
-        /// Font-Underline
+        /// Scheme
         /// </summary>
-        public bool UnderLine
+        public string Scheme
         {
             get
             {
-                return _styles.Fonts[Index].UnderLine;
+                return _styles.Fonts[Index].Scheme;
             }
             set
             {
-                if (value)
-                {
-                    UnderLineType = ExcelUnderLineType.Single;
-                }
-                else
-                {
-                    UnderLineType = ExcelUnderLineType.None;
-                }
-                //_ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.UnderlineType, value, _positionID, _address));
+                _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.Scheme, value, _positionID, _address));
             }
         }
-        public ExcelUnderLineType UnderLineType
+
+        /// <summary>
+        /// The Size of the font
+        /// </summary>
+        public float Size
         {
             get
             {
-                return _styles.Fonts[Index].UnderLineType;
+                return _styles.Fonts[Index].Size;
             }
             set
             {
-                _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.UnderlineType, value, _positionID, _address));
+                _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.Size, value, _positionID, _address));
             }
         }
+
         /// <summary>
         /// Font-Vertical Align
         /// </summary>
@@ -209,27 +169,25 @@ namespace OfficeOpenXml.Style
                 _ChangedEvent(this, new StyleChangeEventArgs(eStyleClass.Font, eStyleProperty.VerticalAlign, value, _positionID, _address));
             }
         }
+
+        internal override string Id
+        {
+            get
+            {
+                return Name + Size.ToString() + Family.ToString() + Scheme.ToString() + Bold.ToString()[0] + Italic.ToString()[0] + false.ToString()[0] + false.ToString()[0] + VerticalAlign;
+            }
+        }
+
         /// <summary>
         /// Set the font from a Font object
         /// </summary>
         /// <param name="Font"></param>
-        public void SetFromFont(Font Font)
+        public void SetFromFont(SKFont Font)
         {
-            Name = Font.Name;
-            //Family=fnt.FontFamily.;
+            Name = Font.Typeface.FamilyName;
             Size = (int)Font.Size;
-            Strike = Font.Strikeout;
-            Bold = Font.Bold;
-            UnderLine = Font.Underline;
-            Italic = Font.Italic;
-        }
-
-        internal override string Id
-        {
-            get 
-            {
-                return Name + Size.ToString() + Family.ToString() + Scheme.ToString() + Bold.ToString()[0] + Italic.ToString()[0] + Strike.ToString()[0] + UnderLine.ToString()[0] + VerticalAlign;
-            }
+            Bold = Font.Typeface.IsBold;
+            Italic = Font.Typeface.IsItalic;
         }
     }
 }

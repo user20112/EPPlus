@@ -13,25 +13,23 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2013-03-01 (Prior file history on https://github.com/swmal/ExcelFormulaParser)
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace OfficeOpenXml.FormulaParsing.ExcelUtilities
 {
@@ -63,28 +61,14 @@ namespace OfficeOpenXml.FormulaParsing.ExcelUtilities
             return Convert.ToDouble(o1).CompareTo(Convert.ToDouble(o2));
         }
 
-        private static object CheckGetRange(object v)
+        protected virtual int CompareObjectToString(object o1, string o2)
         {
-            if (v is ExcelDataProvider.IRangeInfo)
+            double d2;
+            if (double.TryParse(o2, out d2))
             {
-                var r = ((ExcelDataProvider.IRangeInfo)v);
-                if (r.GetNCells() > 1)
-                {
-                    v = ExcelErrorValue.Create(eErrorType.NA);
-                }
-                v = r.GetOffset(0, 0);
+                return Convert.ToDouble(o1).CompareTo(d2);
             }
-            else if (v is ExcelDataProvider.INameInfo)
-            {
-                var n = ((ExcelDataProvider.INameInfo)v);
-                v = CheckGetRange(n);
-            }
-            return v;
-        }
-
-        protected virtual int CompareStringToString(string s1, string s2)
-        {
-            return s1.CompareTo(s2);
+            return IncompatibleOperands;
         }
 
         protected virtual int CompareStringToObject(string o1, object o2)
@@ -107,14 +91,28 @@ namespace OfficeOpenXml.FormulaParsing.ExcelUtilities
             return IncompatibleOperands;
         }
 
-        protected virtual int CompareObjectToString(object o1, string o2)
+        protected virtual int CompareStringToString(string s1, string s2)
         {
-            double d2;
-            if (double.TryParse(o2, out d2))
+            return s1.CompareTo(s2);
+        }
+
+        private static object CheckGetRange(object v)
+        {
+            if (v is ExcelDataProvider.IRangeInfo)
             {
-                return Convert.ToDouble(o1).CompareTo(d2);
+                var r = ((ExcelDataProvider.IRangeInfo)v);
+                if (r.GetNCells() > 1)
+                {
+                    v = ExcelErrorValue.Create(eErrorType.NA);
+                }
+                v = r.GetOffset(0, 0);
             }
-            return IncompatibleOperands;
+            else if (v is ExcelDataProvider.INameInfo)
+            {
+                var n = ((ExcelDataProvider.INameInfo)v);
+                v = CheckGetRange(n);
+            }
+            return v;
         }
     }
 }

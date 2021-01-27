@@ -13,27 +13,26 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 using OfficeOpenXml.Style.XmlAccess;
-using System.Drawing;
+using SkiaSharp;
+using System;
 
 namespace OfficeOpenXml.Style
 {
@@ -42,14 +41,46 @@ namespace OfficeOpenXml.Style
     /// </summary>
     public sealed class ExcelColor :  StyleBase, IColor
     {
-        eStyleClass _cls;
-        StyleBase _parent;
-        internal ExcelColor(ExcelStyles styles, OfficeOpenXml.XmlHelper.ChangedEventHandler ChangedEvent, int worksheetID, string address, eStyleClass cls, StyleBase parent) : 
+        private eStyleClass _cls;
+        private StyleBase _parent;
+
+        internal ExcelColor(ExcelStyles styles, OfficeOpenXml.XmlHelper.ChangedEventHandler ChangedEvent, int worksheetID, string address, eStyleClass cls, StyleBase parent) :
             base(styles, ChangedEvent, worksheetID, address)
         {
             _parent = parent;
             _cls = cls;
         }
+
+        /// <summary>
+        /// The indexed color number.
+        /// </summary>
+        public int Indexed
+        {
+            get
+            {
+                return GetSource().Indexed;
+            }
+            set
+            {
+                _ChangedEvent(this, new StyleChangeEventArgs(_cls, eStyleProperty.IndexedColor, value, _positionID, _address));
+            }
+        }
+
+        /// <summary>
+        /// The RGB value
+        /// </summary>
+        public string Rgb
+        {
+            get
+            {
+                return GetSource().Rgb;
+            }
+            internal set
+            {
+                _ChangedEvent(this, new StyleChangeEventArgs(_cls, eStyleProperty.Color, value, _positionID, _address));
+            }
+        }
+
         /// <summary>
         /// The theme color
         /// </summary>
@@ -60,6 +91,7 @@ namespace OfficeOpenXml.Style
                 return GetSource().Theme;
             }
         }
+
         /// <summary>
         /// The tint value
         /// </summary>
@@ -78,94 +110,15 @@ namespace OfficeOpenXml.Style
                 _ChangedEvent(this, new StyleChangeEventArgs(_cls, eStyleProperty.Tint, value, _positionID, _address));
             }
         }
-        /// <summary>
-        /// The RGB value
-        /// </summary>
-        public string Rgb
-        {
-            get
-            {
-                return GetSource().Rgb;
-            }
-            internal set
-            {
-                _ChangedEvent(this, new StyleChangeEventArgs(_cls, eStyleProperty.Color, value, _positionID, _address));
-            }
-        }
-        /// <summary>
-        /// The indexed color number.
-        /// </summary>
-        public int Indexed
-        {
-            get
-            {
-                return GetSource().Indexed;
-            }
-            set
-            {
-                _ChangedEvent(this, new StyleChangeEventArgs(_cls, eStyleProperty.IndexedColor, value, _positionID, _address));
-            }
-        }
-        /// <summary>
-        /// Set the color of the object
-        /// </summary>
-        /// <param name="color">The color</param>
-        public void SetColor(Color color)
-        {
-            Rgb = color.ToArgb().ToString("X");       
-        }
-        /// <summary>
-        /// Set the color of the object
-        /// </summary>
-        /// <param name="alpha">Alpha component value</param>
-        /// <param name="red">Red component value</param>
-        /// <param name="green">Green component value</param>
-        /// <param name="blue">Blue component value</param>
-        public void SetColor(int alpha, int red, int green, int blue)
-        {
-            if(alpha < 0 || red < 0 || green < 0 ||blue < 0 ||
-               alpha > 255 || red > 255 || green > 255 || blue > 255)
-            {
-                throw (new ArgumentException("Argument range must be from 0 to 255"));
-            }
-            Rgb = alpha.ToString("X2") + red.ToString("X2") + green.ToString("X2") + blue.ToString("X2");
-        }
+
         internal override string Id
         {
-            get 
+            get
             {
                 return Theme + Tint + Rgb + Indexed;
             }
         }
-        private ExcelColorXml GetSource()
-        {
-            Index = _parent.Index < 0 ? 0 : _parent.Index;
-            switch(_cls)
-            {
-                case eStyleClass.FillBackgroundColor:
-                    return _styles.Fills[Index].BackgroundColor;
-                case eStyleClass.FillPatternColor:
-                    return _styles.Fills[Index].PatternColor;
-                case eStyleClass.Font:
-                    return _styles.Fonts[Index].Color;
-                case eStyleClass.BorderLeft:
-                    return _styles.Borders[Index].Left.Color;
-                case eStyleClass.BorderTop:
-                    return _styles.Borders[Index].Top.Color;
-                case eStyleClass.BorderRight:
-                    return _styles.Borders[Index].Right.Color;
-                case eStyleClass.BorderBottom:
-                    return _styles.Borders[Index].Bottom.Color;
-                case eStyleClass.BorderDiagonal:
-                    return _styles.Borders[Index].Diagonal.Color;
-                default:
-                    throw(new Exception("Invalid style-class for Color"));
-            }
-        }
-        internal override void SetIndex(int index)
-        {
-            _parent.Index = index;
-        }
+
         /// <summary>
         /// Return the RGB value for the Indexed or Tint property
         /// </summary>
@@ -174,6 +127,7 @@ namespace OfficeOpenXml.Style
         {
             return LookupColor(this);
         }
+
         /// <summary>
         /// Return the RGB value for the color object that uses the Indexed or Tint property
         /// </summary>
@@ -273,6 +227,71 @@ namespace OfficeOpenXml.Style
             }
 
             return translatedRGB;
+        }
+
+        /// <summary>
+        /// Set the color of the object
+        /// </summary>
+        /// <param name="color">The color</param>
+        public void SetColor(SKColor color)
+        {
+            Rgb = ((uint)color).ToString("X");
+        }
+
+        /// <summary>
+        /// Set the color of the object
+        /// </summary>
+        /// <param name="alpha">Alpha component value</param>
+        /// <param name="red">Red component value</param>
+        /// <param name="green">Green component value</param>
+        /// <param name="blue">Blue component value</param>
+        public void SetColor(int alpha, int red, int green, int blue)
+        {
+            if(alpha < 0 || red < 0 || green < 0 ||blue < 0 ||
+               alpha > 255 || red > 255 || green > 255 || blue > 255)
+            {
+                throw (new ArgumentException("Argument range must be from 0 to 255"));
+            }
+            Rgb = alpha.ToString("X2") + red.ToString("X2") + green.ToString("X2") + blue.ToString("X2");
+        }
+
+        internal override void SetIndex(int index)
+        {
+            _parent.Index = index;
+        }
+
+        private ExcelColorXml GetSource()
+        {
+            Index = _parent.Index < 0 ? 0 : _parent.Index;
+            switch(_cls)
+            {
+                case eStyleClass.FillBackgroundColor:
+                    return _styles.Fills[Index].BackgroundColor;
+
+                case eStyleClass.FillPatternColor:
+                    return _styles.Fills[Index].PatternColor;
+
+                case eStyleClass.Font:
+                    return _styles.Fonts[Index].Color;
+
+                case eStyleClass.BorderLeft:
+                    return _styles.Borders[Index].Left.Color;
+
+                case eStyleClass.BorderTop:
+                    return _styles.Borders[Index].Top.Color;
+
+                case eStyleClass.BorderRight:
+                    return _styles.Borders[Index].Right.Color;
+
+                case eStyleClass.BorderBottom:
+                    return _styles.Borders[Index].Bottom.Color;
+
+                case eStyleClass.BorderDiagonal:
+                    return _styles.Borders[Index].Diagonal.Color;
+
+                default:
+                    throw(new Exception("Invalid style-class for Color"));
+            }
         }
     }
 }

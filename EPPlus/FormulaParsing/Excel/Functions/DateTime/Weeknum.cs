@@ -1,9 +1,8 @@
-﻿using System;
+﻿using OfficeOpenXml.FormulaParsing.ExpressionGraph;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
 {
@@ -23,27 +22,34 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
                     case 1:
                         startDay = DayOfWeek.Sunday;
                         break;
+
                     case 2:
                     case 11:
                         startDay = DayOfWeek.Monday;
                         break;
+
                     case 12:
                         startDay = DayOfWeek.Tuesday;
                         break;
+
                     case 13:
                         startDay = DayOfWeek.Wednesday;
                         break;
+
                     case 14:
                         startDay = DayOfWeek.Thursday;
                         break;
+
                     case 15:
                         startDay = DayOfWeek.Friday;
                         break;
+
                     case 16:
                         startDay = DayOfWeek.Saturday;
                         break;
+
                     default:
-                        // Not supported 
+                        // Not supported
                         ThrowExcelErrorValueException(eErrorType.Num);
                         break;
                 }
@@ -57,7 +63,5 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
                                                                              startDay);
             return CreateResult(week, DataType.Integer);
         }
-        
-        
     }
 }

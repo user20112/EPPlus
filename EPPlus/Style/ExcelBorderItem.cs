@@ -13,26 +13,25 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 using OfficeOpenXml.Style.XmlAccess;
+using System;
 
 namespace OfficeOpenXml.Style
 {
@@ -41,29 +40,17 @@ namespace OfficeOpenXml.Style
     /// </summary>
     public sealed class ExcelBorderItem : StyleBase
     {
-        eStyleClass _cls;
-        StyleBase _parent;
-        internal ExcelBorderItem (ExcelStyles styles, OfficeOpenXml.XmlHelper.ChangedEventHandler ChangedEvent, int worksheetID, string address, eStyleClass cls, StyleBase parent) : 
+        private eStyleClass _cls;
+        private ExcelColor _color = null;
+        private StyleBase _parent;
+
+        internal ExcelBorderItem (ExcelStyles styles, OfficeOpenXml.XmlHelper.ChangedEventHandler ChangedEvent, int worksheetID, string address, eStyleClass cls, StyleBase parent) :
             base(styles, ChangedEvent, worksheetID, address)
 	    {
             _cls=cls;
             _parent = parent;
 	    }
-        /// <summary>
-        /// The line style of the border
-        /// </summary>
-        public ExcelBorderStyle Style
-        {
-            get
-            {
-                return GetSource().Style;
-            }
-            set
-            {
-                _ChangedEvent(this, new StyleChangeEventArgs(_cls, eStyleProperty.Style, value, _positionID, _address));
-            }
-        }
-        ExcelColor _color=null;
+
         /// <summary>
         /// The color of the border
         /// </summary>
@@ -79,14 +66,31 @@ namespace OfficeOpenXml.Style
             }
         }
 
+        /// <summary>
+        /// The line style of the border
+        /// </summary>
+        public ExcelBorderStyle Style
+        {
+            get
+            {
+                return GetSource().Style;
+            }
+            set
+            {
+                _ChangedEvent(this, new StyleChangeEventArgs(_cls, eStyleProperty.Style, value, _positionID, _address));
+            }
+        }
+
         internal override string Id
         {
             get { return Style + Color.Id; }
         }
+
         internal override void SetIndex(int index)
         {
             _parent.Index = index;
         }
+
         private ExcelBorderItemXml GetSource()
         {
             int ix = _parent.Index < 0 ? 0 : _parent.Index;
@@ -95,18 +99,22 @@ namespace OfficeOpenXml.Style
             {
                 case eStyleClass.BorderTop:
                     return _styles.Borders[ix].Top;
+
                 case eStyleClass.BorderBottom:
                     return _styles.Borders[ix].Bottom;
+
                 case eStyleClass.BorderLeft:
                     return _styles.Borders[ix].Left;
+
                 case eStyleClass.BorderRight:
                     return _styles.Borders[ix].Right;
+
                 case eStyleClass.BorderDiagonal:
                     return _styles.Borders[ix].Diagonal;
+
                 default:
                     throw new Exception("Invalid class for Borderitem");
             }
-
         }
     }
 }

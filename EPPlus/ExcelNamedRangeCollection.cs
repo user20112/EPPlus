@@ -13,28 +13,28 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Added this class		        2010-01-28
  * Jan Källman		License changed GPL-->LGPL 2011-12-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Collections;
-using System.Linq;
+
 using OfficeOpenXml.FormulaParsing.ExcelUtilities;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace OfficeOpenXml
 {
@@ -43,20 +43,59 @@ namespace OfficeOpenXml
     /// </summary>
     public class ExcelNamedRangeCollection : IEnumerable<ExcelNamedRange>
     {
-        internal ExcelWorksheet _ws;
         internal ExcelWorkbook _wb;
+        internal ExcelWorksheet _ws;
+        private Dictionary<string, int> _dic = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        private List<ExcelNamedRange> _list = new List<ExcelNamedRange>();
+
         internal ExcelNamedRangeCollection(ExcelWorkbook wb)
         {
             _wb = wb;
             _ws = null;
         }
+
         internal ExcelNamedRangeCollection(ExcelWorkbook wb, ExcelWorksheet ws)
         {
             _wb = wb;
             _ws = ws;
         }
-        List<ExcelNamedRange> _list = new List<ExcelNamedRange>();
-        Dictionary<string, int> _dic = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// The current number of items in the collection
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                return _dic.Count;
+            }
+        }
+
+        /// <summary>
+        /// Name indexer
+        /// </summary>
+        /// <param name="Name">The name (key) for a Named range</param>
+        /// <returns>a reference to the range</returns>
+        /// <remarks>
+        /// Throws a KeyNotFoundException if the key is not in the collection.
+        /// </remarks>
+        public ExcelNamedRange this[string Name]
+        {
+            get
+            {
+                return _list[_dic[Name]];
+            }
+        }
+
+        public ExcelNamedRange this[int Index]
+        {
+            get
+            {
+                return _list[Index];
+            }
+        }
+
         /// <summary>
         /// Add a new named range
         /// </summary>
@@ -72,7 +111,6 @@ namespace OfficeOpenXml
             }
             if (Range.IsName)
             {
-
                 item = new ExcelNamedRange(Name, _wb,_ws, _dic.Count);
             }
             else
@@ -82,25 +120,6 @@ namespace OfficeOpenXml
 
             AddName(Name, item);
 
-            return item;
-        }
-
-        private void AddName(string Name, ExcelNamedRange item)
-        {
-            _dic.Add(Name, _list.Count);
-            _list.Add(item);
-        }
-        /// <summary>
-        /// Add a defined name referencing value
-        /// </summary>
-        /// <param name="Name"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public ExcelNamedRange AddValue(string Name, object value)
-        {
-            var item = new ExcelNamedRange(Name,_wb, _ws, _dic.Count);
-            item.NameValue = value;
-            AddName(Name, item);
             return item;
         }
 
@@ -115,7 +134,7 @@ namespace OfficeOpenXml
         [Obsolete("Call AddFormula() instead.  See Issue Tracker Id #14687")]
         public ExcelNamedRange AddFormla(string Name, string Formula)
         {
-            return  this.AddFormula(Name, Formula);
+            return this.AddFormula(Name, Formula);
         }
 
         /// <summary>
@@ -132,24 +151,82 @@ namespace OfficeOpenXml
             return item;
         }
 
-        internal void Insert(int rowFrom, int colFrom, int rows, int cols)
+        /// <summary>
+        /// Add a defined name referencing value
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public ExcelNamedRange AddValue(string Name, object value)
         {
-            Insert(rowFrom, colFrom, rows, cols, n => true);
+            var item = new ExcelNamedRange(Name, _wb, _ws, _dic.Count);
+            item.NameValue = value;
+            AddName(Name, item);
+            return item;
         }
 
-        internal void Insert(int rowFrom, int colFrom, int rows, int cols, Func<ExcelNamedRange, bool> filter)
+        /// <summary>
+        /// Checks collection for the presence of a key
+        /// </summary>
+        /// <param name="key">key to search for</param>
+        /// <returns>true if the key is in the collection</returns>
+        public bool ContainsKey(string key)
         {
-            var namedRanges = this._list.Where(filter);
-            foreach(var namedRange in namedRanges)
+            return _dic.ContainsKey(key);
+        }
+
+        /// <summary>
+        /// Implement interface method IEnumerator&lt;ExcelNamedRange&gt; GetEnumerator()
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<ExcelNamedRange> GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Implement interface method IEnumeratable GetEnumerator()
+        /// </summary>
+        /// <returns></returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Remove a defined name from the collection
+        /// </summary>
+        /// <param name="Name">The name</param>
+        public void Remove(string Name)
+        {
+            if (_dic.ContainsKey(Name))
             {
-                InsertRows(rowFrom, rows, namedRange);
-                InsertColumns(colFrom, cols, namedRange);
+                var ix = _dic[Name];
+
+                for (int i = ix + 1; i < _list.Count; i++)
+                {
+                    _dic.Remove(_list[i].Name);
+                    _list[i].Index--;
+                    _dic.Add(_list[i].Name, _list[i].Index);
+                }
+                _dic.Remove(Name);
+                _list.RemoveAt(ix);
             }
         }
+
+        internal void Clear()
+        {
+            while (Count > 0)
+            {
+                Remove(_list[0].Name);
+            }
+        }
+
         internal void Delete(int rowFrom, int colFrom, int rows, int cols)
         {
             Delete(rowFrom, colFrom, rows, cols, n => true);
         }
+
         internal void Delete(int rowFrom, int colFrom, int rows, int cols, Func<ExcelNamedRange, bool> filter)
         {
             var namedRanges = this._list.Where(filter);
@@ -174,6 +251,39 @@ namespace OfficeOpenXml
                 }
             }
         }
+
+        internal void Insert(int rowFrom, int colFrom, int rows, int cols)
+        {
+            Insert(rowFrom, colFrom, rows, cols, n => true);
+        }
+
+        internal void Insert(int rowFrom, int colFrom, int rows, int cols, Func<ExcelNamedRange, bool> filter)
+        {
+            var namedRanges = this._list.Where(filter);
+            foreach (var namedRange in namedRanges)
+            {
+                InsertRows(rowFrom, rows, namedRange);
+                InsertColumns(colFrom, cols, namedRange);
+            }
+        }
+
+        private static string BuildNewAddress(ExcelNamedRange namedRange, string newAddress)
+        {
+            if (namedRange.FullAddress.Contains("!"))
+            {
+                var worksheet = namedRange.FullAddress.Split('!')[0];
+                worksheet = worksheet.Trim('\'');
+                newAddress = ExcelCellBase.GetFullAddress(worksheet, newAddress);
+            }
+            return newAddress;
+        }
+
+        private void AddName(string Name, ExcelNamedRange item)
+        {
+            _dic.Add(Name, _list.Count);
+            _list.Add(item);
+        }
+
         private void InsertColumns(int colFrom, int cols, ExcelNamedRange namedRange)
         {
             if (colFrom > 0)
@@ -191,17 +301,6 @@ namespace OfficeOpenXml
             }
         }
 
-        private static string BuildNewAddress(ExcelNamedRange namedRange, string newAddress)
-        {
-            if (namedRange.FullAddress.Contains("!"))
-            {
-                var worksheet = namedRange.FullAddress.Split('!')[0];
-                worksheet = worksheet.Trim('\'');
-                newAddress = ExcelCellBase.GetFullAddress(worksheet, newAddress);
-            }
-            return newAddress;
-        }
-
         private void InsertRows(int rowFrom, int rows, ExcelNamedRange namedRange)
         {
             if (rows > 0)
@@ -209,109 +308,14 @@ namespace OfficeOpenXml
                 if (rowFrom <= namedRange.Start.Row)
                 {
                     var newAddress = ExcelCellBase.GetAddress(namedRange.Start.Row + rows, namedRange.Start.Column, namedRange.End.Row + rows, namedRange.End.Column);
-                    namedRange.Address = BuildNewAddress(namedRange, newAddress); 
+                    namedRange.Address = BuildNewAddress(namedRange, newAddress);
                 }
                 else if (rowFrom <= namedRange.End.Row && namedRange.End.Row+rows <= ExcelPackage.MaxRows)
                 {
                     var newAddress = ExcelCellBase.GetAddress(namedRange.Start.Row, namedRange.Start.Column, namedRange.End.Row + rows, namedRange.End.Column);
-                    namedRange.Address = BuildNewAddress(namedRange, newAddress); 
+                    namedRange.Address = BuildNewAddress(namedRange, newAddress);
                 }
             }
         }
-
-        /// <summary>
-        /// Remove a defined name from the collection
-        /// </summary>
-        /// <param name="Name">The name</param>
-        public void Remove(string Name)
-        {
-            if(_dic.ContainsKey(Name))
-            {
-                var ix = _dic[Name];
-
-                for (int i = ix+1; i < _list.Count; i++)
-                {
-                    _dic.Remove(_list[i].Name);
-                    _list[i].Index--;
-                    _dic.Add(_list[i].Name, _list[i].Index);
-                }
-                _dic.Remove(Name);
-                _list.RemoveAt(ix);
-            }
-        }
-        /// <summary>
-        /// Checks collection for the presence of a key
-        /// </summary>
-        /// <param name="key">key to search for</param>
-        /// <returns>true if the key is in the collection</returns>
-        public bool ContainsKey(string key)
-        {
-            return _dic.ContainsKey(key);
-        }
-        /// <summary>
-        /// The current number of items in the collection
-        /// </summary>
-        public int Count
-        {
-            get
-            {
-                return _dic.Count;
-            }
-        }
-        /// <summary>
-        /// Name indexer
-        /// </summary>
-        /// <param name="Name">The name (key) for a Named range</param>
-        /// <returns>a reference to the range</returns>
-        /// <remarks>
-        /// Throws a KeyNotFoundException if the key is not in the collection.
-        /// </remarks>
-        public ExcelNamedRange this[string Name]
-        {
-            get
-            {
-                return _list[_dic[Name]];
-            }
-        }
-        public ExcelNamedRange this[int Index]
-        {
-            get
-            {
-                return _list[Index];
-            }
-        }
-
-        #region "IEnumerable"
-        #region IEnumerable<ExcelNamedRange> Members
-        /// <summary>
-        /// Implement interface method IEnumerator&lt;ExcelNamedRange&gt; GetEnumerator()
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerator<ExcelNamedRange> GetEnumerator()
-        {
-            return _list.GetEnumerator();
-        }
-        #endregion
-        #region IEnumerable Members
-        /// <summary>
-        /// Implement interface method IEnumeratable GetEnumerator()
-        /// </summary>
-        /// <returns></returns>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return _list.GetEnumerator();
-        }
-
-        #endregion
-        #endregion
-
-        internal void Clear()
-        {
-            while(Count>0)
-            {
-                Remove(_list[0].Name);
-            }
-        }
-
     }
 }

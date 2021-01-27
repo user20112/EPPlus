@@ -24,17 +24,13 @@
 // ------------------------------------------------------------------
 //
 
-
 using System;
 using System.IO;
-using System.Collections.Generic;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
-
     internal partial class ZipFile
     {
-
         /// <summary>
         /// Extracts all of the items in the zip archive, to the specified path in the
         /// filesystem.  The path can be relative or fully-qualified.
@@ -152,8 +148,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _InternalExtractAll(path, true);
         }
 
-
-
         /// <summary>
         /// Extracts all of the items in the zip archive, to the specified path in the
         /// filesystem, using the specified behavior when extraction would overwrite an
@@ -222,7 +216,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _InternalExtractAll(path, true);
         }
 
-
         private void _InternalExtractAll(string path, bool overrideExtractExistingProperty)
         {
             bool header = Verbose;
@@ -284,15 +277,11 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                     }
                     OnExtractAllCompleted(path);
                 }
-
             }
             finally
             {
-
                 _inExtractAll = false;
             }
         }
-
-
     }
 }

@@ -11,23 +11,19 @@
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author Change                      Date
  *******************************************************************************
  * Mats Alm Added		                2016-12-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace OfficeOpenXml.FormulaParsing
 {
     public interface INameValueProvider
     {
-        bool IsNamedValue(string key, string worksheet);
-
         object GetNamedValue(string key);
+
+        bool IsNamedValue(string key, string worksheet);
 
         void Reload();
     }

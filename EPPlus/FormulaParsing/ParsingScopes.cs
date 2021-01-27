@@ -11,16 +11,15 @@
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author Change                      Date
  *******************************************************************************
  * Mats Alm Added		                2016-12-27
  *******************************************************************************/
-using System;
+
+using OfficeOpenXml.FormulaParsing.ExcelUtilities;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.ExcelUtilities;
 
 namespace OfficeOpenXml.FormulaParsing
 {
@@ -32,32 +31,12 @@ namespace OfficeOpenXml.FormulaParsing
     {
         private readonly IParsingLifetimeEventHandler _lifetimeEventHandler;
 
+        private Stack<ParsingScope> _scopes = new Stack<ParsingScope>();
+
         public ParsingScopes(IParsingLifetimeEventHandler lifetimeEventHandler)
         {
             _lifetimeEventHandler = lifetimeEventHandler;
         }
-        private Stack<ParsingScope> _scopes = new Stack<ParsingScope>();
-
-        /// <summary>
-        /// Creates a new <see cref="ParsingScope"/> and puts it on top of the stack.
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        public virtual ParsingScope NewScope(RangeAddress address)
-        {
-            ParsingScope scope;
-            if (_scopes.Count() > 0)
-            {
-                scope = new ParsingScope(this, _scopes.Peek(), address);
-            }
-            else
-            {
-                scope = new ParsingScope(this, address);
-            }
-            _scopes.Push(scope);
-            return scope;
-        }
-
 
         /// <summary>
         /// The current parsing scope.
@@ -78,6 +57,26 @@ namespace OfficeOpenXml.FormulaParsing
             {
                 _lifetimeEventHandler.ParsingCompleted();
             }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ParsingScope"/> and puts it on top of the stack.
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public virtual ParsingScope NewScope(RangeAddress address)
+        {
+            ParsingScope scope;
+            if (_scopes.Count() > 0)
+            {
+                scope = new ParsingScope(this, _scopes.Peek(), address);
+            }
+            else
+            {
+                scope = new ParsingScope(this, address);
+            }
+            _scopes.Push(scope);
+            return scope;
         }
     }
 }

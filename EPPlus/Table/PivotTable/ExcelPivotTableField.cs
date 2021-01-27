@@ -13,58 +13,30 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Added		21-MAR-2011
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml;
 using System.Globalization;
+using System.Xml;
 
 namespace OfficeOpenXml.Table.PivotTable
 {
-    
-    /// <summary>
-    /// Defines the axis for a PivotTable
-    /// </summary>
-    public enum ePivotFieldAxis
-    {
-        /// <summary>
-        /// None
-        /// </summary>
-        None=-1,
-        /// <summary>
-        /// Column axis
-        /// </summary>
-        Column,
-        /// <summary>
-        /// Page axis (Include Count Filter) 
-        /// 
-        /// </summary>
-        Page,
-        /// <summary>
-        /// Row axis
-        /// </summary>
-        Row,
-        /// <summary>
-        /// Values axis
-        /// </summary>
-        Values 
-    }
     /// <summary>
     /// Build-in table row functions
     /// </summary>
@@ -83,68 +55,7 @@ namespace OfficeOpenXml.Table.PivotTable
         Var,
         VarP
     }
-    /// <summary>
-    /// Defines the data formats for a field in the PivotTable
-    /// </summary>
-    public enum eShowDataAs
-    {
-        /// <summary>
-        /// Indicates the field is shown as the "difference from" a value.
-        /// </summary>
-        Difference,
-        /// <summary>
-        /// Indicates the field is shown as the "index.
-        /// </summary>
-        Index, 
-        /// <summary>
-        /// Indicates that the field is shown as its normal datatype.
-        /// </summary>
-        Normal, 
-        /// <summary>
-        /// /Indicates the field is show as the "percentage of" a value
-        /// </summary>
-        Percent, 
-        /// <summary>
-        /// Indicates the field is shown as the "percentage difference from" a value.
-        /// </summary>
-        PercentDiff, 
-        /// <summary>
-        /// Indicates the field is shown as the percentage of column.
-        /// </summary>
-        PercentOfCol,
-        /// <summary>
-        /// Indicates the field is shown as the percentage of row
-        /// </summary>
-        PercentOfRow, 
-        /// <summary>
-        /// Indicates the field is shown as percentage of total.
-        /// </summary>
-        PercentOfTotal, 
-        /// <summary>
-        /// Indicates the field is shown as running total in the table.
-        /// </summary>
-        RunTotal,        
-    }
-      /// <summary>
-     /// Built-in subtotal functions
-     /// </summary>
-    [Flags] 
-    public enum eSubTotalFunctions 
-     {
-         None=1,
-         Count=2, 
-         CountA=4, 
-         Avg=8, 
-         Default=16, 
-         Min=32, 
-         Max=64, 
-         Product=128, 
-         StdDev=256, 
-         StdDevP=512, 
-         Sum=1024, 
-         Var=2048, 
-         VarP=4096
-     }
+
     /// <summary>
     /// Data grouping
     /// </summary>
@@ -159,6 +70,90 @@ namespace OfficeOpenXml.Table.PivotTable
         Minutes = 32,
         Seconds = 64
     }
+
+    /// <summary>
+    /// Defines the axis for a PivotTable
+    /// </summary>
+    public enum ePivotFieldAxis
+    {
+        /// <summary>
+        /// None
+        /// </summary>
+        None=-1,
+
+        /// <summary>
+        /// Column axis
+        /// </summary>
+        Column,
+
+        /// <summary>
+        /// Page axis (Include Count Filter)
+        ///
+        /// </summary>
+        Page,
+
+        /// <summary>
+        /// Row axis
+        /// </summary>
+        Row,
+
+        /// <summary>
+        /// Values axis
+        /// </summary>
+        Values
+    }
+
+    /// <summary>
+    /// Defines the data formats for a field in the PivotTable
+    /// </summary>
+    public enum eShowDataAs
+    {
+        /// <summary>
+        /// Indicates the field is shown as the "difference from" a value.
+        /// </summary>
+        Difference,
+
+        /// <summary>
+        /// Indicates the field is shown as the "index.
+        /// </summary>
+        Index,
+
+        /// <summary>
+        /// Indicates that the field is shown as its normal datatype.
+        /// </summary>
+        Normal,
+
+        /// <summary>
+        /// /Indicates the field is show as the "percentage of" a value
+        /// </summary>
+        Percent,
+
+        /// <summary>
+        /// Indicates the field is shown as the "percentage difference from" a value.
+        /// </summary>
+        PercentDiff,
+
+        /// <summary>
+        /// Indicates the field is shown as the percentage of column.
+        /// </summary>
+        PercentOfCol,
+
+        /// <summary>
+        /// Indicates the field is shown as the percentage of row
+        /// </summary>
+        PercentOfRow,
+
+        /// <summary>
+        /// Indicates the field is shown as percentage of total.
+        /// </summary>
+        PercentOfTotal,
+
+        /// <summary>
+        /// Indicates the field is shown as running total in the table.
+        /// </summary>
+        RunTotal,
+    }
+
     /// <summary>
     /// Sorting
     /// </summary>
@@ -168,302 +163,50 @@ namespace OfficeOpenXml.Table.PivotTable
         Ascending,
         Descending
     }
+
+    /// <summary>
+    /// Built-in subtotal functions
+    /// </summary>
+    [Flags]
+    public enum eSubTotalFunctions
+     {
+         None=1,
+         Count=2,
+         CountA=4,
+         Avg=8,
+         Default=16,
+         Min=32,
+         Max=64,
+         Product=128,
+         StdDev=256,
+         StdDevP=512,
+         Sum=1024,
+         Var=2048,
+         VarP=4096
+     }
+
     /// <summary>
     /// A pivot table field.
     /// </summary>
     public class ExcelPivotTableField : XmlHelper
     {
+        internal XmlHelperInstance _cacheFieldHelper = null;
+        internal ExcelPivotTableFieldCollectionBase<ExcelPivotTableFieldItem> _items = null;
+
+        //}
+        internal ExcelPivotTablePageFieldSettings _pageFieldSettings = null;
+
         internal ExcelPivotTable _table;
-        internal ExcelPivotTableField(XmlNamespaceManager ns, XmlNode topNode,ExcelPivotTable table, int index, int baseIndex) :
-            base(ns, topNode)
+        private ExcelPivotTableFieldGroup _grouping = null;
+
+        internal ExcelPivotTableField(XmlNamespaceManager ns, XmlNode topNode, ExcelPivotTable table, int index, int baseIndex) :
+                    base(ns, topNode)
         {
             Index = index;
             BaseIndex = baseIndex;
             _table = table;
         }
-        public int Index
-        {
-            get;
-            set;
-        }
-        internal int BaseIndex
-        {
-            get;
-            set;
-        }
-        /// <summary>
-        /// Name of the field
-        /// </summary>
-        public string Name 
-        { 
-            get
-            {
-                string v = GetXmlNodeString("@name");
-                if (v == "")
-                {
-                    return _cacheFieldHelper.GetXmlNodeString("@name");
-                }
-                else
-                {
-                    return v;
-                }
-            }
-            set
-            {
-                SetXmlNodeString("@name", value);
-            }
-        }
-        /// <summary>
-        /// Compact mode
-        /// </summary>
-        public bool Compact
-        { 
-            get
-            {
-                return GetXmlNodeBool("@compact");
-            }
-            set
-            {
-                SetXmlNodeBool("@compact",value);
-            }
-        }
-        /// <summary>
-        /// A boolean that indicates whether the items in this field should be shown in Outline form
-        /// </summary>
-        public bool Outline 
-        { 
-            get
-            {
-                return GetXmlNodeBool("@outline");
-            }
-            set
-            {
-                SetXmlNodeBool("@outline",value);
-            }
-        }
-        /// <summary>
-        /// The custom text that is displayed for the subtotals label
-        /// </summary>
-        public bool SubtotalTop 
-        { 
-            get
-            {
-                return GetXmlNodeBool("@subtotalTop");
-            }
-            set
-            {
-                SetXmlNodeBool("@subtotalTop",value);
-            }
-        }
-        /// <summary>
-        /// Indicates whether the field can have multiple items selected in the page field
-        /// </summary>
-        public bool MultipleItemSelectionAllowed
-        {
-            get
-            {
-                return GetXmlNodeBool("@multipleItemSelectionAllowed");
-            }
-            set
-            {
-                SetXmlNodeBool("@multipleItemSelectionAllowed", value);
-            }
-        }
-        #region Show properties
-        /// <summary>
-        /// Indicates whether to show all items for this field
-        /// </summary>
-        public bool ShowAll 
-        { 
-            get
-            {
-                return GetXmlNodeBool("@showAll");
-            }
-            set
-            {
-                SetXmlNodeBool("@showAll",value);
-            }
-        }
-        /// <summary>
-        /// Indicates whether to hide drop down buttons on PivotField headers
-        /// </summary>
-        public bool ShowDropDowns
-        {
-            get
-            {
-                return GetXmlNodeBool("@showDropDowns");
-            }
-            set
-            {
-                SetXmlNodeBool("@showDropDowns", value);
-            }
-        }
-        /// <summary>
-        /// Indicates whether this hierarchy is omitted from the field list
-        /// </summary>
-        public bool ShowInFieldList
-        {
-            get
-            {
-                return GetXmlNodeBool("@showInFieldList");
-            }
-            set
-            {
-                SetXmlNodeBool("@showInFieldList", value);
-            }
-        }
-        /// <summary>
-        /// Indicates whether to show the property as a member caption
-        /// </summary>
-        public bool ShowAsCaption
-        {
-            get
-            {
-                return GetXmlNodeBool("@showPropAsCaption");
-            }
-            set
-            {
-                SetXmlNodeBool("@showPropAsCaption", value);
-            }
-        }
-        /// <summary>
-        /// Indicates whether to show the member property value in a PivotTable cell
-        /// </summary>
-        public bool ShowMemberPropertyInCell
-        {
-            get
-            {
-                return GetXmlNodeBool("@showPropCell");
-            }
-            set
-            {
-                SetXmlNodeBool("@showPropCell", value);
-            }
-        }
-        /// <summary>
-        /// Indicates whether to show the member property value in a tooltip on the appropriate PivotTable cells
-        /// </summary>
-        public bool ShowMemberPropertyToolTip
-        {
-            get
-            {
-                return GetXmlNodeBool("@showPropTip");
-            }
-            set
-            {
-                SetXmlNodeBool("@showPropTip", value);
-            }
-        }
-        #endregion
-        /// <summary>
-        /// The type of sort that is applied to this field
-        /// </summary>
-        public eSortType Sort
-        {
-            get
-            {
-                string v = GetXmlNodeString("@sortType");
-                return v == "" ? eSortType.None : (eSortType)Enum.Parse(typeof(eSortType), v, true);
-            }
-            set
-            {
-                if (value == eSortType.None)
-                {
-                    DeleteNode("@sortType");
-                }
-                else
-                {
-                    SetXmlNodeString("@sortType", value.ToString().ToLower(CultureInfo.InvariantCulture));
-                }
-            }
-        }
-        /// <summary>
-        /// A boolean that indicates whether manual filter is in inclusive mode
-        /// </summary>
-        public bool IncludeNewItemsInFilter
-        { 
-            get
-            {
-                return GetXmlNodeBool("@includeNewItemsInFilter");
-            }
-            set
-            {
-                SetXmlNodeBool("@includeNewItemsInFilter",value);
-            }
-        }
-         /// <summary>
-         /// Enumeration of the different subtotal operations that can be applied to page, row or column fields
-         /// </summary>
-         public eSubTotalFunctions SubTotalFunctions
-         {
-            get
-            {
-                eSubTotalFunctions ret = 0;
-                XmlNodeList nl = TopNode.SelectNodes("d:items/d:item/@t", NameSpaceManager);
-                if (nl.Count == 0) return eSubTotalFunctions.None;
-                foreach (XmlAttribute item in nl)
-                {
-                    try
-                    {
-                        ret |= (eSubTotalFunctions)Enum.Parse(typeof(eSubTotalFunctions), item.Value, true);
-                    }
-                    catch (ArgumentException ex)
-                    {
-                        throw new ArgumentException("Unable to parse value of " + item.Value + " to a valid pivot table subtotal function", ex);
-                    }
-                }
-                return ret;
-             }
-             set
-             {
-                 if ((value & eSubTotalFunctions.None) == eSubTotalFunctions.None && (value != eSubTotalFunctions.None))
-                 {
-                     throw (new ArgumentException("Value None can not be combined with other values."));
-                 }
-                 if ((value & eSubTotalFunctions.Default) == eSubTotalFunctions.Default && (value != eSubTotalFunctions.Default))
-                 {
-                     throw (new ArgumentException("Value Default can not be combined with other values."));
-                 }
 
-
-                 // remove old attribute                 
-                 XmlNodeList nl = TopNode.SelectNodes("d:items/d:item/@t", NameSpaceManager);
-                 if (nl.Count > 0)
-                 {
-                     foreach (XmlAttribute item in nl)
-                     {
-                         DeleteNode("@" + item.Value + "Subtotal");
-                         item.OwnerElement.ParentNode.RemoveChild(item.OwnerElement);
-                     }
-                 }
-                 
- 
-                 if (value==eSubTotalFunctions.None)
-                 {
-                     // for no subtotals, set defaultSubtotal to off
-                     SetXmlNodeBool("@defaultSubtotal", false);
-                     TopNode.InnerXml = "";
-                 }
-                 else
-                 {
-                     string innerXml = "";
-                     int count = 0;
-                     foreach (eSubTotalFunctions e in Enum.GetValues(typeof(eSubTotalFunctions)))
-                    {
-                        if ((value & e) == e)
-                        {
-                            var newTotalType = e.ToString();
-                            var totalType = char.ToLowerInvariant(newTotalType[0]) + newTotalType.Substring(1);
-                            // add new attribute
-                            SetXmlNodeBool("@" + totalType + "Subtotal", true);
-                            innerXml += "<item t=\"" + totalType + "\" />";
-                            count++;
-                        }
-                    }
-                    TopNode.InnerXml = string.Format("<items count=\"{0}\">{1}</items>", count, innerXml);
-                 }
-             }
-         }
         /// <summary>
         /// Type of axis
         /// </summary>
@@ -471,16 +214,20 @@ namespace OfficeOpenXml.Table.PivotTable
         {
             get
             {
-                switch(GetXmlNodeString("@axis"))
+                switch (GetXmlNodeString("@axis"))
                 {
                     case "axisRow":
                         return ePivotFieldAxis.Row;
+
                     case "axisCol":
                         return ePivotFieldAxis.Column;
+
                     case "axisPage":
                         return ePivotFieldAxis.Page;
+
                     case "axisValues":
                         return ePivotFieldAxis.Values;
+
                     default:
                         return ePivotFieldAxis.None;
                 }
@@ -490,63 +237,76 @@ namespace OfficeOpenXml.Table.PivotTable
                 switch (value)
                 {
                     case ePivotFieldAxis.Row:
-                        SetXmlNodeString("@axis","axisRow");
+                        SetXmlNodeString("@axis", "axisRow");
                         break;
+
                     case ePivotFieldAxis.Column:
-                        SetXmlNodeString("@axis","axisCol");
+                        SetXmlNodeString("@axis", "axisCol");
                         break;
+
                     case ePivotFieldAxis.Values:
                         SetXmlNodeString("@axis", "axisValues");
                         break;
+
                     case ePivotFieldAxis.Page:
                         SetXmlNodeString("@axis", "axisPage");
                         break;
+
                     default:
                         DeleteNode("@axis");
                         break;
                 }
             }
-        }        
+        }
+
         /// <summary>
-        /// If the field is a row field
+        /// Compact mode
         /// </summary>
-        public bool IsRowField
+        public bool Compact
         {
             get
             {
-                return (TopNode.SelectSingleNode(string.Format("../../d:rowFields/d:field[@x={0}]", Index), NameSpaceManager) != null);
+                return GetXmlNodeBool("@compact");
             }
-            internal set
+            set
             {
-                if (value)
-                {
-                    var rowsNode = TopNode.SelectSingleNode("../../d:rowFields", NameSpaceManager);
-                    if (rowsNode == null)
-                    {
-                        _table.CreateNode("d:rowFields");
-                    }
-                    rowsNode = TopNode.SelectSingleNode("../../d:rowFields", NameSpaceManager);
-
-                    AppendField(rowsNode, Index, "field", "x");
-                    if (BaseIndex == Index)
-                    {
-                        TopNode.InnerXml = "<items count=\"1\"><item t=\"default\" /></items>";
-                    }
-                    else
-                    {
-                        TopNode.InnerXml = "<items count=\"0\"></items>";
-                    }
-                }
-                else
-                {
-                    XmlElement node = TopNode.SelectSingleNode(string.Format("../../d:rowFields/d:field[@x={0}]", Index), NameSpaceManager) as XmlElement;
-                     if (node != null)
-                     {
-                         node.ParentNode.RemoveChild(node);
-                     }
-                }
+                SetXmlNodeBool("@compact", value);
             }
         }
+
+        /// <summary>
+        /// Grouping settings.
+        /// Null if the field has no grouping otherwise ExcelPivotTableFieldNumericGroup or ExcelPivotTableFieldNumericGroup.
+        /// </summary>
+        public ExcelPivotTableFieldGroup Grouping
+        {
+            get
+            {
+                return _grouping;
+            }
+        }
+
+        /// <summary>
+        /// A boolean that indicates whether manual filter is in inclusive mode
+        /// </summary>
+        public bool IncludeNewItemsInFilter
+        {
+            get
+            {
+                return GetXmlNodeBool("@includeNewItemsInFilter");
+            }
+            set
+            {
+                SetXmlNodeBool("@includeNewItemsInFilter", value);
+            }
+        }
+
+        public int Index
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// If the field is a column field
         /// </summary>
@@ -587,6 +347,7 @@ namespace OfficeOpenXml.Table.PivotTable
                 }
             }
         }
+
         /// <summary>
         /// If the field is a datafield
         /// </summary>
@@ -597,6 +358,7 @@ namespace OfficeOpenXml.Table.PivotTable
                 return GetXmlNodeBool("@dataField", false);
             }
         }
+
         /// <summary>
         /// If the field is a page field.
         /// </summary>
@@ -604,7 +366,7 @@ namespace OfficeOpenXml.Table.PivotTable
         {
             get
             {
-                return (Axis==ePivotFieldAxis.Page);
+                return (Axis == ePivotFieldAxis.Page);
             }
             internal set
             {
@@ -633,11 +395,152 @@ namespace OfficeOpenXml.Table.PivotTable
                 }
             }
         }
+
+        /// <summary>
+        /// If the field is a row field
+        /// </summary>
+        public bool IsRowField
+        {
+            get
+            {
+                return (TopNode.SelectSingleNode(string.Format("../../d:rowFields/d:field[@x={0}]", Index), NameSpaceManager) != null);
+            }
+            internal set
+            {
+                if (value)
+                {
+                    var rowsNode = TopNode.SelectSingleNode("../../d:rowFields", NameSpaceManager);
+                    if (rowsNode == null)
+                    {
+                        _table.CreateNode("d:rowFields");
+                    }
+                    rowsNode = TopNode.SelectSingleNode("../../d:rowFields", NameSpaceManager);
+
+                    AppendField(rowsNode, Index, "field", "x");
+                    if (BaseIndex == Index)
+                    {
+                        TopNode.InnerXml = "<items count=\"1\"><item t=\"default\" /></items>";
+                    }
+                    else
+                    {
+                        TopNode.InnerXml = "<items count=\"0\"></items>";
+                    }
+                }
+                else
+                {
+                    XmlElement node = TopNode.SelectSingleNode(string.Format("../../d:rowFields/d:field[@x={0}]", Index), NameSpaceManager) as XmlElement;
+                    if (node != null)
+                    {
+                        node.ParentNode.RemoveChild(node);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Pivottable field Items. Used for grouping.
+        /// </summary>
+        public ExcelPivotTableFieldCollectionBase<ExcelPivotTableFieldItem> Items
+        {
+            get
+            {
+                if (_items == null)
+                {
+                    _items = new ExcelPivotTableFieldCollectionBase<ExcelPivotTableFieldItem>(_table);
+                    foreach (XmlNode node in TopNode.SelectNodes("d:items//d:item", NameSpaceManager))
+                    {
+                        var item = new ExcelPivotTableFieldItem(NameSpaceManager, node, this);
+                        if (item.T == "")
+                        {
+                            _items.AddInternal(item);
+                        }
+                    }
+                    //if (_grouping is ExcelPivotTableFieldDateGroup)
+                    //{
+                    //    ExcelPivotTableFieldDateGroup dtgrp = ((ExcelPivotTableFieldDateGroup)_grouping);
+
+                    //    ExcelPivotTableFieldItem minItem=null, maxItem=null;
+                    //    foreach (var item in _items)
+                    //    {
+                    //        if (item.X == 0)
+                    //        {
+                    //            minItem = item;
+                    //        }
+                    //        else if (maxItem == null || maxItem.X < item.X)
+                    //        {
+                    //            maxItem = item;
+                    //        }
+                    //    }
+                    //    if (dtgrp.AutoStart)
+                    //    {
+                    //        _items._list.Remove(minItem);
+                    //    }
+                    //    if (dtgrp.AutoEnd)
+                    //    {
+                    //        _items._list.Remove(maxItem);
+                    //    }
+
+                    //}
+                }
+                return _items;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether the field can have multiple items selected in the page field
+        /// </summary>
+        public bool MultipleItemSelectionAllowed
+        {
+            get
+            {
+                return GetXmlNodeBool("@multipleItemSelectionAllowed");
+            }
+            set
+            {
+                SetXmlNodeBool("@multipleItemSelectionAllowed", value);
+            }
+        }
+
+        /// <summary>
+        /// Name of the field
+        /// </summary>
+        public string Name
+        {
+            get
+            {
+                string v = GetXmlNodeString("@name");
+                if (v == "")
+                {
+                    return _cacheFieldHelper.GetXmlNodeString("@name");
+                }
+                else
+                {
+                    return v;
+                }
+            }
+            set
+            {
+                SetXmlNodeString("@name", value);
+            }
+        }
+
+        /// <summary>
+        /// A boolean that indicates whether the items in this field should be shown in Outline form
+        /// </summary>
+        public bool Outline
+        {
+            get
+            {
+                return GetXmlNodeBool("@outline");
+            }
+            set
+            {
+                SetXmlNodeBool("@outline", value);
+            }
+        }
+
         //public ExcelPivotGrouping DateGrouping
         //{
-
-        //}
-        internal ExcelPivotTablePageFieldSettings _pageFieldSettings = null;
         public ExcelPivotTablePageFieldSettings PageFieldSettings
         {
             get
@@ -645,24 +548,262 @@ namespace OfficeOpenXml.Table.PivotTable
                 return _pageFieldSettings;
             }
         }
+
+        /// <summary>
+        /// Indicates whether to show all items for this field
+        /// </summary>
+        public bool ShowAll
+        {
+            get
+            {
+                return GetXmlNodeBool("@showAll");
+            }
+            set
+            {
+                SetXmlNodeBool("@showAll", value);
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether to show the property as a member caption
+        /// </summary>
+        public bool ShowAsCaption
+        {
+            get
+            {
+                return GetXmlNodeBool("@showPropAsCaption");
+            }
+            set
+            {
+                SetXmlNodeBool("@showPropAsCaption", value);
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether to hide drop down buttons on PivotField headers
+        /// </summary>
+        public bool ShowDropDowns
+        {
+            get
+            {
+                return GetXmlNodeBool("@showDropDowns");
+            }
+            set
+            {
+                SetXmlNodeBool("@showDropDowns", value);
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether this hierarchy is omitted from the field list
+        /// </summary>
+        public bool ShowInFieldList
+        {
+            get
+            {
+                return GetXmlNodeBool("@showInFieldList");
+            }
+            set
+            {
+                SetXmlNodeBool("@showInFieldList", value);
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether to show the member property value in a PivotTable cell
+        /// </summary>
+        public bool ShowMemberPropertyInCell
+        {
+            get
+            {
+                return GetXmlNodeBool("@showPropCell");
+            }
+            set
+            {
+                SetXmlNodeBool("@showPropCell", value);
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether to show the member property value in a tooltip on the appropriate PivotTable cells
+        /// </summary>
+        public bool ShowMemberPropertyToolTip
+        {
+            get
+            {
+                return GetXmlNodeBool("@showPropTip");
+            }
+            set
+            {
+                SetXmlNodeBool("@showPropTip", value);
+            }
+        }
+
+        /// <summary>
+        /// The type of sort that is applied to this field
+        /// </summary>
+        public eSortType Sort
+        {
+            get
+            {
+                string v = GetXmlNodeString("@sortType");
+                return v == "" ? eSortType.None : (eSortType)Enum.Parse(typeof(eSortType), v, true);
+            }
+            set
+            {
+                if (value == eSortType.None)
+                {
+                    DeleteNode("@sortType");
+                }
+                else
+                {
+                    SetXmlNodeString("@sortType", value.ToString().ToLower(CultureInfo.InvariantCulture));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Enumeration of the different subtotal operations that can be applied to page, row or column fields
+        /// </summary>
+        public eSubTotalFunctions SubTotalFunctions
+        {
+            get
+            {
+                eSubTotalFunctions ret = 0;
+                XmlNodeList nl = TopNode.SelectNodes("d:items/d:item/@t", NameSpaceManager);
+                if (nl.Count == 0) return eSubTotalFunctions.None;
+                foreach (XmlAttribute item in nl)
+                {
+                    try
+                    {
+                        ret |= (eSubTotalFunctions)Enum.Parse(typeof(eSubTotalFunctions), item.Value, true);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        throw new ArgumentException("Unable to parse value of " + item.Value + " to a valid pivot table subtotal function", ex);
+                    }
+                }
+                return ret;
+            }
+            set
+            {
+                if ((value & eSubTotalFunctions.None) == eSubTotalFunctions.None && (value != eSubTotalFunctions.None))
+                {
+                    throw (new ArgumentException("Value None can not be combined with other values."));
+                }
+                if ((value & eSubTotalFunctions.Default) == eSubTotalFunctions.Default && (value != eSubTotalFunctions.Default))
+                {
+                    throw (new ArgumentException("Value Default can not be combined with other values."));
+                }
+
+                // remove old attribute
+                XmlNodeList nl = TopNode.SelectNodes("d:items/d:item/@t", NameSpaceManager);
+                if (nl.Count > 0)
+                {
+                    foreach (XmlAttribute item in nl)
+                    {
+                        DeleteNode("@" + item.Value + "Subtotal");
+                        item.OwnerElement.ParentNode.RemoveChild(item.OwnerElement);
+                    }
+                }
+
+                if (value == eSubTotalFunctions.None)
+                {
+                    // for no subtotals, set defaultSubtotal to off
+                    SetXmlNodeBool("@defaultSubtotal", false);
+                    TopNode.InnerXml = "";
+                }
+                else
+                {
+                    string innerXml = "";
+                    int count = 0;
+                    foreach (eSubTotalFunctions e in Enum.GetValues(typeof(eSubTotalFunctions)))
+                    {
+                        if ((value & e) == e)
+                        {
+                            var newTotalType = e.ToString();
+                            var totalType = char.ToLowerInvariant(newTotalType[0]) + newTotalType.Substring(1);
+                            // add new attribute
+                            SetXmlNodeBool("@" + totalType + "Subtotal", true);
+                            innerXml += "<item t=\"" + totalType + "\" />";
+                            count++;
+                        }
+                    }
+                    TopNode.InnerXml = string.Format("<items count=\"{0}\">{1}</items>", count, innerXml);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The custom text that is displayed for the subtotals label
+        /// </summary>
+        public bool SubtotalTop
+        {
+            get
+            {
+                return GetXmlNodeBool("@subtotalTop");
+            }
+            set
+            {
+                SetXmlNodeBool("@subtotalTop", value);
+            }
+        }
+
+        internal int BaseIndex
+        {
+            get;
+            set;
+        }
+
         internal eDateGroupBy DateGrouping
         {
             get;
             set;
         }
-        ExcelPivotTableFieldGroup _grouping=null;
+
         /// <summary>
-        /// Grouping settings. 
-        /// Null if the field has no grouping otherwise ExcelPivotTableFieldNumericGroup or ExcelPivotTableFieldNumericGroup.
-        /// </summary>        
-        public ExcelPivotTableFieldGroup Grouping
+        /// Add a date grouping on this field.
+        /// </summary>
+        /// <param name="groupBy">Group by</param>
+        public void AddDateGrouping(eDateGroupBy groupBy)
         {
-            get
-            {
-                return _grouping;
-            }
+            AddDateGrouping(groupBy, DateTime.MinValue, DateTime.MaxValue, 1);
         }
-        #region Private & internal Methods
+
+        /// <summary>
+        /// Add a date grouping on this field.
+        /// </summary>
+        /// <param name="groupBy">Group by</param>
+        /// <param name="startDate">Fixed start date. Use DateTime.MinValue for auto</param>
+        /// <param name="endDate">Fixed end date. Use DateTime.MaxValue for auto</param>
+        public void AddDateGrouping(eDateGroupBy groupBy, DateTime startDate, DateTime endDate)
+        {
+            AddDateGrouping(groupBy, startDate, endDate, 1);
+        }
+
+        /// <summary>
+        /// Add a date grouping on this field.
+        /// </summary>
+        /// <param name="days">Number of days when grouping on days</param>
+        /// <param name="startDate">Fixed start date. Use DateTime.MinValue for auto</param>
+        /// <param name="endDate">Fixed end date. Use DateTime.MaxValue for auto</param>
+        public void AddDateGrouping(int days, DateTime startDate, DateTime endDate)
+        {
+            AddDateGrouping(eDateGroupBy.Days, startDate, endDate, days);
+        }
+
+        /// <summary>
+        /// Add numberic grouping to the field
+        /// </summary>
+        /// <param name="Start">Start value</param>
+        /// <param name="End">End value</param>
+        /// <param name="Interval">Interval</param>
+        public void AddNumericGrouping(double Start, double End, double Interval)
+        {
+            ValidateGrouping();
+            SetNumericGroup(Start, End, Interval);
+        }
+
         internal XmlElement AppendField(XmlNode rowsNode, int index, string fieldNodeText, string indexAttrText)
         {
             XmlElement prevField = null, newElement;
@@ -691,7 +832,7 @@ namespace OfficeOpenXml.Table.PivotTable
 
             return newElement;
         }
-        internal XmlHelperInstance _cacheFieldHelper = null;
+
         internal void SetCacheFieldNode(XmlNode cacheField)
         {
             _cacheFieldHelper = new XmlHelperInstance(NameSpaceManager, cacheField);
@@ -710,8 +851,7 @@ namespace OfficeOpenXml.Table.PivotTable
                 }
             }
         }
-        #endregion
-        #region Grouping
+
         internal ExcelPivotTableFieldDateGroup SetDateGroup(eDateGroupBy GroupBy, DateTime StartDate, DateTime EndDate, int interval)
         {
             ExcelPivotTableFieldDateGroup group;
@@ -748,6 +888,7 @@ namespace OfficeOpenXml.Table.PivotTable
             _grouping = group;
             return group;
         }
+
         internal ExcelPivotTableFieldNumericGroup SetNumericGroup(double start, double end, double interval)
         {
             ExcelPivotTableFieldNumericGroup group;
@@ -765,241 +906,20 @@ namespace OfficeOpenXml.Table.PivotTable
             return group;
         }
 
-        private int AddNumericGroupItems(ExcelPivotTableFieldNumericGroup group, double start, double end, double interval)
+        private void AddCacheField(ExcelPivotTableField field, DateTime startDate, DateTime endDate, int interval)
         {
-            if (interval < 0)
-            {
-                throw (new Exception("The interval must be a positiv"));
-            }
-            if (start > end)
-            {
-                throw(new Exception("Then End number must be larger than the Start number"));
-            }
+            //Add Cache definition field.
+            var cacheTopNode = _table.CacheDefinition.CacheDefinitionXml.SelectSingleNode("//d:cacheFields", _table.NameSpaceManager);
+            var cacheFieldNode = _table.CacheDefinition.CacheDefinitionXml.CreateElement("cacheField", ExcelPackage.schemaMain);
 
-            XmlElement groupItems = group.TopNode.SelectSingleNode("d:fieldGroup/d:groupItems", group.NameSpaceManager) as XmlElement;
-            int items = 2;
-            //First date
-            double index=start;
-            double nextIndex=start+interval;
-            AddGroupItem(groupItems, "<" + start.ToString(CultureInfo.InvariantCulture));
+            cacheFieldNode.SetAttribute("name", field.DateGrouping.ToString());
+            cacheFieldNode.SetAttribute("databaseField", "0");
+            cacheTopNode.AppendChild(cacheFieldNode);
+            field.SetCacheFieldNode(cacheFieldNode);
 
-            while (index < end)
-            {
-                AddGroupItem(groupItems, string.Format("{0}-{1}", index.ToString(CultureInfo.InvariantCulture), nextIndex.ToString(CultureInfo.InvariantCulture)));
-                index=nextIndex;
-                nextIndex+=interval;
-                items++;
-            }
-            AddGroupItem(groupItems, ">" + nextIndex.ToString(CultureInfo.InvariantCulture));
-            return items;
+            field.SetDateGroup(field.DateGrouping, startDate, endDate, interval);
         }
 
-        private void AddFieldItems(int items)
-        {
-            XmlElement prevNode = null;
-            XmlElement itemsNode = TopNode.SelectSingleNode("d:items", NameSpaceManager) as XmlElement;
-            for (int x = 0; x < items; x++)
-            {
-                var itemNode = itemsNode.OwnerDocument.CreateElement("item", ExcelPackage.schemaMain);
-                itemNode.SetAttribute("x", x.ToString());
-                if (prevNode == null)
-                {
-                    itemsNode.PrependChild(itemNode);
-                }
-                else
-                {
-                    itemsNode.InsertAfter(itemNode, prevNode);
-                }
-                prevNode = itemNode;
-            }
-            itemsNode.SetAttribute("count", (items + 1).ToString());
-        }
-
-        private int AddDateGroupItems(ExcelPivotTableFieldGroup group, eDateGroupBy GroupBy, DateTime StartDate, DateTime EndDate, int interval)
-        {
-            XmlElement groupItems = group.TopNode.SelectSingleNode("d:fieldGroup/d:groupItems", group.NameSpaceManager) as XmlElement;
-            int items = 2;
-            //First date
-            AddGroupItem(groupItems, "<" + StartDate.ToString("s", CultureInfo.InvariantCulture).Substring(0, 10));
-
-            switch (GroupBy)
-            {
-                case eDateGroupBy.Seconds:
-                case eDateGroupBy.Minutes:
-                    AddTimeSerie(60, groupItems);
-                    items += 60;
-                    break;
-                case eDateGroupBy.Hours:
-                    AddTimeSerie(24, groupItems);
-                    items += 24;
-                    break;
-                case eDateGroupBy.Days:
-                    if (interval == 1)
-                    {
-                        DateTime dt = new DateTime(2008, 1, 1); //pick a year with 366 days
-                        while (dt.Year == 2008)
-                        {
-                            AddGroupItem(groupItems, dt.ToString("dd-MMM"));
-                            dt = dt.AddDays(1);
-                        }
-                        items += 366;
-                    }
-                    else
-                    {
-                        DateTime dt = StartDate;
-                        items = 0;
-                        while (dt < EndDate)
-                        {
-                            AddGroupItem(groupItems, dt.ToString("dd-MMM"));
-                            dt = dt.AddDays(interval);
-                            items++;
-                        }
-                    }
-                    break;
-                case eDateGroupBy.Months:
-                    AddGroupItem(groupItems, "jan");
-                    AddGroupItem(groupItems, "feb");
-                    AddGroupItem(groupItems, "mar");
-                    AddGroupItem(groupItems, "apr");
-                    AddGroupItem(groupItems, "may");
-                    AddGroupItem(groupItems, "jun");
-                    AddGroupItem(groupItems, "jul");
-                    AddGroupItem(groupItems, "aug");
-                    AddGroupItem(groupItems, "sep");
-                    AddGroupItem(groupItems, "oct");
-                    AddGroupItem(groupItems, "nov");
-                    AddGroupItem(groupItems, "dec");
-                    items += 12;
-                    break;
-                case eDateGroupBy.Quarters:
-                    AddGroupItem(groupItems, "Qtr1");
-                    AddGroupItem(groupItems, "Qtr2");
-                    AddGroupItem(groupItems, "Qtr3");
-                    AddGroupItem(groupItems, "Qtr4");
-                    items += 4;
-                    break;
-                case eDateGroupBy.Years:
-                    if(StartDate.Year>=1900 && EndDate!=DateTime.MaxValue)
-                    {
-                        for (int year = StartDate.Year; year <= EndDate.Year; year++)
-                        {
-                            AddGroupItem(groupItems, year.ToString());
-                        }
-                        items += EndDate.Year - StartDate.Year+1;
-                    }
-                    break;
-                default:
-                    throw (new Exception("unsupported grouping"));
-            }
-
-            //Lastdate
-            AddGroupItem(groupItems, ">" + EndDate.ToString("s", CultureInfo.InvariantCulture).Substring(0, 10));
-            return items;
-        }
-
-        private void AddTimeSerie(int count, XmlElement groupItems)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                AddGroupItem(groupItems, string.Format("{0:00}", i));
-            }
-        }
-
-        private void AddGroupItem(XmlElement groupItems, string value)
-        {
-            var s = groupItems.OwnerDocument.CreateElement("s", ExcelPackage.schemaMain);
-            s.SetAttribute("v", value);
-            groupItems.AppendChild(s);
-        }
-        #endregion
-        internal ExcelPivotTableFieldCollectionBase<ExcelPivotTableFieldItem> _items=null;
-        /// <summary>
-        /// Pivottable field Items. Used for grouping.
-        /// </summary>
-        public ExcelPivotTableFieldCollectionBase<ExcelPivotTableFieldItem> Items
-        {
-            get
-            {
-                if (_items == null)
-                {
-                    _items = new ExcelPivotTableFieldCollectionBase<ExcelPivotTableFieldItem>(_table);
-                    foreach (XmlNode node in TopNode.SelectNodes("d:items//d:item", NameSpaceManager))
-                    {
-                        var item = new ExcelPivotTableFieldItem(NameSpaceManager, node,this);
-                        if (item.T == "")
-                        {
-                            _items.AddInternal(item);
-                        }
-                    }
-                    //if (_grouping is ExcelPivotTableFieldDateGroup)
-                    //{
-                    //    ExcelPivotTableFieldDateGroup dtgrp = ((ExcelPivotTableFieldDateGroup)_grouping);
-
-                    //    ExcelPivotTableFieldItem minItem=null, maxItem=null;
-                    //    foreach (var item in _items)
-                    //    {
-                    //        if (item.X == 0)
-                    //        {
-                    //            minItem = item;
-                    //        }
-                    //        else if (maxItem == null || maxItem.X < item.X)
-                    //        {
-                    //            maxItem = item;
-                    //        }
-                    //    }
-                    //    if (dtgrp.AutoStart)
-                    //    {
-                    //        _items._list.Remove(minItem);
-                    //    }
-                    //    if (dtgrp.AutoEnd)
-                    //    {
-                    //        _items._list.Remove(maxItem);
-                    //    }
-
-                    //}
-                }
-                return _items;
-            }
-        }
-        /// <summary>
-        /// Add numberic grouping to the field
-        /// </summary>
-        /// <param name="Start">Start value</param>
-        /// <param name="End">End value</param>
-        /// <param name="Interval">Interval</param>
-        public void AddNumericGrouping(double Start, double End, double Interval)
-        {
-            ValidateGrouping();
-            SetNumericGroup(Start, End, Interval);
-        }
-        /// <summary>
-        /// Add a date grouping on this field.
-        /// </summary>
-        /// <param name="groupBy">Group by</param>
-        public void AddDateGrouping(eDateGroupBy groupBy)
-        {
-            AddDateGrouping(groupBy, DateTime.MinValue, DateTime.MaxValue,1);
-        }
-        /// <summary>
-        /// Add a date grouping on this field.
-        /// </summary>
-        /// <param name="groupBy">Group by</param>
-        /// <param name="startDate">Fixed start date. Use DateTime.MinValue for auto</param>
-        /// <param name="endDate">Fixed end date. Use DateTime.MaxValue for auto</param>
-        public void AddDateGrouping(eDateGroupBy groupBy, DateTime startDate, DateTime endDate)
-        {
-            AddDateGrouping(groupBy, startDate, endDate, 1);
-        }
-        /// <summary>
-        /// Add a date grouping on this field.
-        /// </summary>
-        /// <param name="days">Number of days when grouping on days</param>
-        /// <param name="startDate">Fixed start date. Use DateTime.MinValue for auto</param>
-        /// <param name="endDate">Fixed end date. Use DateTime.MaxValue for auto</param>
-        public void AddDateGrouping(int days, DateTime startDate, DateTime endDate)
-        {
-            AddDateGrouping(eDateGroupBy.Days, startDate, endDate, days);
-        }
         private void AddDateGrouping(eDateGroupBy groupBy, DateTime startDate, DateTime endDate, int groupInterval)
         {
             if (groupInterval < 1 || groupInterval >= Int16.MaxValue)
@@ -1012,8 +932,8 @@ namespace OfficeOpenXml.Table.PivotTable
             }
             ValidateGrouping();
 
-            bool firstField = true;            
-            List<ExcelPivotTableField> fields=new List<ExcelPivotTableField>();
+            bool firstField = true;
+            List<ExcelPivotTableField> fields = new List<ExcelPivotTableField>();
             //Seconds
             if ((groupBy & eDateGroupBy.Seconds) == eDateGroupBy.Seconds)
             {
@@ -1062,25 +982,100 @@ namespace OfficeOpenXml.Table.PivotTable
             _items = null;
         }
 
-        private void ValidateGrouping()
+        private int AddDateGroupItems(ExcelPivotTableFieldGroup group, eDateGroupBy GroupBy, DateTime StartDate, DateTime EndDate, int interval)
         {
-            if (!(IsColumnField || IsRowField))
+            XmlElement groupItems = group.TopNode.SelectSingleNode("d:fieldGroup/d:groupItems", group.NameSpaceManager) as XmlElement;
+            int items = 2;
+            //First date
+            AddGroupItem(groupItems, "<" + StartDate.ToString("s", CultureInfo.InvariantCulture).Substring(0, 10));
+
+            switch (GroupBy)
             {
-                throw (new Exception("Field must be a row or column field"));
+                case eDateGroupBy.Seconds:
+                case eDateGroupBy.Minutes:
+                    AddTimeSerie(60, groupItems);
+                    items += 60;
+                    break;
+
+                case eDateGroupBy.Hours:
+                    AddTimeSerie(24, groupItems);
+                    items += 24;
+                    break;
+
+                case eDateGroupBy.Days:
+                    if (interval == 1)
+                    {
+                        DateTime dt = new DateTime(2008, 1, 1); //pick a year with 366 days
+                        while (dt.Year == 2008)
+                        {
+                            AddGroupItem(groupItems, dt.ToString("dd-MMM"));
+                            dt = dt.AddDays(1);
+                        }
+                        items += 366;
+                    }
+                    else
+                    {
+                        DateTime dt = StartDate;
+                        items = 0;
+                        while (dt < EndDate)
+                        {
+                            AddGroupItem(groupItems, dt.ToString("dd-MMM"));
+                            dt = dt.AddDays(interval);
+                            items++;
+                        }
+                    }
+                    break;
+
+                case eDateGroupBy.Months:
+                    AddGroupItem(groupItems, "jan");
+                    AddGroupItem(groupItems, "feb");
+                    AddGroupItem(groupItems, "mar");
+                    AddGroupItem(groupItems, "apr");
+                    AddGroupItem(groupItems, "may");
+                    AddGroupItem(groupItems, "jun");
+                    AddGroupItem(groupItems, "jul");
+                    AddGroupItem(groupItems, "aug");
+                    AddGroupItem(groupItems, "sep");
+                    AddGroupItem(groupItems, "oct");
+                    AddGroupItem(groupItems, "nov");
+                    AddGroupItem(groupItems, "dec");
+                    items += 12;
+                    break;
+
+                case eDateGroupBy.Quarters:
+                    AddGroupItem(groupItems, "Qtr1");
+                    AddGroupItem(groupItems, "Qtr2");
+                    AddGroupItem(groupItems, "Qtr3");
+                    AddGroupItem(groupItems, "Qtr4");
+                    items += 4;
+                    break;
+
+                case eDateGroupBy.Years:
+                    if (StartDate.Year >= 1900 && EndDate != DateTime.MaxValue)
+                    {
+                        for (int year = StartDate.Year; year <= EndDate.Year; year++)
+                        {
+                            AddGroupItem(groupItems, year.ToString());
+                        }
+                        items += EndDate.Year - StartDate.Year + 1;
+                    }
+                    break;
+
+                default:
+                    throw (new Exception("unsupported grouping"));
             }
-            foreach (var field in _table.Fields)
-            {
-                if (field.Grouping != null)
-                {
-                    throw (new Exception("Grouping already exists"));
-                }
-            }
+
+            //Lastdate
+            AddGroupItem(groupItems, ">" + EndDate.ToString("s", CultureInfo.InvariantCulture).Substring(0, 10));
+            return items;
         }
-        private ExcelPivotTableField AddField(eDateGroupBy groupBy, DateTime startDate, DateTime endDate, ref  bool firstField)
+
+        private ExcelPivotTableField AddField(eDateGroupBy groupBy, DateTime startDate, DateTime endDate, ref bool firstField)
         {
-            return AddField(groupBy, startDate, endDate, ref firstField,1);
+            return AddField(groupBy, startDate, endDate, ref firstField, 1);
         }
-        private ExcelPivotTableField AddField(eDateGroupBy groupBy, DateTime startDate, DateTime endDate, ref  bool firstField, int interval)
+
+        private ExcelPivotTableField AddField(eDateGroupBy groupBy, DateTime startDate, DateTime endDate, ref bool firstField, int interval)
         {
             if (firstField == false)
             {
@@ -1099,7 +1094,7 @@ namespace OfficeOpenXml.Table.PivotTable
                 XmlNode rowColFields;
                 if (IsRowField)
                 {
-                    rowColFields=TopNode.SelectSingleNode("../../d:rowFields", NameSpaceManager);
+                    rowColFields = TopNode.SelectSingleNode("../../d:rowFields", NameSpaceManager);
                 }
                 else
                 {
@@ -1130,7 +1125,7 @@ namespace OfficeOpenXml.Table.PivotTable
                 {
                     _table.ColumnFields.Insert(field, index);
                 }
-                
+
                 _table.Fields.AddInternal(field);
 
                 AddCacheField(field, startDate, endDate, interval);
@@ -1145,18 +1140,85 @@ namespace OfficeOpenXml.Table.PivotTable
                 return this;
             }
         }
-        private void AddCacheField(ExcelPivotTableField field, DateTime startDate, DateTime endDate, int interval)
+
+        private void AddFieldItems(int items)
         {
-            //Add Cache definition field.
-            var cacheTopNode = _table.CacheDefinition.CacheDefinitionXml.SelectSingleNode("//d:cacheFields", _table.NameSpaceManager);
-            var cacheFieldNode = _table.CacheDefinition.CacheDefinitionXml.CreateElement("cacheField", ExcelPackage.schemaMain);
+            XmlElement prevNode = null;
+            XmlElement itemsNode = TopNode.SelectSingleNode("d:items", NameSpaceManager) as XmlElement;
+            for (int x = 0; x < items; x++)
+            {
+                var itemNode = itemsNode.OwnerDocument.CreateElement("item", ExcelPackage.schemaMain);
+                itemNode.SetAttribute("x", x.ToString());
+                if (prevNode == null)
+                {
+                    itemsNode.PrependChild(itemNode);
+                }
+                else
+                {
+                    itemsNode.InsertAfter(itemNode, prevNode);
+                }
+                prevNode = itemNode;
+            }
+            itemsNode.SetAttribute("count", (items + 1).ToString());
+        }
 
-            cacheFieldNode.SetAttribute("name", field.DateGrouping.ToString());
-            cacheFieldNode.SetAttribute("databaseField", "0");
-            cacheTopNode.AppendChild(cacheFieldNode);
-            field.SetCacheFieldNode(cacheFieldNode);
+        private void AddGroupItem(XmlElement groupItems, string value)
+        {
+            var s = groupItems.OwnerDocument.CreateElement("s", ExcelPackage.schemaMain);
+            s.SetAttribute("v", value);
+            groupItems.AppendChild(s);
+        }
 
-            field.SetDateGroup(field.DateGrouping, startDate, endDate, interval);
+        private int AddNumericGroupItems(ExcelPivotTableFieldNumericGroup group, double start, double end, double interval)
+        {
+            if (interval < 0)
+            {
+                throw (new Exception("The interval must be a positiv"));
+            }
+            if (start > end)
+            {
+                throw(new Exception("Then End number must be larger than the Start number"));
+            }
+
+            XmlElement groupItems = group.TopNode.SelectSingleNode("d:fieldGroup/d:groupItems", group.NameSpaceManager) as XmlElement;
+            int items = 2;
+            //First date
+            double index=start;
+            double nextIndex=start+interval;
+            AddGroupItem(groupItems, "<" + start.ToString(CultureInfo.InvariantCulture));
+
+            while (index < end)
+            {
+                AddGroupItem(groupItems, string.Format("{0}-{1}", index.ToString(CultureInfo.InvariantCulture), nextIndex.ToString(CultureInfo.InvariantCulture)));
+                index=nextIndex;
+                nextIndex+=interval;
+                items++;
+            }
+            AddGroupItem(groupItems, ">" + nextIndex.ToString(CultureInfo.InvariantCulture));
+            return items;
+        }
+
+        private void AddTimeSerie(int count, XmlElement groupItems)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                AddGroupItem(groupItems, string.Format("{0:00}", i));
+            }
+        }
+
+        private void ValidateGrouping()
+        {
+            if (!(IsColumnField || IsRowField))
+            {
+                throw (new Exception("Field must be a row or column field"));
+            }
+            foreach (var field in _table.Fields)
+            {
+                if (field.Grouping != null)
+                {
+                    throw (new Exception("Grouping already exists"));
+                }
+            }
         }
     }
 }

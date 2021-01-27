@@ -13,27 +13,26 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
+
 using System.Globalization;
+using System.Xml;
+
 namespace OfficeOpenXml.Style.XmlAccess
 {
     /// <summary>
@@ -41,12 +40,29 @@ namespace OfficeOpenXml.Style.XmlAccess
     /// </summary>
     public sealed class ExcelGradientFillXml : ExcelFillXml
     {
+        private const string _bottomPath = "d:gradientFill/@bottom";
+
+        private const string _degreePath = "d:gradientFill/@degree";
+
+        private const string _gradientColor1Path = "d:gradientFill/d:stop[@position=\"0\"]/d:color";
+
+        private const string _gradientColor2Path = "d:gradientFill/d:stop[@position=\"1\"]/d:color";
+
+        private const string _leftPath = "d:gradientFill/@left";
+
+        private const string _rightPath = "d:gradientFill/@right";
+
+        private const string _topPath = "d:gradientFill/@top";
+
+        private const string _typePath = "d:gradientFill/@type";
+
         internal ExcelGradientFillXml(XmlNamespaceManager nameSpaceManager)
-            : base(nameSpaceManager)
+                                                                            : base(nameSpaceManager)
         {
             GradientColor1 = new ExcelColorXml(nameSpaceManager);
             GradientColor2 = new ExcelColorXml(nameSpaceManager);
         }
+
         internal ExcelGradientFillXml(XmlNamespaceManager nsm, XmlNode topNode) :
             base(nsm, topNode)
         {
@@ -54,22 +70,22 @@ namespace OfficeOpenXml.Style.XmlAccess
             Type = GetXmlNodeString(_typePath)=="path" ? ExcelFillGradientType.Path : ExcelFillGradientType.Linear;
             GradientColor1 = new ExcelColorXml(nsm, topNode.SelectSingleNode(_gradientColor1Path, nsm));
             GradientColor2 = new ExcelColorXml(nsm, topNode.SelectSingleNode(_gradientColor2Path, nsm));
-            
+
             Top = GetXmlNodeDouble(_topPath);
             Bottom = GetXmlNodeDouble(_bottomPath);
             Left = GetXmlNodeDouble(_leftPath);
             Right = GetXmlNodeDouble(_rightPath);
         }
-        const string _typePath = "d:gradientFill/@type";
+
         /// <summary>
-        /// Type of gradient fill. 
+        /// Percentage format bottom
         /// </summary>
-        public ExcelFillGradientType Type
+        public double Bottom
         {
             get;
             internal set;
         }
-        const string _degreePath = "d:gradientFill/@degree";
+
         /// <summary>
         /// Angle of the linear gradient
         /// </summary>
@@ -78,16 +94,16 @@ namespace OfficeOpenXml.Style.XmlAccess
             get;
             internal set;
         }
-        const string _gradientColor1Path = "d:gradientFill/d:stop[@position=\"0\"]/d:color";
+
         /// <summary>
         /// Gradient color 1
         /// </summary>
-        public ExcelColorXml GradientColor1 
+        public ExcelColorXml GradientColor1
         {
             get;
             private set;
         }
-        const string _gradientColor2Path = "d:gradientFill/d:stop[@position=\"1\"]/d:color";
+
         /// <summary>
         /// Gradient color 2
         /// </summary>
@@ -96,25 +112,7 @@ namespace OfficeOpenXml.Style.XmlAccess
             get;
             private set;
         }
-        const string _bottomPath = "d:gradientFill/@bottom";
-        /// <summary>
-        /// Percentage format bottom
-        /// </summary>
-        public double Bottom
-        { 
-            get; 
-            internal set; 
-        }
-        const string _topPath = "d:gradientFill/@top";
-        /// <summary>
-        /// Percentage format top
-        /// </summary>
-        public double Top
-        {
-            get;
-            internal set;
-        }
-        const string _leftPath = "d:gradientFill/@left";
+
         /// <summary>
         /// Percentage format left
         /// </summary>
@@ -123,7 +121,7 @@ namespace OfficeOpenXml.Style.XmlAccess
             get;
             internal set;
         }
-        const string _rightPath = "d:gradientFill/@right";
+
         /// <summary>
         /// Percentage format right
         /// </summary>
@@ -132,6 +130,25 @@ namespace OfficeOpenXml.Style.XmlAccess
             get;
             internal set;
         }
+
+        /// <summary>
+        /// Percentage format top
+        /// </summary>
+        public double Top
+        {
+            get;
+            internal set;
+        }
+
+        /// <summary>
+        /// Type of gradient fill.
+        /// </summary>
+        public ExcelFillGradientType Type
+        {
+            get;
+            internal set;
+        }
+
         internal override string Id
         {
             get
@@ -140,8 +157,6 @@ namespace OfficeOpenXml.Style.XmlAccess
             }
         }
 
-        #region Public Properties
-        #endregion
         internal override ExcelFillXml Copy()
         {
             ExcelGradientFillXml newFill = new ExcelGradientFillXml(NameSpaceManager);
@@ -157,7 +172,7 @@ namespace OfficeOpenXml.Style.XmlAccess
             newFill.Bottom = Bottom;
             newFill.Left = Left;
             newFill.Right = Right;
-            
+
             return newFill;
         }
 

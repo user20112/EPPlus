@@ -13,28 +13,27 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 using System.Xml;
-using OfficeOpenXml.Style;
+
 namespace OfficeOpenXml.Style.XmlAccess
 {
     /// <summary>
@@ -42,11 +41,18 @@ namespace OfficeOpenXml.Style.XmlAccess
     /// </summary>
     public sealed class ExcelBorderItemXml : StyleXmlHelper
     {
+        private const string _colorPath = "d:color";
+
+        private ExcelBorderStyle _borderStyle = ExcelBorderStyle.None;
+
+        private ExcelColorXml _color = null;
+
         internal ExcelBorderItemXml(XmlNamespaceManager nameSpaceManager) : base(nameSpaceManager)
         {
             _borderStyle=ExcelBorderStyle.None;
             _color = new ExcelColorXml(NameSpaceManager);
         }
+
         internal ExcelBorderItemXml(XmlNamespaceManager nsm, XmlNode topNode) :
             base(nsm, topNode)
         {
@@ -62,21 +68,23 @@ namespace OfficeOpenXml.Style.XmlAccess
             }
         }
 
-        private ExcelBorderStyle GetBorderStyle(string style)
+        /// <summary>
+        /// Border style
+        /// </summary>
+        public ExcelColorXml Color
         {
-            if(style=="") return ExcelBorderStyle.None;
-            string sInStyle = style.Substring(0, 1).ToUpper(CultureInfo.InvariantCulture) + style.Substring(1, style.Length - 1);
-            try
+            get
             {
-                return (ExcelBorderStyle)Enum.Parse(typeof(ExcelBorderStyle), sInStyle);
+                return _color;
             }
-            catch
+            internal set
             {
-                return ExcelBorderStyle.None;
+                _color = value;
             }
-
         }
-        ExcelBorderStyle _borderStyle = ExcelBorderStyle.None;
+
+        public bool Exists { get; private set; }
+
         /// <summary>
         /// Cell Border style
         /// </summary>
@@ -92,25 +100,10 @@ namespace OfficeOpenXml.Style.XmlAccess
                 Exists = true;
             }
         }
-        ExcelColorXml _color = null;
-        const string _colorPath = "d:color";
-        /// <summary>
-        /// Border style
-        /// </summary>
-        public ExcelColorXml Color
-        {
-            get
-            {
-                return _color;
-            }
-            internal set
-            {
-                _color = value;
-            }
-        }
+
         internal override string Id
         {
-            get 
+            get
             {
                 if (Exists)
                 {
@@ -141,10 +134,24 @@ namespace OfficeOpenXml.Style.XmlAccess
                 if (Color.Exists)
                 {
                     CreateNode(_colorPath);
-                    topNode.AppendChild(Color.CreateXmlNode(TopNode.SelectSingleNode(_colorPath,NameSpaceManager)));
+                    topNode.AppendChild(Color.CreateXmlNode(TopNode.SelectSingleNode(_colorPath, NameSpaceManager)));
                 }
             }
             return TopNode;
+        }
+
+        private ExcelBorderStyle GetBorderStyle(string style)
+        {
+            if(style=="") return ExcelBorderStyle.None;
+            string sInStyle = style.Substring(0, 1).ToUpper(CultureInfo.InvariantCulture) + style.Substring(1, style.Length - 1);
+            try
+            {
+                return (ExcelBorderStyle)Enum.Parse(typeof(ExcelBorderStyle), sInStyle);
+            }
+            catch
+            {
+                return ExcelBorderStyle.None;
+            }
         }
 
         private string SetBorderString(ExcelBorderStyle Style)
@@ -152,6 +159,5 @@ namespace OfficeOpenXml.Style.XmlAccess
             string newName=Enum.GetName(typeof(ExcelBorderStyle), Style);
             return newName.Substring(0, 1).ToLower(CultureInfo.InvariantCulture) + newName.Substring(1, newName.Length - 1);
         }
-        public bool Exists { get; private set; }
     }
 }

@@ -16,11 +16,9 @@
  *******************************************************************************
  * Mats Alm Added		                2016-12-27
  *******************************************************************************/
+
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace OfficeOpenXml
 {
@@ -33,26 +31,32 @@ namespace OfficeOpenXml
         /// Division by zero
         /// </summary>
         Div0,
+
         /// <summary>
         /// Not applicable
         /// </summary>
         NA,
+
         /// <summary>
         /// Name error
         /// </summary>
         Name,
+
         /// <summary>
         /// Null error
         /// </summary>
         Null,
+
         /// <summary>
         /// Num error
         /// </summary>
         Num,
+
         /// <summary>
         /// Reference error
         /// </summary>
         Ref,
+
         /// <summary>
         /// Value error
         /// </summary>
@@ -65,6 +69,86 @@ namespace OfficeOpenXml
     /// <seealso cref="eErrorType"/>
     public class ExcelErrorValue
     {
+        private ExcelErrorValue(eErrorType type)
+        {
+            Type = type;
+        }
+
+        /// <summary>
+        /// The error type
+        /// </summary>
+        public eErrorType Type { get; private set; }
+
+        public static ExcelErrorValue operator +(object v1, ExcelErrorValue v2)
+        {
+            return v2;
+        }
+
+        public static ExcelErrorValue operator +(ExcelErrorValue v1, ExcelErrorValue v2)
+        {
+            return v1;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is ExcelErrorValue)) return false;
+            return ((ExcelErrorValue)obj).ToString() == this.ToString();
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        /// <summary>
+        /// Returns the string representation of the error type
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            switch (Type)
+            {
+                case eErrorType.Div0:
+                    return Values.Div0;
+
+                case eErrorType.NA:
+                    return Values.NA;
+
+                case eErrorType.Name:
+                    return Values.Name;
+
+                case eErrorType.Null:
+                    return Values.Null;
+
+                case eErrorType.Num:
+                    return Values.Num;
+
+                case eErrorType.Ref:
+                    return Values.Ref;
+
+                case eErrorType.Value:
+                    return Values.Value;
+
+                default:
+                    throw (new ArgumentException("Invalid errortype"));
+            }
+        }
+
+        internal static ExcelErrorValue Create(eErrorType errorType)
+        {
+            return new ExcelErrorValue(errorType);
+        }
+
+        internal static ExcelErrorValue Parse(string val)
+        {
+            if (Values.StringIsErrorValue(val))
+            {
+                return new ExcelErrorValue(Values.ToErrorType(val));
+            }
+            if (string.IsNullOrEmpty(val)) throw new ArgumentNullException("val");
+            throw new ArgumentException("Not a valid error value: " + val);
+        }
+
         /// <summary>
         /// Handles the convertion between <see cref="eErrorType"/> and the string values
         /// used by Excel.
@@ -126,77 +210,6 @@ namespace OfficeOpenXml
                 }
                 return _values[val];
             }
-        }
-
-        internal static ExcelErrorValue Create(eErrorType errorType)
-        {
-            return new ExcelErrorValue(errorType);
-        }
-
-        internal static ExcelErrorValue Parse(string val)
-        {
-            if (Values.StringIsErrorValue(val))
-            {
-                return new ExcelErrorValue(Values.ToErrorType(val));
-            }
-            if(string.IsNullOrEmpty(val)) throw new ArgumentNullException("val");
-            throw new ArgumentException("Not a valid error value: " + val);
-        }
-
-        private ExcelErrorValue(eErrorType type)
-        {
-            Type=type; 
-        }
-
-        /// <summary>
-        /// The error type
-        /// </summary>
-        public eErrorType Type { get; private set; }
-
-        /// <summary>
-        /// Returns the string representation of the error type
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
-        {
-            switch(Type)
-            {
-                case eErrorType.Div0:
-                    return Values.Div0;
-                case eErrorType.NA:
-                    return Values.NA;
-                case eErrorType.Name:
-                    return Values.Name;
-                case eErrorType.Null:
-                    return Values.Null;
-                case eErrorType.Num:
-                    return Values.Num;
-                case eErrorType.Ref:
-                    return Values.Ref;
-                case eErrorType.Value:
-                    return Values.Value;
-                default:
-                    throw(new ArgumentException("Invalid errortype"));
-            }
-        }
-        public static ExcelErrorValue operator +(object v1, ExcelErrorValue v2)
-        {
-            return v2;
-        }
-        public static ExcelErrorValue operator +(ExcelErrorValue v1, ExcelErrorValue v2)
-        {
-            return v1;
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (!(obj is ExcelErrorValue)) return false;
-            return ((ExcelErrorValue) obj).ToString() == this.ToString();
         }
     }
 }

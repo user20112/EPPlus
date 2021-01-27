@@ -26,15 +26,64 @@
 // ------------------------------------------------------------------
 //
 
-
 using System;
 using System.IO;
-using System.Collections.Generic;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
     internal partial class ZipFile
     {
+        /// <summary>
+        ///   Provides a human-readable string with information about the ZipFile.
+        /// </summary>
+        ///
+        /// <remarks>
+        ///   <para>
+        ///     The information string contains 10 lines or so, about each ZipEntry,
+        ///     describing whether encryption is in use, the compressed and uncompressed
+        ///     length of the entry, the offset of the entry, and so on. As a result the
+        ///     information string can be very long for zip files that contain many
+        ///     entries.
+        ///   </para>
+        ///   <para>
+        ///     This information is mostly useful for diagnostic purposes.
+        ///   </para>
+        /// </remarks>
+        public string Info
+        {
+            get
+            {
+                var builder = new System.Text.StringBuilder();
+                builder.Append(string.Format("          ZipFile: {0}\n", this.Name));
+                if (!string.IsNullOrEmpty(this._Comment))
+                {
+                    builder.Append(string.Format("          Comment: {0}\n", this._Comment));
+                }
+                if (this._versionMadeBy != 0)
+                {
+                    builder.Append(string.Format("  version made by: 0x{0:X4}\n", this._versionMadeBy));
+                }
+                if (this._versionNeededToExtract != 0)
+                {
+                    builder.Append(string.Format("needed to extract: 0x{0:X4}\n", this._versionNeededToExtract));
+                }
+
+                builder.Append(string.Format("       uses ZIP64: {0}\n", this.InputUsesZip64));
+
+                builder.Append(string.Format("     disk with CD: {0}\n", this._diskNumberWithCd));
+                if (this._OffsetOfCentralDirectory == 0xFFFFFFFF)
+                    builder.Append(string.Format("      CD64 offset: 0x{0:X16}\n", this._OffsetOfCentralDirectory64));
+                else
+                    builder.Append(string.Format("        CD offset: 0x{0:X8}\n", this._OffsetOfCentralDirectory));
+                builder.Append("\n");
+                foreach (ZipEntry entry in this._entries.Values)
+                {
+                    builder.Append(entry.Info);
+                }
+                return builder.ToString();
+            }
+        }
+
         /// <summary>
         ///   Checks a zip file to see if its directory is consistent.
         /// </summary>
@@ -72,7 +121,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             return CheckZip(zipFileName, false, null);
         }
-
 
         /// <summary>
         ///   Checks a zip file to see if its directory is consistent,
@@ -199,7 +247,52 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return isOk;
         }
 
-
+        /// <summary>
+        ///   Verify the password on a zip file.
+        /// </summary>
+        ///
+        /// <remarks>
+        ///   <para>
+        ///     Keep in mind that passwords in zipfiles are applied to
+        ///     zip entries, not to the entire zip file. So testing a
+        ///     zipfile for a particular password doesn't work in the
+        ///     general case. On the other hand, it's often the case
+        ///     that a single password will be used on all entries in a
+        ///     zip file. This method works for that case.
+        ///   </para>
+        ///   <para>
+        ///     There is no way to check a password without doing the
+        ///     decryption. So this code decrypts and extracts the given
+        ///     zipfile into <see cref="System.IO.Stream.Null"/>
+        ///   </para>
+        /// </remarks>
+        ///
+        /// <param name="zipFileName">The filename to of the zip file to fix.</param>
+        ///
+        /// <param name="password">The password to check.</param>
+        ///
+        /// <returns>a bool indicating whether the password matches.</returns>
+        public static bool CheckZipPassword(string zipFileName, string password)
+        {
+            // workitem 13664
+            bool success = false;
+            try
+            {
+                using (ZipFile zip1 = ZipFile.Read(zipFileName))
+                {
+                    foreach (var e in zip1)
+                    {
+                        if (!e.IsDirectory && e.UsesEncryption)
+                        {
+                            e.ExtractWithPassword(System.IO.Stream.Null, password);
+                        }
+                    }
+                }
+                success = true;
+            }
+            catch (Ionic.Zip.BadPasswordException) { }
+            return success;
+        }
 
         /// <summary>
         ///   Rewrite the directory within a zipfile.
@@ -244,109 +337,5 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 zip.Save(zipFileName);
             }
         }
-
-
-
-        /// <summary>
-        ///   Verify the password on a zip file.
-        /// </summary>
-        ///
-        /// <remarks>
-        ///   <para>
-        ///     Keep in mind that passwords in zipfiles are applied to
-        ///     zip entries, not to the entire zip file. So testing a
-        ///     zipfile for a particular password doesn't work in the
-        ///     general case. On the other hand, it's often the case
-        ///     that a single password will be used on all entries in a
-        ///     zip file. This method works for that case.
-        ///   </para>
-        ///   <para>
-        ///     There is no way to check a password without doing the
-        ///     decryption. So this code decrypts and extracts the given
-        ///     zipfile into <see cref="System.IO.Stream.Null"/>
-        ///   </para>
-        /// </remarks>
-        ///
-        /// <param name="zipFileName">The filename to of the zip file to fix.</param>
-        ///
-        /// <param name="password">The password to check.</param>
-        ///
-        /// <returns>a bool indicating whether the password matches.</returns>
-        public static bool CheckZipPassword(string zipFileName, string password)
-        {
-            // workitem 13664
-            bool success = false;
-            try
-            {
-                using (ZipFile zip1 = ZipFile.Read(zipFileName))
-                {
-                    foreach (var e in zip1)
-                    {
-                        if (!e.IsDirectory && e.UsesEncryption)
-                        {
-                            e.ExtractWithPassword(System.IO.Stream.Null, password);
-                        }
-                    }
-                }
-                success = true;
-            }
-            catch(Ionic.Zip.BadPasswordException) { }
-            return success;
-        }
-
-
-        /// <summary>
-        ///   Provides a human-readable string with information about the ZipFile.
-        /// </summary>
-        ///
-        /// <remarks>
-        ///   <para>
-        ///     The information string contains 10 lines or so, about each ZipEntry,
-        ///     describing whether encryption is in use, the compressed and uncompressed
-        ///     length of the entry, the offset of the entry, and so on. As a result the
-        ///     information string can be very long for zip files that contain many
-        ///     entries.
-        ///   </para>
-        ///   <para>
-        ///     This information is mostly useful for diagnostic purposes.
-        ///   </para>
-        /// </remarks>
-        public string Info
-        {
-            get
-            {
-                var builder = new System.Text.StringBuilder();
-                builder.Append(string.Format("          ZipFile: {0}\n", this.Name));
-                if (!string.IsNullOrEmpty(this._Comment))
-                {
-                    builder.Append(string.Format("          Comment: {0}\n", this._Comment));
-                }
-                if (this._versionMadeBy != 0)
-                {
-                    builder.Append(string.Format("  version made by: 0x{0:X4}\n", this._versionMadeBy));
-                }
-                if (this._versionNeededToExtract != 0)
-                {
-                    builder.Append(string.Format("needed to extract: 0x{0:X4}\n", this._versionNeededToExtract));
-                }
-
-                builder.Append(string.Format("       uses ZIP64: {0}\n", this.InputUsesZip64));
-
-                builder.Append(string.Format("     disk with CD: {0}\n", this._diskNumberWithCd));
-                if (this._OffsetOfCentralDirectory == 0xFFFFFFFF)
-                    builder.Append(string.Format("      CD64 offset: 0x{0:X16}\n", this._OffsetOfCentralDirectory64));
-                else
-                    builder.Append(string.Format("        CD offset: 0x{0:X8}\n", this._OffsetOfCentralDirectory));
-                builder.Append("\n");
-                foreach (ZipEntry entry in this._entries.Values)
-                {
-                    builder.Append(entry.Info);
-                }
-                return builder.ToString();
-            }
-        }
-
-
     }
-
 }

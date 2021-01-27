@@ -13,35 +13,32 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  *  * Author							Change						      Date
  * ******************************************************************************
  * Eyal Seagull		    Conditional Formatting      2012-04-03
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml;
+
 using OfficeOpenXml.Utils;
-using OfficeOpenXml.ConditionalFormatting.Contracts;
+using System;
+using System.Xml;
 
 namespace OfficeOpenXml.ConditionalFormatting
 {
-	/// <summary>
-	/// Factory class for ExcelConditionalFormatting.
-	/// </summary>
-	internal static class ExcelConditionalFormattingRuleFactory
+    /// <summary>
+    /// Factory class for ExcelConditionalFormatting.
+    /// </summary>
+    internal static class ExcelConditionalFormattingRuleFactory
 	{
 		public static ExcelConditionalFormattingRule Create(
 			eExcelConditionalFormattingRuleType type,
@@ -59,7 +56,7 @@ namespace OfficeOpenXml.ConditionalFormatting
       Require.Argument(priority).IsInRange(0, int.MaxValue, "priority");
 
       Require.Argument(worksheet).IsNotNull("worksheet");
-			
+
 			// According the conditional formatting rule type
 			switch (type)
 			{
@@ -139,7 +136,6 @@ namespace OfficeOpenXml.ConditionalFormatting
             priority,
             worksheet,
             itemElementNode);
-
 
         case eExcelConditionalFormattingRuleType.LastMonth:
           return new ExcelConditionalFormattingLastMonth(
@@ -350,6 +346,7 @@ namespace OfficeOpenXml.ConditionalFormatting
             priority,
 						worksheet,
 						itemElementNode);
+
         case eExcelConditionalFormattingRuleType.ThreeIconSet:
           return new ExcelConditionalFormattingThreeIconSet(
             address,
@@ -357,6 +354,7 @@ namespace OfficeOpenXml.ConditionalFormatting
             worksheet,
             itemElementNode,
             null);
+
         case eExcelConditionalFormattingRuleType.FourIconSet:
           return new ExcelConditionalFormattingFourIconSet(
             address,
@@ -364,6 +362,7 @@ namespace OfficeOpenXml.ConditionalFormatting
             worksheet,
             itemElementNode,
             null);
+
         case eExcelConditionalFormattingRuleType.FiveIconSet:
           return new ExcelConditionalFormattingFiveIconSet(
             address,
@@ -371,6 +370,7 @@ namespace OfficeOpenXml.ConditionalFormatting
             worksheet,
             itemElementNode,
             null);
+
         case eExcelConditionalFormattingRuleType.DataBar:
           return new ExcelConditionalFormattingDataBar(
             eExcelConditionalFormattingRuleType.DataBar,
@@ -379,7 +379,6 @@ namespace OfficeOpenXml.ConditionalFormatting
             worksheet,
             itemElementNode,
             null);
-
 
         //TODO: Add DataBar
 			}

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml;
-
-namespace OfficeOpenXml.Style.Dxf
+﻿namespace OfficeOpenXml.Style.Dxf
 {
     public class ExcelDxfBorderItem : DxfStyleBase<ExcelDxfBorderItem>
     {
@@ -13,8 +7,17 @@ namespace OfficeOpenXml.Style.Dxf
         {
             Color=new ExcelDxfColor(styles);
         }
-        public ExcelBorderStyle? Style { get; set;}
+
         public ExcelDxfColor Color { get; internal set; }
+        public ExcelBorderStyle? Style { get; set; }
+
+        protected internal override bool HasValue
+        {
+            get
+            {
+                return Style != null || Color.HasValue;
+            }
+        }
 
         protected internal override string Id
         {
@@ -24,21 +27,15 @@ namespace OfficeOpenXml.Style.Dxf
             }
         }
 
-        protected internal override void CreateNodes(XmlHelper helper, string path)
-        {            
-            SetValueEnum(helper, path + "/@style", Style);
-            SetValueColor(helper, path + "/d:color", Color);
-        }
-        protected internal override bool HasValue
-        {
-            get 
-            {
-                return Style != null || Color.HasValue;
-            }
-        }
         protected internal override ExcelDxfBorderItem Clone()
         {
             return new ExcelDxfBorderItem(_styles) { Style = Style, Color = Color };
+        }
+
+        protected internal override void CreateNodes(XmlHelper helper, string path)
+        {
+            SetValueEnum(helper, path + "/@style", Style);
+            SetValueColor(helper, path + "/d:color", Color);
         }
     }
 }

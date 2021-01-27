@@ -13,33 +13,30 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		01-01-2012
  * Jan Källman      Added compression support 27-03-2012
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 
 namespace OfficeOpenXml.Utils
 {
     internal static class VBACompression
     {
-        #region  Compression
         /// <summary>
         /// Compression using a run length encoding algorithm.
         /// See MS-OVBA Section 2.4
@@ -75,10 +72,37 @@ namespace OfficeOpenXml.Utils
                 decompEnd = part.Length < decompStart + 4096 ? part.Length : decompStart + 4096;
             }
 
-
             br.Flush();
             return ms.ToArray();
         }
+
+        internal static byte[] DecompressPart(byte[] part)
+        {
+            return DecompressPart(part, 0);
+        }
+
+        /// <summary>
+        /// Decompression using a run length encoding algorithm.
+        /// See MS-OVBA Section 2.4
+        /// </summary>
+        /// <param name="part">Byte array to decompress</param>
+        /// <param name="startPos"></param>
+        /// <returns></returns>
+        internal static byte[] DecompressPart(byte[] part, int startPos)
+        {
+            if (part[startPos] != 1)
+            {
+                return null;
+            }
+            MemoryStream ms = new MemoryStream(4096);
+            int compressPos = startPos + 1;
+            while (compressPos < part.Length - 1)
+            {
+                DecompressChunk(ms, part, ref compressPos);
+            }
+            return ms.ToArray();
+        }
+
         private static byte[] CompressChunk(byte[] buffer, ref int startPos)
         {
             var comprBuffer = new byte[4096];
@@ -131,14 +155,13 @@ namespace OfficeOpenXml.Utils
                             Array.Copy(BitConverter.GetBytes(token), 0, comprBuffer, cPos, 2);
                             dPos = dPos + bestLength;
                             cPos += 2;
-                            //SetCopy Token                        
+                            //SetCopy Token
                         }
                         else
                         {
                             comprBuffer[cPos++] = buffer[dPos++];
                         }
                     }
-
                     else
                     {
                         comprBuffer[cPos++] = buffer[dPos++];
@@ -153,32 +176,7 @@ namespace OfficeOpenXml.Utils
             startPos = dEnd;
             return ret;
         }
-        internal static byte[] DecompressPart(byte[] part)
-        {
-            return DecompressPart(part, 0);
-        }
-        /// <summary>
-        /// Decompression using a run length encoding algorithm.
-        /// See MS-OVBA Section 2.4
-        /// </summary>
-        /// <param name="part">Byte array to decompress</param>
-        /// <param name="startPos"></param>
-        /// <returns></returns>
-        internal static byte[] DecompressPart(byte[] part, int startPos)
-        {
 
-            if (part[startPos] != 1)
-            {
-                return null;
-            }
-            MemoryStream ms = new MemoryStream(4096);
-            int compressPos = startPos + 1;
-            while (compressPos < part.Length - 1)
-            {
-                DecompressChunk(ms, part, ref compressPos);
-            }
-            return ms.ToArray();
-        }
         private static void DecompressChunk(MemoryStream ms, byte[] compBuffer, ref int pos)
         {
             ushort header = BitConverter.ToUInt16(compBuffer, pos);
@@ -237,7 +235,6 @@ namespace OfficeOpenXml.Utils
                             }
 
                             pos += 2;
-
                         }
                         if (pos >= endPos)
                             break;
@@ -252,6 +249,7 @@ namespace OfficeOpenXml.Utils
                 return;
             }
         }
+
         private static int GetLengthBits(int decompPos)
         {
             if (decompPos <= 16)
@@ -296,6 +294,5 @@ namespace OfficeOpenXml.Utils
                 return 12 - (int)Math.Truncate(Math.Log(decompPos - 1 >> 4, 2) + 1);
             }
         }
-        #endregion
     }
 }

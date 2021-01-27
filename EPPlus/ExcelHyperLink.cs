@@ -13,25 +13,24 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Added this class		        2010-01-24
  * Jan Källman		License changed GPL-->LGPL 2011-12-27
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OfficeOpenXml
 {
@@ -49,6 +48,7 @@ namespace OfficeOpenXml
         {
             OriginalUri = (Uri)this;
         }
+
 #if !Core
         /// <summary>
         /// A new hyperlink with the specified URI. This syntax is obsolete
@@ -62,6 +62,7 @@ namespace OfficeOpenXml
             OriginalUri = (Uri)this;
         }
 #endif
+
         /// <summary>
         /// A new hyperlink with the specified URI and kind
         /// </summary>
@@ -72,6 +73,7 @@ namespace OfficeOpenXml
         {
             OriginalUri = (Uri)this;
         }
+
         /// <summary>
         /// Sheet internal reference
         /// </summary>
@@ -83,7 +85,9 @@ namespace OfficeOpenXml
             _referenceAddress = referenceAddress;
             _display = display;
         }
-        string _referenceAddress = null;
+
+        private string _referenceAddress = null;
+
         /// <summary>
         /// The Excel address for internal links.
         /// </summary>
@@ -98,7 +102,9 @@ namespace OfficeOpenXml
                 _referenceAddress = value;
             }
         }
-        string _display = "";
+
+        private string _display = "";
+
         /// <summary>
         /// Displayed text
         /// </summary>
@@ -113,6 +119,7 @@ namespace OfficeOpenXml
                 _display = value;
             }
         }
+
         /// <summary>
         /// Tooltip
         /// </summary>
@@ -121,7 +128,9 @@ namespace OfficeOpenXml
             get;
             set;
         }
-        int _colSpann = 0;
+
+        private int _colSpann = 0;
+
         /// <summary>
         /// If the hyperlink spans multiple columns
         /// </summary>
@@ -136,7 +145,9 @@ namespace OfficeOpenXml
                 _colSpann = value;
             }
         }
-        int _rowSpann = 0;
+
+        private int _rowSpann = 0;
+
         /// <summary>
         /// If the hyperlink spans multiple rows
         /// </summary>
@@ -151,8 +162,9 @@ namespace OfficeOpenXml
                 _rowSpann = value;
             }
         }
+
         /// <summary>
-        /// Used to handle non absolute URI's. 
+        /// Used to handle non absolute URI's.
         /// Is used if IsAblsoluteUri is true. The base URI will have a dummy value of xl://nonAbsolute.
         /// </summary>
         public Uri OriginalUri
@@ -160,6 +172,7 @@ namespace OfficeOpenXml
             get;
             internal set;
         }
+
         internal string RId
         {
             get;

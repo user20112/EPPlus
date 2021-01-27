@@ -25,9 +25,7 @@
 //
 // ------------------------------------------------------------------
 
-
 using System;
-using Interop = System.Runtime.InteropServices;
 
 namespace OfficeOpenXml.Packaging.Ionic.Crc
 {
@@ -42,11 +40,11 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
     ///   archive files.
     /// </remarks>
 
-//    [Interop.GuidAttribute("ebc25cf6-9120-4283-b972-0e5520d0000C")]
-//    [Interop.ComVisible(true)]
-//#if !NETCF
-//    [Interop.ClassInterface(Interop.ClassInterfaceType.AutoDispatch)]
-//#endif
+    //    [Interop.GuidAttribute("ebc25cf6-9120-4283-b972-0e5520d0000C")]
+    //    [Interop.ComVisible(true)]
+    //#if !NETCF
+    //    [Interop.ClassInterface(Interop.ClassInterfaceType.AutoDispatch)]
+    //#endif
     internal class CRC32
     {
         /// <summary>
@@ -114,7 +112,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
             }
         }
 
-
         /// <summary>
         ///   Get the CRC32 for the given (word,byte) combo.  This is a
         ///   computation defined by PKzip for PKZIP 2.0 (weak) encryption.
@@ -131,7 +128,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
         {
             return (Int32)(crc32Table[(W ^ B) & 0xFF] ^ (W >> 8));
         }
-
 
         /// <summary>
         /// Update the value for the running CRC32 using the given block of bytes.
@@ -163,7 +159,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
             }
             _TotalBytesRead += count;
         }
-
 
         /// <summary>
         ///   Process one byte in the CRC.
@@ -214,12 +209,9 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
                     _register = (_register >> 8) ^ crc32Table[(temp >= 0)
                                                               ? temp
                                                               : (temp + 256)];
-
                 }
             }
         }
-
-
 
         private static uint ReverseBits(uint data)
         {
@@ -245,8 +237,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
                 return (byte)((0x01001001 * (s + t)) >> 24);
             }
         }
-
-
 
         private void GenerateLookupTable()
         {
@@ -298,7 +288,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
 #endif
         }
 
-
         private uint gf2_matrix_times(uint[] matrix, uint vec)
         {
             uint sum = 0;
@@ -318,8 +307,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
             for (int i = 0; i < 32; i++)
                 square[i] = gf2_matrix_times(mat, mat[i]);
         }
-
-
 
         /// <summary>
         ///   Combines the given CRC32 value with the current running total.
@@ -378,8 +365,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
                 if ((len2 & 1)==1)
                     crc1 = gf2_matrix_times(odd, crc1);
                 len2 >>= 1;
-
-
             } while (len2 != 0);
 
             crc1 ^= crc2;
@@ -389,7 +374,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
             //return (int) crc1;
             return;
         }
-
 
         /// <summary>
         ///   Create an instance of the CRC32 class using the default settings: no
@@ -419,7 +403,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
             this( unchecked((int)0xEDB88320), reverseBits)
         {
         }
-
 
         /// <summary>
         ///   Create an instance of the CRC32 class, specifying the polynomial and
@@ -469,13 +452,13 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
 
         // private member vars
         private UInt32 dwPolynomial;
+
         private Int64 _TotalBytesRead;
         private bool reverseBits;
         private UInt32[] crc32Table;
         private const int BUFFER_SIZE = 8192;
         private UInt32 _register = 0xFFFFFFFFU;
     }
-
 
     /// <summary>
     /// A Stream that calculates a CRC32 (a checksum) on all bytes read,
@@ -608,7 +591,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
                 throw new ArgumentException("length");
         }
 
-
         // This ctor is private - no validation is done here.  This is to allow the use
         // of a (specific) negative value for the _lengthLimit, to indicate that there
         // is no length set.  So we validate the length limit in those ctors that use an
@@ -623,7 +605,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
             _lengthLimit = length;
             _leaveOpen = leaveOpen;
         }
-
 
         /// <summary>
         ///   Gets the total number of bytes run through the CRC32 calculator.
@@ -810,5 +791,4 @@ namespace OfficeOpenXml.Packaging.Ionic.Crc
         }
 #endif
     }
-
 }

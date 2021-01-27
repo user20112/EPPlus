@@ -16,10 +16,6 @@
  *******************************************************************************
  * Mats Alm Added		                2018-1-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace OfficeOpenXml.FormulaParsing
 {
@@ -32,7 +28,7 @@ namespace OfficeOpenXml.FormulaParsing
             ColIndex = colIndex;
         }
 
-        public object Value
+        public int ColIndex
         {
             get;
             private set;
@@ -44,7 +40,7 @@ namespace OfficeOpenXml.FormulaParsing
             private set;
         }
 
-        public int ColIndex
+        public object Value
         {
             get;
             private set;

@@ -13,43 +13,38 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Eyal Seagull        Added       		  2012-04-03
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
-using System.Xml;
+
 using OfficeOpenXml.ConditionalFormatting.Contracts;
+using System.Xml;
 
 namespace OfficeOpenXml.ConditionalFormatting
 {
-  /// <summary>
-  /// ExcelConditionalFormattingUniqueValues
-  /// </summary>
-  public class ExcelConditionalFormattingUniqueValues
+    /// <summary>
+    /// ExcelConditionalFormattingUniqueValues
+    /// </summary>
+    public class ExcelConditionalFormattingUniqueValues
     : ExcelConditionalFormattingRule,
     IExcelConditionalFormattingUniqueValues
   {
     /****************************************************************************************/
 
-    #region Constructors
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="address"></param>
     /// <param name="priority"></param>
@@ -73,7 +68,7 @@ namespace OfficeOpenXml.ConditionalFormatting
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="priority"></param>
     /// <param name="address"></param>
@@ -94,7 +89,7 @@ namespace OfficeOpenXml.ConditionalFormatting
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="priority"></param>
     /// <param name="address"></param>
@@ -111,7 +106,6 @@ namespace OfficeOpenXml.ConditionalFormatting
         null)
     {
     }
-    #endregion Constructors
 
     /****************************************************************************************/
   }

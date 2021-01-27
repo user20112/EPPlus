@@ -13,33 +13,34 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2011-03-23
  * Jan Källman		                License changed GPL-->LGPL  2011-12-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OfficeOpenXml.Utils;
+
 using OfficeOpenXml.DataValidation.Contracts;
+using OfficeOpenXml.Utils;
 
 namespace OfficeOpenXml.DataValidation
 {
     internal class RangeDataValidation : IRangeDataValidation
     {
+        private string _address;
+
+        private ExcelWorksheet _worksheet;
+
         public RangeDataValidation(ExcelWorksheet worksheet, string address)
         {
             Require.Argument(worksheet).IsNotNull("worksheet");
@@ -48,17 +49,19 @@ namespace OfficeOpenXml.DataValidation
             _address = address;
         }
 
-        ExcelWorksheet _worksheet;
-        string _address;
-
         public IExcelDataValidationAny AddAnyDataValidation()
         {
             return _worksheet.DataValidations.AddAnyValidation(_address);
         }
 
-        public IExcelDataValidationInt AddIntegerDataValidation()
+        public IExcelDataValidationCustom AddCustomDataValidation()
         {
-            return _worksheet.DataValidations.AddIntegerValidation(_address);
+            return _worksheet.DataValidations.AddCustomValidation(_address);
+        }
+
+        public IExcelDataValidationDateTime AddDateTimeDataValidation()
+        {
+            return _worksheet.DataValidations.AddDateTimeValidation(_address);
         }
 
         public IExcelDataValidationDecimal AddDecimalDataValidation()
@@ -66,9 +69,9 @@ namespace OfficeOpenXml.DataValidation
             return _worksheet.DataValidations.AddDecimalValidation(_address);
         }
 
-        public IExcelDataValidationDateTime AddDateTimeDataValidation()
+        public IExcelDataValidationInt AddIntegerDataValidation()
         {
-            return _worksheet.DataValidations.AddDateTimeValidation(_address);
+            return _worksheet.DataValidations.AddIntegerValidation(_address);
         }
 
         public IExcelDataValidationList AddListDataValidation()
@@ -84,11 +87,6 @@ namespace OfficeOpenXml.DataValidation
         public IExcelDataValidationTime AddTimeDataValidation()
         {
             return _worksheet.DataValidations.AddTimeValidation(_address);
-        }
-
-        public IExcelDataValidationCustom AddCustomDataValidation()
-        {
-            return _worksheet.DataValidations.AddCustomValidation(_address);
         }
     }
 }

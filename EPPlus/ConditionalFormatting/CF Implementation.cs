@@ -1,11 +1,8 @@
-﻿#region TODO
-//TODO: Add the "DataBar" extended options
+﻿//TODO: Add the "DataBar" extended options
 //TODO: Add tests for all the rules
 //TODO: Add the IconSet options
 //TODO: Add all the "extList" options
-#endregion
 
-#region §18.3.1.18 conditionalFormatting (Conditional Formatting)
 //Childs:
 //cfRule          (Conditional Formatting Rule) §18.3.1.10
 //extLst          (Future Feature Data Storage Area) §18.2.10
@@ -13,9 +10,7 @@
 //Attributes:
 //pivot
 //sqref           ST_Sqref simple type (§18.18.76)
-#endregion
 
-#region §18.3.1.10 cfRule (Conditional Formatting Rule)
 //Childs:
 //colorScale      (Color Scale) §18.3.1.16
 //dataBar         (Data Bar) §18.3.1.28
@@ -57,12 +52,9 @@
 //                type is not equal to containsText.
 //timePeriod      (Time Period) The applicable time period in a "date occurring…" conditional formatting rule. This
 //                attribute is ignored if type is not equal to timePeriod. ST_TimePeriod §18.18.82.
-#endregion
 
-#region Conditional Formatting XML examples
 // All the examples are assumed to be inside <conditionalFormatting sqref="A1:A10">
 
-#region Example "beginsWith"
 //<x:cfRule type="beginsWith" dxfId="6" priority="5" operator="beginsWith" text="a">
 //  <x:formula>LEFT(A1,LEN("a"))="a"</x:formula>
 //</x:cfRule>
@@ -70,175 +62,117 @@
 //<x:cfRule type="beginsWith" dxfId="5" priority="14" operator="beginsWith" text="&quot;&lt;&gt;">
 //  <x:formula>LEFT(A3,LEN("""&lt;&gt;"))="""&lt;&gt;"</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "between"
 //<x:cfRule type="cellIs" dxfId="8" priority="10" operator="between">
 //  <x:formula>3</x:formula>
 //  <x:formula>7</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "containsText"
 //<x:cfRule type="containsText" dxfId="5" priority="4" operator="containsText" text="c">
 //  <x:formula>NOT(ISERROR(SEARCH("c",A1)))</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "endsWith"
 //<x:cfRule type="endsWith" dxfId="9" priority="11" operator="endsWith" text="c">
 //  <x:formula>RIGHT(A1,LEN("c"))="c"</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "equal"
 //<x:cfRule type="cellIs" dxfId="7" priority="8" operator="equal">
 //  <x:formula>"ab"</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "greaterThan"
 //<x:cfRule type="cellIs" dxfId="6" priority="7" operator="greaterThan">
 //  <x:formula>4</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "greaterThanOrEqual"
 //<x:cfRule type="cellIs" dxfId="3" priority="4" operator="greaterThanOrEqual">
 //  <x:formula>4</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "lessThan"
 //<x:cfRule type="cellIs" dxfId="5" priority="6" operator="lessThan">
 //  <x:formula>4</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "lessThanOrEqual"
 //<x:cfRule type="cellIs" dxfId="4" priority="5" operator="lessThanOrEqual">
 //  <x:formula>4</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "notBetween"
 //<x:cfRule type="cellIs" dxfId="2" priority="3" operator="notBetween">
 //  <x:formula>3</x:formula>
 //  <x:formula>7</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "notContainsText"
 //<x:cfRule type="notContainsText" dxfId="4" priority="3" operator="notContains" text="c">
 //  <x:formula>ISERROR(SEARCH("c",A1))</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "notEqual"
 //<x:cfRule type="cellIs" dxfId="1" priority="2" operator="notEqual">
 //  <x:formula>"ab"</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "containsBlanks"
 //<x:cfRule type="containsBlanks" dxfId="20" priority="37">
 //  <x:formula>LEN(TRIM(A1))=0</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "containsErrors"
 //<x:cfRule type="containsErrors" dxfId="15" priority="19">
 //  <x:formula>ISERROR(A1)</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "expression"
 //<x:cfRule type="expression" dxfId="0" priority="1">
 //  <x:formula>RIGHT(J16,1)="b"</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "duplicateValues"
 //<x:cfRule type="duplicateValues" dxfId="14" priority="16" />
-#endregion
 
-#region Example "notContainsBlanks"
 //<x:cfRule type="notContainsBlanks" dxfId="12" priority="14">
 //  <x:formula>LEN(TRIM(A1))&gt;0</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "notContainsErrors"
 //<x:cfRule type="notContainsErrors" dxfId="11" priority="36">
 //  <x:formula>NOT(ISERROR(A1))</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "uniqueValues"
 //<x:cfRule type="uniqueValues" dxfId="13" priority="15" />
-#endregion
 
-#region Example "last7Days"
 //<x:cfRule type="timePeriod" dxfId="39" priority="10" timePeriod="last7Days">
 //  <x:formula>AND(TODAY()-FLOOR(A1,1)&lt;=6,FLOOR(A1,1)&lt;=TODAY())</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "lastMonth"
 //<x:cfRule type="timePeriod" dxfId="38" priority="9" timePeriod="lastMonth">
 //  <x:formula>AND(MONTH(A1)=MONTH(EDATE(TODAY(),0-1)),YEAR(A1)=YEAR(EDATE(TODAY(),0-1)))</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "lastWeek"
 //<x:cfRule type="timePeriod" dxfId="37" priority="8" timePeriod="lastWeek">
 //  <x:formula>AND(TODAY()-ROUNDDOWN(A1,0)&gt;=(WEEKDAY(TODAY())),TODAY()-ROUNDDOWN(A1,0)&lt;(WEEKDAY(TODAY())+7))</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "nextMonth"
 //<x:cfRule type="timePeriod" dxfId="36" priority="7" timePeriod="nextMonth">
 //  <x:formula>AND(MONTH(A1)=MONTH(EDATE(TODAY(),0+1)),YEAR(A1)=YEAR(EDATE(TODAY(),0+1)))</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "nextWeek"
 //<x:cfRule type="timePeriod" dxfId="35" priority="6" timePeriod="nextWeek">
 //  <x:formula>AND(ROUNDDOWN(A1,0)-TODAY()&gt;(7-WEEKDAY(TODAY())),ROUNDDOWN(A1,0)-TODAY()&lt;(15-WEEKDAY(TODAY())))</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "thisMonth"
 //<x:cfRule type="timePeriod" dxfId="34" priority="5" timePeriod="thisMonth">
 //  <x:formula>AND(MONTH(A1)=MONTH(TODAY()),YEAR(A1)=YEAR(TODAY()))</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "thisWeek"
 //<x:cfRule type="timePeriod" dxfId="33" priority="4" timePeriod="thisWeek">
 //  <x:formula>AND(TODAY()-ROUNDDOWN(A1,0)&lt;=WEEKDAY(TODAY())-1,ROUNDDOWN(A1,0)-TODAY()&lt;=7-WEEKDAY(TODAY()))</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "today"
 //<x:cfRule type="timePeriod" dxfId="32" priority="3" timePeriod="today">
 //  <x:formula>FLOOR(A1,1)=TODAY()</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "tomorrow"
 //<x:cfRule type="timePeriod" dxfId="31" priority="2" timePeriod="tomorrow">
 //  <x:formula>FLOOR(A1,1)=TODAY()+1</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "yesterday"
 //<x:cfRule type="timePeriod" dxfId="1" priority="1" timePeriod="yesterday">
 //  <x:formula>FLOOR(A1,1)=TODAY()-1</x:formula>
 //</x:cfRule>
-#endregion
 
-#region Example "twoColorScale"
 //<cfRule type="colorScale" priority="1">
 //  <colorScale>
 //    <cfvo type="min"/>
@@ -247,9 +181,7 @@
 //    <color rgb="FF63BE7B"/>
 //  </colorScale>
 //</cfRule>
-#endregion
 
-#region Examples "iconSet3" (x all the 3 IconSet options)
 //<x:cfRule type="iconSet" priority="30">
 //  <x:iconSet>
 //    <x:cfvo type="percent" val="0" />
@@ -265,9 +197,7 @@
 //    <x:cfvo type="percent" val="67" />
 //  </x:iconSet>
 //</x:cfRule>
-#endregion
 
-#region Examples "iconSet4" (x all the 4 IconSet options)
 //<x:cfRule type="iconSet" priority="34">
 //  <x:iconSet iconSet="4ArrowsGray">
 //    <x:cfvo type="percent" val="0" />
@@ -276,9 +206,7 @@
 //    <x:cfvo type="percent" val="75" />
 //  </x:iconSet>
 //</x:cfRule>
-#endregion
 
-#region Examples "iconSet5" (x all the 5 IconSet options)
 //<x:cfRule type="iconSet" priority="32">
 //  <x:iconSet iconSet="5ArrowsGray">
 //    <x:cfvo type="percent" val="0" />
@@ -288,9 +216,7 @@
 //    <x:cfvo type="percent" val="80" />
 //  </x:iconSet>
 //</x:cfRule>
-#endregion
 
-#region Examples "iconSet" Extended (not implemented yet)
 //<x:extLst>
 //  <x:ext xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main" uri="{78C0D931-6437-407d-A8EE-F0AAD7539E65}">
 //    <x14:conditionalFormattings>
@@ -386,7 +312,3 @@
 //    </x14:conditionalFormattings>
 //  </x:ext>
 //</x:extLst>
-#endregion
-
-
-#endregion

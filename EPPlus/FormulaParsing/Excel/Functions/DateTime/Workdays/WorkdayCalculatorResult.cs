@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-
-namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime.Workdays
+﻿namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime.Workdays
 {
     public class WorkdayCalculatorResult
     {
@@ -16,11 +10,10 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime.Workdays
             Direction = direction;
         }
 
+        public WorkdayCalculationDirection Direction { get; set; }
+        public System.DateTime EndDate { get; }
         public int NumberOfWorkdays { get; }
 
         public System.DateTime StartDate { get; }
-
-        public System.DateTime EndDate { get; }
-        public WorkdayCalculationDirection Direction { get; set; }
     }
 }

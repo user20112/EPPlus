@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+﻿using SkiaSharp;
 
 namespace OfficeOpenXml.Style
 {
@@ -14,13 +10,15 @@ namespace OfficeOpenXml.Style
     //    <xsd:attribute name = "tint" type="xsd:double" use="optional" default="0.0"/>
     //</xsd:complexType>
 
-    interface IColor
+    internal interface IColor
     {
         //bool? Auto { get; set; }  //TODO: Add this functionallity
         int Indexed { get; set; }
+
         string Rgb { get; }
         string Theme { get; }
         decimal Tint { get; set; }
-        void SetColor(Color color);
+
+        void SetColor(SKColor color);
     }
 }

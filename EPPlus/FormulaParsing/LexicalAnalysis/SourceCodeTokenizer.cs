@@ -13,60 +13,61 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2013-03-01 (Prior file history on https://github.com/swmal/ExcelFormulaParser)
  *******************************************************************************/
-using System;
+
+using OfficeOpenXml.FormulaParsing.Excel.Functions;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
-using OfficeOpenXml.FormulaParsing.Excel.Functions;
+
 namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
 {
     public class SourceCodeTokenizer : ISourceCodeTokenizer
     {
-        public static ISourceCodeTokenizer Default
-        {
-            get { return new SourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, false); }
-        }
-        public static ISourceCodeTokenizer R1C1
-        {
-            get { return new SourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, true); }
-        }
+        private readonly ITokenSeparatorProvider _separatorProvider;
 
+        private readonly ITokenFactory _tokenFactory;
 
-        public SourceCodeTokenizer(IFunctionNameProvider functionRepository, INameValueProvider nameValueProvider, bool r1c1=false)
+        public SourceCodeTokenizer(IFunctionNameProvider functionRepository, INameValueProvider nameValueProvider, bool r1c1 = false)
             : this(new TokenFactory(functionRepository, nameValueProvider, r1c1), new TokenSeparatorProvider())
         {
-
         }
+
         public SourceCodeTokenizer(ITokenFactory tokenFactory, ITokenSeparatorProvider tokenProvider)
         {
             _tokenFactory = tokenFactory;
             _separatorProvider = tokenProvider;
         }
 
-        private readonly ITokenSeparatorProvider _separatorProvider;
-        private readonly ITokenFactory _tokenFactory;
+        public static ISourceCodeTokenizer Default
+        {
+            get { return new SourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, false); }
+        }
+
+        public static ISourceCodeTokenizer R1C1
+        {
+            get { return new SourceCodeTokenizer(FunctionNameProvider.Empty, NameValueProvider.Empty, true); }
+        }
 
         public IEnumerable<Token> Tokenize(string input)
         {
             return Tokenize(input, null);
         }
+
         public IEnumerable<Token> Tokenize(string input, string worksheet)
         {
             if (string.IsNullOrEmpty(input))
@@ -91,9 +92,6 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
 
             return context.Result;
         }
-
-        
-
 
         private static void CleanupTokens(TokenizerContext context, IDictionary<string, Token>  tokens)
         {
@@ -208,6 +206,7 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
         {
             return TokenIsNegator(context.LastToken);
         }
+
         private static bool TokenIsNegator(Token t)
         {
             return t == null

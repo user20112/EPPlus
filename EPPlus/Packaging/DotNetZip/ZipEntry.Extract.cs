@@ -23,13 +23,11 @@
 //
 // ------------------------------------------------------------------
 
-
 using System;
 using System.IO;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
-
     internal partial class ZipEntry
     {
         /// <summary>
@@ -75,7 +73,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             InternalExtract(".", null, null);
         }
-
 
         /// <summary>
         ///   Extract the entry to a file in the filesystem, using the specified
@@ -183,10 +180,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             InternalExtract(baseDirectory, null, null);
         }
 
-
-
-
-
         /// <summary>
         ///   Extract the entry to the filesystem, starting at the specified base
         ///   directory, and using the specified behavior when extraction would
@@ -239,7 +232,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             ExtractExistingFile = extractExistingFile;
             InternalExtract(baseDirectory, null, null);
         }
-
 
         /// <summary>
         ///   Extract the entry to the filesystem, using the current working directory
@@ -335,9 +327,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             InternalExtract(baseDirectory, null, password);
         }
 
-
-
-
         /// <summary>
         ///   Extract the entry to a file in the filesystem, relative to the
         ///   current directory, using the specified behavior when extraction
@@ -361,8 +350,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             ExtractExistingFile = extractExistingFile;
             InternalExtract(".", null, password);
         }
-
-
 
         /// <summary>
         ///   Extract the entry to the filesystem, starting at the specified base
@@ -419,7 +406,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             InternalExtract(null, stream, password);
         }
-
 
         /// <summary>
         ///   Opens a readable stream corresponding to the zip entry in the
@@ -575,8 +561,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return InternalOpenReader(password);
         }
 
-
-
         internal Ionic.Crc.CrcCalculatorStream InternalOpenReader(string password)
         {
             ValidateCompression();
@@ -607,14 +591,11 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return new Ionic.Crc.CrcCalculatorStream(input3, LeftToRead);
         }
 
-
-
         private void OnExtractProgress(Int64 bytesWritten, Int64 totalBytesToWrite)
         {
             if (_container.ZipFile != null)
             _ioOperationCanceled = _container.ZipFile.OnExtractBlock(this, bytesWritten, totalBytesToWrite);
         }
-
 
         private void OnBeforeExtract(string path)
         {
@@ -665,12 +646,10 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             File.Delete(fileName);
         }
 
-
         private void WriteStatus(string format, params Object[] args)
         {
             if (_container.ZipFile != null && _container.ZipFile.Verbose) _container.ZipFile.StatusMessageTextWriter.WriteLine(format, args);
         }
-
 
         // Pass in either basedir or s, but not both.
         // In other words, you can extract to a stream or to a directory (filesystem), but not both!
@@ -742,7 +721,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                     SetupCryptoForExtract(p);
                 }
 
-
                 // set up the output stream
                 if (targetFileName != null)
                 {
@@ -773,7 +751,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                     WriteStatus("extract entry {0} to stream...", FileName);
                     output = outstream;
                 }
-
 
                 if (_ioOperationCanceled)
                     goto ExitTry;
@@ -889,14 +866,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                             // error occurred.  Nothing to be done about it.
                             if (File.Exists(targetFileName) && !fileExistsBeforeExtraction)
                                 File.Delete(targetFileName);
-
                         }
                         finally { }
                     }
                 }
             }
         }
-
 
 #if NOT
         internal void CalcWinZipAesMac(Stream input)
@@ -906,20 +881,16 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             {
                 if (input is WinZipAesCipherStream)
                     wzs = input as WinZipAesCipherStream;
-
                 else if (input is Ionic.Zlib.CrcCalculatorStream)
                 {
                     xxx;
                 }
-
             }
         }
 #endif
 
-
         internal void VerifyCrcAfterExtract(Int32 actualCrc32)
         {
-
 #if AESCRYPTO
                 // After extracting, Validate the CRC32
                 if (actualCrc32 != _Crc32)
@@ -947,18 +918,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                     // side effect: advances file position.
                 }
 
-
-
-
 #else
             if (actualCrc32 != _Crc32)
                 throw new BadCrcException("CRC error: the file being extracted appears to be corrupted. " +
                                           String.Format("Expected 0x{0:X8}, Actual 0x{1:X8}", _Crc32, actualCrc32));
 #endif
         }
-
-
-
 
         private int CheckExtractExistingFile(string baseDir, string targetFileName)
         {
@@ -996,16 +961,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             while (true);
         }
 
-
-
-
         private void _CheckRead(int nbytes)
         {
             if (nbytes == 0)
                 throw new BadReadException(String.Format("bad read of entry {0} from compressed archive.",
                              this.FileName));
         }
-
 
         private Stream _inputDecryptorStream;
 
@@ -1088,8 +1049,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return CrcResult;
         }
 
-
-
         internal Stream GetExtractDecompressor(Stream input2)
         {
             // get a stream that either decompresses or not.
@@ -1097,6 +1056,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             {
                 case (short)CompressionMethod.None:
                     return input2;
+
                 case (short)CompressionMethod.Deflate:
                     return new Ionic.Zlib.DeflateStream(input2, Ionic.Zlib.CompressionMode.Decompress, true);
 #if BZIP
@@ -1107,8 +1067,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             return null;
         }
-
-
 
         internal Stream GetExtractDecryptor(Stream input)
         {
@@ -1121,15 +1079,11 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                  _Encryption_FromZipFile == EncryptionAlgorithm.WinZipAes256)
                 input2 = new WinZipAesCipherStream(input, _aesCrypto_forExtract, _CompressedFileDataSize, CryptoMode.Decrypt);
 #endif
-
             else
                 input2 = input;
 
             return input2;
         }
-
-
-
 
         internal void _SetTimes(string fileOrDirectory, bool isFile)
         {
@@ -1207,10 +1161,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 #endif
         }
 
-
-#region Support methods
-
-
         // workitem 7968
         private string UnsupportedAlgorithm
         {
@@ -1222,39 +1172,51 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                     case 0:
                         alg = "--";
                         break;
+
                     case 0x6601:
                         alg = "DES";
                         break;
+
                     case 0x6602: // - RC2 (version needed to extract < 5.2)
                         alg = "RC2";
                         break;
+
                     case 0x6603: // - 3DES 168
                         alg = "3DES-168";
                         break;
+
                     case 0x6609: // - 3DES 112
                         alg = "3DES-112";
                         break;
+
                     case 0x660E: // - AES 128
                         alg = "PKWare AES128";
                         break;
+
                     case 0x660F: // - AES 192
                         alg = "PKWare AES192";
                         break;
+
                     case 0x6610: // - AES 256
                         alg = "PKWare AES256";
                         break;
+
                     case 0x6702: // - RC2 (version needed to extract >= 5.2)
                         alg = "RC2";
                         break;
+
                     case 0x6720: // - Blowfish
                         alg = "Blowfish";
                         break;
+
                     case 0x6721: // - Twofish
                         alg = "Twofish";
                         break;
+
                     case 0x6801: // - RC4
                         alg = "RC4";
                         break;
+
                     case 0xFFFF: // - Unknown algorithm
                     default:
                         alg = String.Format("Unknown (0x{0:X4})", _UnsupportedAlgorithmId);
@@ -1275,27 +1237,35 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                     case 0:
                         meth = "Store";
                         break;
+
                     case 1:
                         meth = "Shrink";
                         break;
+
                     case 8:
                         meth = "DEFLATE";
                         break;
+
                     case 9:
                         meth = "Deflate64";
                         break;
+
                     case 12:
                         meth = "BZIP2"; // only if BZIP not compiled in
                         break;
+
                     case 14:
                         meth = "LZMA";
                         break;
+
                     case 19:
                         meth = "LZ77";
                         break;
+
                     case 98:
                         meth = "PPMd";
                         break;
+
                     default:
                         meth = String.Format("Unknown (0x{0:X4})", _CompressionMethod);
                         break;
@@ -1303,7 +1273,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return meth;
             }
         }
-
 
         internal void ValidateEncryption()
         {
@@ -1324,7 +1293,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         private void ValidateCompression()
         {
             if ((_CompressionMethod_FromZipFile != (short)CompressionMethod.None) &&
@@ -1336,7 +1304,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 throw new ZipException(String.Format("Entry {0} uses an unsupported compression method (0x{1:X2}, {2})",
                                                           FileName, _CompressionMethod_FromZipFile, UnsupportedCompressionMethod));
         }
-
 
         private void SetupCryptoForExtract(string password)
         {
@@ -1379,8 +1346,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
 #endif
         }
-
-
 
         /// <summary>
         /// Validates that the args are consistent.
@@ -1448,9 +1413,5 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             throw new ArgumentNullException("outstream");
         }
-
-
-#endregion
-
     }
 }

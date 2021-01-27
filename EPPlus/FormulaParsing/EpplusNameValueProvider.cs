@@ -11,16 +11,11 @@
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author Change                      Date
  *******************************************************************************
  * Mats Alm Added		                2016-12-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing;
 
 namespace OfficeOpenXml.FormulaParsing
 {
@@ -35,6 +30,11 @@ namespace OfficeOpenXml.FormulaParsing
             _values = _excelDataProvider.GetWorkbookNameValues();
         }
 
+        public virtual object GetNamedValue(string key)
+        {
+            return _values[key];
+        }
+
         public virtual bool IsNamedValue(string key, string ws)
         {
             if(ws!=null)
@@ -46,11 +46,6 @@ namespace OfficeOpenXml.FormulaParsing
                 }
             }
             return _values != null && _values.ContainsKey(key);
-        }
-
-        public virtual object GetNamedValue(string key)
-        {
-            return _values[key];
         }
 
         public virtual void Reload()

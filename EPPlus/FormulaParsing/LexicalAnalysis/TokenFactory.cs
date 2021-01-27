@@ -13,42 +13,46 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2013-03-01 (Prior file history on https://github.com/swmal/ExcelFormulaParser)
  * Jan Källman                      Replaced Adress validate    2013-03-01
  * *******************************************************************************/
+
+using OfficeOpenXml.FormulaParsing.Excel.Functions;
+using OfficeOpenXml.FormulaParsing.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using OfficeOpenXml.FormulaParsing;
-using OfficeOpenXml.FormulaParsing.Excel.Functions;
-using OfficeOpenXml.FormulaParsing.ExcelUtilities;
-using OfficeOpenXml.FormulaParsing.Utilities;
-using OfficeOpenXml;
 
 namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
 {
     public class TokenFactory : ITokenFactory
     {
-        public TokenFactory(IFunctionNameProvider functionRepository, INameValueProvider nameValueProvider, bool r1c1=false)
-            : this(new TokenSeparatorProvider(), nameValueProvider, functionRepository, r1c1)
-        {
+        private readonly IFunctionNameProvider _functionNameProvider;
 
+        private readonly INameValueProvider _nameValueProvider;
+
+        private readonly ITokenSeparatorProvider _tokenSeparatorProvider;
+
+        private bool _r1c1;
+
+        public TokenFactory(IFunctionNameProvider functionRepository, INameValueProvider nameValueProvider, bool r1c1 = false)
+                                            : this(new TokenSeparatorProvider(), nameValueProvider, functionRepository, r1c1)
+        {
         }
 
         public TokenFactory(ITokenSeparatorProvider tokenSeparatorProvider, INameValueProvider nameValueProvider, IFunctionNameProvider functionNameProvider, bool r1c1)
@@ -59,14 +63,11 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             _r1c1 = r1c1;
         }
 
-        private readonly ITokenSeparatorProvider _tokenSeparatorProvider;
-        private readonly IFunctionNameProvider _functionNameProvider;
-        private readonly INameValueProvider _nameValueProvider;
-        private bool _r1c1;
         public Token Create(IEnumerable<Token> tokens, string token)
         {
             return Create(tokens, token, null);
         }
+
         public Token Create(IEnumerable<Token> tokens, string token, string worksheet)
         {
             Token tokenSeparator = null;
@@ -101,7 +102,6 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
                 {
                     throw(new ArgumentException(string.Format("Invalid formula token sequence near {0}",token)));
                 }
-                
             }
 
             if (tokens.Any() && tokens.Last().TokenType == TokenType.String)
@@ -156,13 +156,12 @@ namespace OfficeOpenXml.FormulaParsing.LexicalAnalysis
             if (at==ExcelAddressBase.AddressType.InternalAddress)
             {
                 return new Token(token.ToUpper(CultureInfo.InvariantCulture), TokenType.ExcelAddress);
-            } 
+            }
             else if (at == ExcelAddressBase.AddressType.R1C1)
             {
                 return new Token(token.ToUpper(CultureInfo.InvariantCulture), TokenType.ExcelAddressR1C1);
             }
             return new Token(token, TokenType.Unrecognized);
-
         }
 
         public Token Create(string token, TokenType explicitTokenType)

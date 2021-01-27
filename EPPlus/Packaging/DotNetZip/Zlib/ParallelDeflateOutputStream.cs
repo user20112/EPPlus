@@ -26,9 +26,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.IO;
-
+using System.Threading;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zlib
 {
@@ -99,7 +98,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
     /// <seealso cref="Ionic.Zlib.DeflateStream" />
     public class ParallelDeflateOutputStream : System.IO.Stream
     {
-
         private static readonly int IO_BUFFER_SIZE_DEFAULT = 64 * 1024;  // 128k
         private static readonly int BufferPairsPerCore = 4;
 
@@ -110,9 +108,11 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         private int                         _maxBufferPairs;
         private int                         _bufferSize = IO_BUFFER_SIZE_DEFAULT;
         private AutoResetEvent              _newlyCompressedBlob;
+
         //private ManualResetEvent            _writingDone;
         //private ManualResetEvent            _sessionReset;
         private object                      _outputLock = new object();
+
         private bool                        _isClosed;
         private bool                        _firstWriteDone;
         private int                         _currentlyFilling;
@@ -306,7 +306,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             this.MaxBufferPairs = 16; // default
         }
 
-
         /// <summary>
         ///   The ZLIB strategy to be used during compression.
         /// </summary>
@@ -463,7 +462,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         /// </remarks>
         public int Crc32 { get { return _Crc32; } }
 
-
         /// <summary>
         /// The total number of uncompressed bytes processed by the ParallelDeflateOutputStream.
         /// </summary>
@@ -471,7 +469,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         /// This value is meaningful only after a call to Close().
         /// </remarks>
         public Int64 BytesProcessed { get { return _totalBytesProcessed; } }
-
 
         private void _InitializePoolOfWorkItems()
         {
@@ -493,9 +490,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             _lastWritten = -1;
             _latestCompressed = -1;
         }
-
-
-
 
         /// <summary>
         ///   Write data to the stream.
@@ -552,7 +546,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                 _InitializePoolOfWorkItems();
                 _firstWriteDone = true;
             }
-
 
             do
             {
@@ -644,8 +637,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             return;
         }
 
-
-
         private void _FlushFinish()
         {
             // After writing a series of compressed buffers, each one closed
@@ -682,7 +673,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             _Crc32 = _runningCrc.Crc32Result;
         }
 
-
         private void _Flush(bool lastInput)
         {
             if (_isClosed)
@@ -709,8 +699,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
         }
 
-
-
         /// <summary>
         /// Flush the stream.
         /// </summary>
@@ -728,7 +716,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
             _Flush(false);
         }
-
 
         /// <summary>
         /// Close the stream.
@@ -764,8 +751,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             _isClosed = true;
         }
 
-
-
         // workitem 10030 - implement a new Dispose method
 
         /// <summary>Dispose the object</summary>
@@ -787,8 +772,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             Dispose(true);
         }
 
-
-
         /// <summary>The Dispose method</summary>
         /// <param name="disposing">
         ///   indicates whether the Dispose method was invoked by user code.
@@ -797,7 +780,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         {
             base.Dispose(disposing);
         }
-
 
         /// <summary>
         ///   Resets the stream for use with another stream.
@@ -865,9 +847,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             _latestCompressed = -1;
             _outStream = stream;
         }
-
-
-
 
         private void EmitPendingBuffers(bool doAll, bool mustWait)
         {
@@ -966,7 +945,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                     }
                     else
                         nextToWrite = -1;
-
                 } while (nextToWrite >= 0);
 
             //} while (doAll && (_lastWritten != _latestCompressed));
@@ -974,8 +952,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
             emitting = false;
         }
-
-
 
 #if OLD
         private void _PerpetualWriterMethod(object state)
@@ -1036,7 +1012,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                                                    workitem.status,
                                                    workitem.compressedBytesAvailable);
 
-
                                     Monitor.Pulse(workitem);
                                     break;
                                 }
@@ -1076,7 +1051,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
                                     if (_noMoreInputForThisSegment && _nextToWrite == _nextToFill)
                                         break;
-
                                 }
                             }
                             while (true);
@@ -1089,9 +1063,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
                         if (_noMoreInputForThisSegment && _nextToWrite == _nextToFill)
                             break;
-
                     } while (true);
-
 
                     // Finish:
                     // After writing a series of buffers, closing each one with
@@ -1147,9 +1119,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         }
 #endif
 
-
-
-
         private void _DeflateOne(Object wi)
         {
             // compress one buffer
@@ -1196,9 +1165,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
         }
 
-
-
-
         private bool DeflateOneSegment(WorkItem workitem)
         {
             ZlibCodec compressor = workitem.compressor;
@@ -1224,7 +1190,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             return true;
         }
 
-
         [System.Diagnostics.ConditionalAttribute("Trace")]
         private void TraceOutput(TraceBits bits, string format, params object[] varParams)
         {
@@ -1245,32 +1210,29 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
         }
 
-
         // used only when Trace is defined
         [Flags]
-        enum TraceBits : uint
+        private enum TraceBits : uint
         {
-            None         = 0,
-            NotUsed1     = 1,
-            EmitLock     = 2,
-            EmitEnter    = 4,    // enter _EmitPending
-            EmitBegin    = 8,    // begin to write out
-            EmitDone     = 16,   // done writing out
-            EmitSkip     = 32,   // writer skipping a workitem
-            EmitAll      = 58,   // All Emit flags
-            Flush        = 64,
-            Lifecycle    = 128,  // constructor/disposer
-            Session      = 256,  // Close/Reset
-            Synch        = 512,  // thread synchronization
-            Instance     = 1024, // instance settings
-            Compress     = 2048,  // compress task
-            Write        = 4096,    // filling buffers, when caller invokes Write()
-            WriteEnter   = 8192,    // upon entry to Write()
-            WriteTake    = 16384,    // on _toFill.Take()
-            All          = 0xffffffff,
+            None = 0,
+            NotUsed1 = 1,
+            EmitLock = 2,
+            EmitEnter = 4,    // enter _EmitPending
+            EmitBegin = 8,    // begin to write out
+            EmitDone = 16,   // done writing out
+            EmitSkip = 32,   // writer skipping a workitem
+            EmitAll = 58,   // All Emit flags
+            Flush = 64,
+            Lifecycle = 128,  // constructor/disposer
+            Session = 256,  // Close/Reset
+            Synch = 512,  // thread synchronization
+            Instance = 1024, // instance settings
+            Compress = 2048,  // compress task
+            Write = 4096,    // filling buffers, when caller invokes Write()
+            WriteEnter = 8192,    // upon entry to Write()
+            WriteTake = 16384,    // on _toFill.Take()
+            All = 0xffffffff,
         }
-
-
 
         /// <summary>
         /// Indicates whether the stream supports Seek operations.
@@ -1282,7 +1244,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         {
             get { return false; }
         }
-
 
         /// <summary>
         /// Indicates whether the stream supports Read operations.
@@ -1380,9 +1341,5 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         {
             throw new NotSupportedException();
         }
-
     }
-
 }
-
-

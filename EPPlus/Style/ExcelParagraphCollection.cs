@@ -13,28 +13,26 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
+
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
-using OfficeOpenXml.Drawing;
-using System.Drawing;
 
 namespace OfficeOpenXml.Style
 {
@@ -43,8 +41,9 @@ namespace OfficeOpenXml.Style
     /// </summary>
     public class ExcelParagraphCollection : XmlHelper, IEnumerable<ExcelParagraph>
     {
-        List<ExcelParagraph> _list = new List<ExcelParagraph>();
-        string _path;
+        private List<ExcelParagraph> _list = new List<ExcelParagraph>();
+        private string _path;
+
         internal ExcelParagraphCollection(XmlNamespaceManager ns, XmlNode topNode, string path, string[] schemaNodeOrder) :
             base(ns, topNode)
         {
@@ -59,13 +58,7 @@ namespace OfficeOpenXml.Style
             }
             _path = path;
         }
-        public ExcelParagraph this[int Index]
-        {
-            get
-            {
-                return _list[Index];
-            }
-        }
+
         public int Count
         {
             get
@@ -73,6 +66,44 @@ namespace OfficeOpenXml.Style
                 return _list.Count;
             }
         }
+
+        public string Text
+        {
+            get
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (var item in _list)
+                {
+                    sb.Append(item.Text);
+                }
+                return sb.ToString();
+            }
+            set
+            {
+                if (Count == 0)
+                {
+                    Add(value);
+                }
+                else
+                {
+                    this[0].Text = value;
+                    int count = Count;
+                    for (int ix = Count - 1; ix > 0; ix--)
+                    {
+                        RemoveAt(ix);
+                    }
+                }
+            }
+        }
+
+        public ExcelParagraph this[int Index]
+        {
+            get
+            {
+                return _list[Index];
+            }
+        }
+
         /// <summary>
         /// Add a rich text string
         /// </summary>
@@ -95,25 +126,42 @@ namespace OfficeOpenXml.Style
                 CreateNode(_path);
                 parentNode = TopNode.SelectSingleNode(_path, NameSpaceManager);
             }
-            
+
             var node = doc.CreateElement("a", "r", ExcelPackage.schemaDrawings);
             parentNode.AppendChild(node);
             var childNode = doc.CreateElement("a", "rPr", ExcelPackage.schemaDrawings);
             node.AppendChild(childNode);
             var rt = new ExcelParagraph(NameSpaceManager, node, "", SchemaNodeOrder);
             rt.ComplexFont = "Calibri";
-            rt.LatinFont = "Calibri"; 
+            rt.LatinFont = "Calibri";
             rt.Size = 11;
 
             rt.Text = Text;
             _list.Add(rt);
             return rt;
         }
+
         public void Clear()
         {
             _list.Clear();
             TopNode.RemoveAll();
         }
+
+        IEnumerator<ExcelParagraph> IEnumerable<ExcelParagraph>.GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return _list.GetEnumerator();
+        }
+
+        public void Remove(ExcelRichText Item)
+        {
+            TopNode.RemoveChild(Item.TopNode);
+        }
+
         public void RemoveAt(int Index)
         {
             var node = _list[Index].TopNode;
@@ -124,54 +172,5 @@ namespace OfficeOpenXml.Style
             node.ParentNode.RemoveChild(node);
             _list.RemoveAt(Index);
         }
-        public void Remove(ExcelRichText Item)
-        {
-            TopNode.RemoveChild(Item.TopNode);
-        }
-        public string Text
-        {
-            get
-            {
-                StringBuilder sb = new StringBuilder();
-                foreach (var item in _list)
-                {
-                    sb.Append(item.Text);
-                }
-                return sb.ToString();
-            }
-            set
-            {
-                if (Count == 0)
-                {
-                    Add(value);
-                }
-                else
-                {
-                    this[0].Text = value;
-                    int count = Count;
-                    for (int ix = Count-1; ix > 0; ix--)
-                    {
-                        RemoveAt(ix);
-                    }
-                }
-            }
-        }
-        #region IEnumerable<ExcelRichText> Members
-
-        IEnumerator<ExcelParagraph> IEnumerable<ExcelParagraph>.GetEnumerator()
-        {
-            return _list.GetEnumerator();
-        }
-
-        #endregion
-
-        #region IEnumerable Members
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return _list.GetEnumerator();
-        }
-
-        #endregion
     }
 }

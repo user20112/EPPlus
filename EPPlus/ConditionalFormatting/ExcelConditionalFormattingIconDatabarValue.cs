@@ -13,142 +13,136 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Eyal Seagull        Added       		  2012-04-03
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
-using System.Xml;
+
 using OfficeOpenXml.Utils;
-using System.Text.RegularExpressions;
+using SkiaSharp;
+using System;
 using System.Globalization;
-using System.Security;
+using System.Xml;
 
 namespace OfficeOpenXml.ConditionalFormatting
 {
-	/// <summary>
-	/// 18.3.1.11 cfvo (Conditional Format Value Object)
-	/// Describes the values of the interpolation points in a gradient scale.
-	/// </summary>
-	public class ExcelConditionalFormattingIconDataBarValue
-		: XmlHelper
-	{
-		/****************************************************************************************/
-
-		#region Private Properties
-		private eExcelConditionalFormattingRuleType _ruleType;
-		private ExcelWorksheet _worksheet;
-		#endregion Private Properties
-
-		/****************************************************************************************/
-
-		#region Constructors
     /// <summary>
-    /// Initialize the cfvo (§18.3.1.11) node
+    /// 18.3.1.11 cfvo (Conditional Format Value Object)
+    /// Describes the values of the interpolation points in a gradient scale.
     /// </summary>
-    /// <param name="type"></param>
-    /// <param name="value"></param>
-    /// <param name="formula"></param>
-    /// <param name="ruleType"></param>
-    /// <param name="address"></param>
-    /// <param name="priority"></param>
-    /// <param name="worksheet"></param>
-    /// <param name="itemElementNode">The cfvo (§18.3.1.11) node parent. Can be any of the following:
-    /// colorScale (§18.3.1.16); dataBar (§18.3.1.28); iconSet (§18.3.1.49)</param>
-    /// <param name="namespaceManager"></param>
-		internal ExcelConditionalFormattingIconDataBarValue(
-			eExcelConditionalFormattingValueObjectType type,
-			double value,
-			string formula,
-			eExcelConditionalFormattingRuleType ruleType,
+    public class ExcelConditionalFormattingIconDataBarValue
+        : XmlHelper
+    {
+        /****************************************************************************************/
+
+        private eExcelConditionalFormattingRuleType _ruleType;
+        private ExcelWorksheet _worksheet;
+
+        /****************************************************************************************/
+
+        /// <summary>
+        /// Initialize the cfvo (§18.3.1.11) node
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="formula"></param>
+        /// <param name="ruleType"></param>
+        /// <param name="address"></param>
+        /// <param name="priority"></param>
+        /// <param name="worksheet"></param>
+        /// <param name="itemElementNode">The cfvo (§18.3.1.11) node parent. Can be any of the following:
+        /// colorScale (§18.3.1.16); dataBar (§18.3.1.28); iconSet (§18.3.1.49)</param>
+        /// <param name="namespaceManager"></param>
+        internal ExcelConditionalFormattingIconDataBarValue(
+            eExcelConditionalFormattingValueObjectType type,
+            double value,
+            string formula,
+            eExcelConditionalFormattingRuleType ruleType,
             ExcelAddress address,
             int priority,
-			ExcelWorksheet worksheet,
-			XmlNode itemElementNode,
-			XmlNamespaceManager namespaceManager)
-			: this(
+            ExcelWorksheet worksheet,
+            XmlNode itemElementNode,
+            XmlNamespaceManager namespaceManager)
+            : this(
             ruleType,
             address,
             worksheet,
             itemElementNode,
-			namespaceManager)
-		{
-			Require.Argument(priority).IsInRange(1, int.MaxValue, "priority");
+            namespaceManager)
+        {
+            Require.Argument(priority).IsInRange(1, int.MaxValue, "priority");
 
             // Check if the parent does not exists
-			if (itemElementNode == null)
-			{
-				// Get the parent node path by the rule type
-				string parentNodePath = ExcelConditionalFormattingValueObjectType.GetParentPathByRuleType(
-					ruleType);
+            if (itemElementNode == null)
+            {
+                // Get the parent node path by the rule type
+                string parentNodePath = ExcelConditionalFormattingValueObjectType.GetParentPathByRuleType(
+                    ruleType);
 
-				// Check for en error (rule type does not have <cfvo>)
-				if (parentNodePath == string.Empty)
-				{
-					throw new Exception(
-						ExcelConditionalFormattingConstants.Errors.MissingCfvoParentNode);
-				}
+                // Check for en error (rule type does not have <cfvo>)
+                if (parentNodePath == string.Empty)
+                {
+                    throw new Exception(
+                        ExcelConditionalFormattingConstants.Errors.MissingCfvoParentNode);
+                }
 
-				// Point to the <cfvo> parent node
-        itemElementNode = _worksheet.WorksheetXml.SelectSingleNode(
-					string.Format(
-						"//{0}[{1}='{2}']/{3}[{4}='{5}']/{6}",
-					// {0}
-						ExcelConditionalFormattingConstants.Paths.ConditionalFormatting,
-					// {1}
-						ExcelConditionalFormattingConstants.Paths.SqrefAttribute,
-					// {2}
-						address.Address,
-					// {3}
-						ExcelConditionalFormattingConstants.Paths.CfRule,
-					// {4}
-						ExcelConditionalFormattingConstants.Paths.PriorityAttribute,
-					// {5}
-						priority,
-					// {6}
-						parentNodePath),
-					_worksheet.NameSpaceManager);
+                // Point to the <cfvo> parent node
+                itemElementNode = _worksheet.WorksheetXml.SelectSingleNode(
+                            string.Format(
+                                "//{0}[{1}='{2}']/{3}[{4}='{5}']/{6}",
+                                // {0}
+                                ExcelConditionalFormattingConstants.Paths.ConditionalFormatting,
+                                // {1}
+                                ExcelConditionalFormattingConstants.Paths.SqrefAttribute,
+                                // {2}
+                                address.Address,
+                                // {3}
+                                ExcelConditionalFormattingConstants.Paths.CfRule,
+                                // {4}
+                                ExcelConditionalFormattingConstants.Paths.PriorityAttribute,
+                                // {5}
+                                priority,
+                                // {6}
+                                parentNodePath),
+                            _worksheet.NameSpaceManager);
 
-				// Check for en error (rule type does not have <cfvo>)
+                // Check for en error (rule type does not have <cfvo>)
                 if (itemElementNode == null)
-				{
-					throw new Exception(
-						ExcelConditionalFormattingConstants.Errors.MissingCfvoParentNode);
-				}
-			}
+                {
+                    throw new Exception(
+                        ExcelConditionalFormattingConstants.Errors.MissingCfvoParentNode);
+                }
+            }
 
             TopNode = itemElementNode;
 
-			// Save the attributes
-			RuleType = ruleType;
-			Type = type;
-			Value = value;
-			Formula = formula;
-		}
-    /// <summary>
-    /// Initialize the cfvo (§18.3.1.11) node
-    /// </summary>
-    /// <param name="ruleType"></param>
-    /// <param name="address"></param>
-    /// <param name="worksheet"></param>
-    /// <param name="itemElementNode">The cfvo (§18.3.1.11) node parent. Can be any of the following:
-    /// colorScale (§18.3.1.16); dataBar (§18.3.1.28); iconSet (§18.3.1.49)</param>
-    /// <param name="namespaceManager"></param>
+            // Save the attributes
+            RuleType = ruleType;
+            Type = type;
+            Value = value;
+            Formula = formula;
+        }
+
+        /// <summary>
+        /// Initialize the cfvo (§18.3.1.11) node
+        /// </summary>
+        /// <param name="ruleType"></param>
+        /// <param name="address"></param>
+        /// <param name="worksheet"></param>
+        /// <param name="itemElementNode">The cfvo (§18.3.1.11) node parent. Can be any of the following:
+        /// colorScale (§18.3.1.16); dataBar (§18.3.1.28); iconSet (§18.3.1.49)</param>
+        /// <param name="namespaceManager"></param>
         internal ExcelConditionalFormattingIconDataBarValue(
             eExcelConditionalFormattingRuleType ruleType,
             ExcelAddress address,
@@ -167,9 +161,9 @@ namespace OfficeOpenXml.ConditionalFormatting
 
             // Schema order list
             SchemaNodeOrder = new string[]
-			{
+            {
                 ExcelConditionalFormattingConstants.Nodes.Cfvo,
-			};
+            };
 
             //Check if the parent does not exists
             if (itemElementNode == null)
@@ -185,112 +179,102 @@ namespace OfficeOpenXml.ConditionalFormatting
                         ExcelConditionalFormattingConstants.Errors.MissingCfvoParentNode);
                 }
             }
-            RuleType = ruleType;            
+            RuleType = ruleType;
         }
-		/// <summary>
-		/// Initialize the <see cref="ExcelConditionalFormattingColorScaleValue"/>
-		/// </summary>
-		/// <param name="type"></param>
-		/// <param name="value"></param>
-		/// <param name="formula"></param>
-		/// <param name="ruleType"></param>
-		/// <param name="priority"></param>
-		/// <param name="address"></param>
-		/// <param name="worksheet"></param>
-		/// <param name="namespaceManager"></param>
-		internal ExcelConditionalFormattingIconDataBarValue(
-			eExcelConditionalFormattingValueObjectType type,
-			double value,
-			string formula,
-			eExcelConditionalFormattingRuleType ruleType,
+
+        /// <summary>
+        /// Initialize the <see cref="ExcelConditionalFormattingColorScaleValue"/>
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="formula"></param>
+        /// <param name="ruleType"></param>
+        /// <param name="priority"></param>
+        /// <param name="address"></param>
+        /// <param name="worksheet"></param>
+        /// <param name="namespaceManager"></param>
+        internal ExcelConditionalFormattingIconDataBarValue(
+            eExcelConditionalFormattingValueObjectType type,
+            double value,
+            string formula,
+            eExcelConditionalFormattingRuleType ruleType,
             ExcelAddress address,
             int priority,
-			ExcelWorksheet worksheet,
-			XmlNamespaceManager namespaceManager)
-			: this(
-				type,
-				value,
-				formula,
-				ruleType,
+            ExcelWorksheet worksheet,
+            XmlNamespaceManager namespaceManager)
+            : this(
+                type,
+                value,
+                formula,
+                ruleType,
                 address,
                 priority,
-				worksheet,
-				null,
-				namespaceManager)
-		{
-            
-		}
-		/// <summary>
-		/// Initialize the <see cref="ExcelConditionalFormattingColorScaleValue"/>
-		/// </summary>
-		/// <param name="type"></param>
-		/// <param name="color"></param>
-		/// <param name="ruleType"></param>
-		/// <param name="priority"></param>
-		/// <param name="address"></param>
-		/// <param name="worksheet"></param>
-		/// <param name="namespaceManager"></param>
-		internal ExcelConditionalFormattingIconDataBarValue(
-			eExcelConditionalFormattingValueObjectType type,
-			Color color,
-			eExcelConditionalFormattingRuleType ruleType,
+                worksheet,
+                null,
+                namespaceManager)
+        {
+        }
+
+        /// <summary>
+        /// Initialize the <see cref="ExcelConditionalFormattingColorScaleValue"/>
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="color"></param>
+        /// <param name="ruleType"></param>
+        /// <param name="priority"></param>
+        /// <param name="address"></param>
+        /// <param name="worksheet"></param>
+        /// <param name="namespaceManager"></param>
+        internal ExcelConditionalFormattingIconDataBarValue(
+            eExcelConditionalFormattingValueObjectType type,
+            SKColor color,
+            eExcelConditionalFormattingRuleType ruleType,
             ExcelAddress address,
             int priority,
-			ExcelWorksheet worksheet,
-			XmlNamespaceManager namespaceManager)
-			: this(
-				type,
-				0,
-				null,
-				ruleType,
+            ExcelWorksheet worksheet,
+            XmlNamespaceManager namespaceManager)
+            : this(
+                type,
+                0,
+                null,
+                ruleType,
                 address,
                 priority,
-				worksheet,
-				null,
-				namespaceManager)
-		{
-		}
-		#endregion Constructors
-
-		/****************************************************************************************/
-
-		#region Methods
-        #endregion
+                worksheet,
+                null,
+                namespaceManager)
+        {
+        }
 
         /****************************************************************************************/
 
-		#region Exposed Properties
+        /****************************************************************************************/
 
-		/// <summary>
-		/// 
-		/// </summary>
-		internal eExcelConditionalFormattingRuleType RuleType
-		{
-			get { return _ruleType; }
-			set { _ruleType = value; }
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		public eExcelConditionalFormattingValueObjectType Type
-		{
-			get
-			{
-				var typeAttribute = GetXmlNodeString(ExcelConditionalFormattingConstants.Paths.TypeAttribute);
-
-				return ExcelConditionalFormattingValueObjectType.GetTypeByAttrbiute(typeAttribute);
-			}
-			set
-			{
-                if ((_ruleType==eExcelConditionalFormattingRuleType.ThreeIconSet || _ruleType==eExcelConditionalFormattingRuleType.FourIconSet || _ruleType==eExcelConditionalFormattingRuleType.FiveIconSet) &&
-                    (value == eExcelConditionalFormattingValueObjectType.Min || value == eExcelConditionalFormattingValueObjectType.Max))
+        /// <summary>
+        /// Get/Set the Formula of the Object Value (uses the same attribute as the Value)
+        /// </summary>
+        public string Formula
+        {
+            get
+            {
+                // Return empty if the Object Value type is not Formula
+                if (Type != eExcelConditionalFormattingValueObjectType.Formula)
                 {
-                    throw(new ArgumentException("Value type can't be Min or Max for icon sets"));
+                    return string.Empty;
                 }
-                SetXmlNodeString(ExcelConditionalFormattingConstants.Paths.TypeAttribute, value.ToString().ToLower(CultureInfo.InvariantCulture));                
-			}
-		}
+
+                // Excel stores the formula in the @val attribute
+                return GetXmlNodeString(ExcelConditionalFormattingConstants.Paths.ValAttribute);
+            }
+            set
+            {
+                // Only store the formula if the Object Value type is Formula
+                if (Type == eExcelConditionalFormattingValueObjectType.Formula)
+                {
+                    SetXmlNodeString(ExcelConditionalFormattingConstants.Paths.ValAttribute, value);
+                }
+            }
+        }
 
         /// <summary>
         /// Get/Set the 'cfvo' node @gte attribute
@@ -304,22 +288,42 @@ namespace OfficeOpenXml.ConditionalFormatting
 
             set
             {
-                SetXmlNodeString(  
+                SetXmlNodeString(
                     ExcelConditionalFormattingConstants.Paths.GteAttribute,
                     (value == false) ? "0" : string.Empty,
                     true);
             }
         }
 
+        /// <summary>
+        ///
+        /// </summary>
+        public eExcelConditionalFormattingValueObjectType Type
+        {
+            get
+            {
+                var typeAttribute = GetXmlNodeString(ExcelConditionalFormattingConstants.Paths.TypeAttribute);
 
+                return ExcelConditionalFormattingValueObjectType.GetTypeByAttrbiute(typeAttribute);
+            }
+            set
+            {
+                if ((_ruleType == eExcelConditionalFormattingRuleType.ThreeIconSet || _ruleType == eExcelConditionalFormattingRuleType.FourIconSet || _ruleType == eExcelConditionalFormattingRuleType.FiveIconSet) &&
+                    (value == eExcelConditionalFormattingValueObjectType.Min || value == eExcelConditionalFormattingValueObjectType.Max))
+                {
+                    throw (new ArgumentException("Value type can't be Min or Max for icon sets"));
+                }
+                SetXmlNodeString(ExcelConditionalFormattingConstants.Paths.TypeAttribute, value.ToString().ToLower(CultureInfo.InvariantCulture));
+            }
+        }
 
         /// <summary>
         /// Get/Set the 'cfvo' node @val attribute
         /// </summary>
         public Double Value
-		{
-			get
-			{
+        {
+            get
+            {
                 if ((Type == eExcelConditionalFormattingValueObjectType.Num)
                     || (Type == eExcelConditionalFormattingValueObjectType.Percent)
                     || (Type == eExcelConditionalFormattingValueObjectType.Percentile))
@@ -331,49 +335,31 @@ namespace OfficeOpenXml.ConditionalFormatting
                     return 0;
                 }
             }
-			set
-			{
-				string valueToStore = string.Empty;
+            set
+            {
+                string valueToStore = string.Empty;
 
-				// Only some types use the @val attribute
-				if ((Type == eExcelConditionalFormattingValueObjectType.Num)
-					|| (Type == eExcelConditionalFormattingValueObjectType.Percent)
-					|| (Type == eExcelConditionalFormattingValueObjectType.Percentile))
-				{
-					valueToStore = value.ToString(CultureInfo.InvariantCulture);
-				}
+                // Only some types use the @val attribute
+                if ((Type == eExcelConditionalFormattingValueObjectType.Num)
+                    || (Type == eExcelConditionalFormattingValueObjectType.Percent)
+                    || (Type == eExcelConditionalFormattingValueObjectType.Percentile))
+                {
+                    valueToStore = value.ToString(CultureInfo.InvariantCulture);
+                }
 
                 SetXmlNodeString(ExcelConditionalFormattingConstants.Paths.ValAttribute, valueToStore);
-			}
-		}
+            }
+        }
 
-		/// <summary>
-		/// Get/Set the Formula of the Object Value (uses the same attribute as the Value)
-		/// </summary>
-		public string Formula
-		{
-			get
-			{
-				// Return empty if the Object Value type is not Formula
-				if (Type != eExcelConditionalFormattingValueObjectType.Formula)
-				{
-					return string.Empty;
-				}
+        /// <summary>
+        ///
+        /// </summary>
+        internal eExcelConditionalFormattingRuleType RuleType
+        {
+            get { return _ruleType; }
+            set { _ruleType = value; }
+        }
 
-				// Excel stores the formula in the @val attribute
-				return GetXmlNodeString(ExcelConditionalFormattingConstants.Paths.ValAttribute);
-			}
-			set
-			{
-				// Only store the formula if the Object Value type is Formula
-				if (Type == eExcelConditionalFormattingValueObjectType.Formula)
-				{
-                    SetXmlNodeString(ExcelConditionalFormattingConstants.Paths.ValAttribute, value);
-				}
-			}
-		}
-		#endregion Exposed Properties
-
-		/****************************************************************************************/
-	}
+        /****************************************************************************************/
+    }
 }

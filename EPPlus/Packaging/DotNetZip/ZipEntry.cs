@@ -25,7 +25,6 @@
 //
 // ------------------------------------------------------------------
 
-
 using System;
 using System.IO;
 using Interop = System.Runtime.InteropServices;
@@ -219,7 +218,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _metadataChanged = true;
             }
         }
-
 
         private int BufferSize
         {
@@ -486,8 +484,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _metadataChanged = true;
         }
 
-
-
         /// <summary>
         ///   Specifies whether the Creation, Access, and Modified times for the given
         ///   entry will be emitted in "Windows format" when the zip archive is saved.
@@ -663,7 +659,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         /// The type of timestamp attached to the ZipEntry.
         /// </summary>
@@ -752,7 +747,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _metadataChanged = true;
             }
         }
-
 
         /// <summary>
         ///   The name of the filesystem file, referred to by the ZipEntry.
@@ -887,7 +881,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         /// The stream that provides content for the ZipEntry.
         /// </summary>
@@ -944,7 +937,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   A flag indicating whether the InputStream was provided Just-in-time.
         /// </summary>
@@ -984,8 +976,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get { return _sourceWasJitProvided; }
         }
 
-
-
         /// <summary>
         /// An enum indicating the source of the ZipEntry.
         /// </summary>
@@ -993,7 +983,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             get { return _Source; }
         }
-
 
         /// <summary>
         /// The version of the zip engine needed to read the ZipEntry.
@@ -1104,7 +1093,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         /// Indicates whether the entry requires ZIP64 extensions.
         /// </summary>
@@ -1180,7 +1168,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             get { return _OutputUsesZip64; }
         }
-
 
         /// <summary>
         ///   The bitfield for the entry as defined in the zip spec. You probably
@@ -1402,7 +1389,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   Sets the compression level to be used for the entry when saving the zip
         ///   archive. This applies only for CompressionMethod = DEFLATE.
@@ -1474,8 +1460,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _restreamRequiredOnSave = true;
             }
         }
-
-
 
         /// <summary>
         ///   The compressed size of the file, in bytes, within the zip archive.
@@ -1602,7 +1586,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             get { return (_Encryption_FromZipFile != EncryptionAlgorithm.None); }
         }
-
 
         /// <summary>
         ///   Set this to specify which encryption algorithm to use for the entry when
@@ -1779,7 +1762,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         /// The Password to be used when encrypting a <c>ZipEntry</c> upon
         /// <c>ZipFile.Save()</c>, or when decrypting an entry upon Extract().
@@ -1952,8 +1934,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             private get { return _Password; }
         }
 
-
-
         internal bool IsChanged
         {
             get
@@ -1961,7 +1941,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _restreamRequiredOnSave | _metadataChanged;
             }
         }
-
 
         /// <summary>
         /// The action the library should take when extracting a file that already exists.
@@ -2026,7 +2005,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             set;
         }
 
-
         /// <summary>
         ///   The action to take when an error is encountered while
         ///   opening or reading files as they are saved into a zip archive.
@@ -2069,7 +2047,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             set;
         }
 
-
         /// <summary>
         /// Indicates whether the entry was included in the most recent save.
         /// </summary>
@@ -2086,7 +2063,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   A callback that allows the application to specify the compression to use
         ///   for a given entry that is about to be added to the zip archive.
@@ -2102,8 +2078,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get;
             set;
         }
-
-
 
         /// <summary>
         ///   Set to indicate whether to use UTF-8 encoding for filenames and comments.
@@ -2145,7 +2119,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 {
                     AlternateEncoding = System.Text.Encoding.GetEncoding("UTF-8");
                     AlternateEncodingUsage = ZipOption.AsNecessary;
-
                 }
                 else
                 {
@@ -2228,7 +2201,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get; set;
         }
 
-
         /// <summary>
         ///   Describes if and when this instance should apply
         ///   AlternateEncoding to encode the FileName and Comment, when
@@ -2239,7 +2211,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             get; set;
         }
-
 
         // /// <summary>
         // /// The text encoding actually used for this ZipEntry.
@@ -2278,15 +2249,11 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         //     }
         // }
 
-
-
-
         internal static string NameInArchive(String filename, string directoryPathInArchive)
         {
             string result = null;
             if (directoryPathInArchive == null)
                 result = filename;
-
             else
             {
                 if (String.IsNullOrEmpty(directoryPathInArchive))
@@ -2336,7 +2303,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             return Create(nameInArchive, ZipEntrySource.ZipOutputStream, null, null);
         }
-
 
         private static ZipEntry Create(string nameInArchive, ZipEntrySource source, Object arg1, Object arg2)
         {
@@ -2419,7 +2385,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                     entry._ntfsTimesAreSet = true;
 
                     entry._LocalFileName = Path.GetFullPath(filename); // workitem 8813
-
                 }
                 catch (System.IO.PathTooLongException ptle)
                 {
@@ -2428,7 +2393,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                                             filename);
                     throw new ZipException(msg, ptle);
                 }
-
             }
 
             entry._LastModified = entry._Mtime;
@@ -2438,9 +2402,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return entry;
         }
 
-
-
-
         internal void MarkAsDirectory()
         {
             _IsDirectory = true;
@@ -2448,8 +2409,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             if (!_FileNameInArchive.EndsWith("/"))
                 _FileNameInArchive += "/";
         }
-
-
 
         /// <summary>
         ///   Indicates whether an entry is marked as a text file. Be careful when
@@ -2543,15 +2502,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             set { _IsText = value; }
         }
 
-
-
         /// <summary>Provides a string representation of the instance.</summary>
         /// <returns>a string representation of the instance.</returns>
         public override String ToString()
         {
             return String.Format("ZipEntry::{0}", FileName);
         }
-
 
         internal Stream ArchiveStream
         {
@@ -2573,7 +2529,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _archiveStream;
             }
         }
-
 
         private void SetFdpLoh()
         {
@@ -2629,8 +2584,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             Ionic.Zip.SharedUtilities.Workaround_Ladybug318918(this.ArchiveStream);
         }
 
-
-
 #if AESCRYPTO
         private static int GetKeyStrengthInBits(EncryptionAlgorithm a)
         {
@@ -2659,7 +2612,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             throw new ZipException("internal error");
         }
 
-
         internal long FileDataPosition
         {
             get
@@ -2681,8 +2633,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _LengthOfHeader;
             }
         }
-
-
 
         private ZipCrypto _zipCrypto_forExtract;
         private ZipCrypto _zipCrypto_forWrite;
@@ -2764,15 +2714,11 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         private OpenDelegate _OpenDelegate;
         private CloseDelegate _CloseDelegate;
 
-
         // summary
         // The default size of the IO buffer for ZipEntry instances. Currently it is 8192 bytes.
         // summary
         //public const int IO_BUFFER_SIZE_DEFAULT = 8192; // 0x8000; // 0x4400
-
     }
-
-
 
     /// <summary>
     ///   An enum that specifies the type of timestamp available on the ZipEntry.
@@ -2851,8 +2797,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         InfoZip1 = 8,
     }
 
-
-
     /// <summary>
     ///   The method of compression to use for a particular ZipEntry.
     /// </summary>
@@ -2888,7 +2832,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 #endif
     }
 
-
 #if NETCF
     internal class NetCfFile
     {
@@ -2918,7 +2861,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return 0;
         }
 
-
         public static int SetLastWriteTime(string filename, DateTime mtime)
         {
             IntPtr hFile  = (IntPtr) CreateFileCE(filename,
@@ -2944,7 +2886,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return 0;
         }
 
-
         [Interop.DllImport("coredll.dll", EntryPoint="CreateFile", SetLastError=true)]
         internal static extern int CreateFileCE(string lpFileName,
                                                 uint dwDesiredAccess,
@@ -2953,7 +2894,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                                                 uint dwCreationDisposition,
                                                 uint dwFlagsAndAttributes,
                                                 int hTemplateFile);
-
 
         [Interop.DllImport("coredll", EntryPoint="GetFileAttributes", SetLastError=true)]
         internal static extern uint GetAttributes(string lpFileName);
@@ -2966,10 +2906,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
         [Interop.DllImport("coredll.dll", SetLastError=true)]
         internal static extern bool CloseHandle(IntPtr hObject);
-
     }
 #endif
-
-
-
 }

@@ -46,22 +46,21 @@
 // and so on.
 // ------------------------------------------------------------------
 
-
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
-using System.Text;
 using System.Reflection;
-using System.ComponentModel;
+using System.Text;
 using System.Text.RegularExpressions;
-using System.Collections.Generic;
+
 #if SILVERLIGHT
 using System.Linq;
 #endif
 
 namespace OfficeOpenXml.Packaging.Ionic
 {
-
     /// <summary>
     /// Enumerates the options for a logical conjunction. This enum is intended for use
     /// internally by the FileSelector class.
@@ -81,23 +80,26 @@ namespace OfficeOpenXml.Packaging.Ionic
         ctime,
     }
 
-
     internal enum ComparisonOperator
     {
         [Description(">")]
         GreaterThan,
+
         [Description(">=")]
         GreaterThanOrEqualTo,
+
         [Description("<")]
         LesserThan,
+
         [Description("<=")]
         LesserThanOrEqualTo,
+
         [Description("=")]
         EqualTo,
+
         [Description("!=")]
         NotEqualTo
     }
-
 
     internal abstract partial class SelectionCriterion
     {
@@ -105,6 +107,7 @@ namespace OfficeOpenXml.Packaging.Ionic
         {
             get;set;
         }
+
         internal abstract bool Evaluate(string filename);
 
         [System.Diagnostics.Conditional("SelectorTrace")]
@@ -113,7 +116,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             //System.Console.WriteLine("  " + format, args);
         }
     }
-
 
     internal partial class SizeCriterion : SelectionCriterion
     {
@@ -143,30 +145,33 @@ namespace OfficeOpenXml.Packaging.Ionic
                 case ComparisonOperator.GreaterThanOrEqualTo:
                     result = Length >= Size;
                     break;
+
                 case ComparisonOperator.GreaterThan:
                     result = Length > Size;
                     break;
+
                 case ComparisonOperator.LesserThanOrEqualTo:
                     result = Length <= Size;
                     break;
+
                 case ComparisonOperator.LesserThan:
                     result = Length < Size;
                     break;
+
                 case ComparisonOperator.EqualTo:
                     result = Length == Size;
                     break;
+
                 case ComparisonOperator.NotEqualTo:
                     result = Length != Size;
                     break;
+
                 default:
                     throw new ArgumentException("Operator");
             }
             return result;
         }
-
     }
-
-
 
     internal partial class TimeCriterion : SelectionCriterion
     {
@@ -189,19 +194,21 @@ namespace OfficeOpenXml.Packaging.Ionic
                 case WhichTime.atime:
                     x = System.IO.File.GetLastAccessTime(filename).ToUniversalTime();
                     break;
+
                 case WhichTime.mtime:
                     x = System.IO.File.GetLastWriteTime(filename).ToUniversalTime();
                     break;
+
                 case WhichTime.ctime:
                     x = System.IO.File.GetCreationTime(filename).ToUniversalTime();
                     break;
+
                 default:
                     throw new ArgumentException("Operator");
             }
             CriterionTrace("TimeCriterion({0},{1})= {2}", filename, Which.ToString(), x);
             return _Evaluate(x);
         }
-
 
         private bool _Evaluate(DateTime x)
         {
@@ -211,21 +218,27 @@ namespace OfficeOpenXml.Packaging.Ionic
                 case ComparisonOperator.GreaterThanOrEqualTo:
                     result = (x >= Time);
                     break;
+
                 case ComparisonOperator.GreaterThan:
                     result = (x > Time);
                     break;
+
                 case ComparisonOperator.LesserThanOrEqualTo:
                     result = (x <= Time);
                     break;
+
                 case ComparisonOperator.LesserThan:
                     result = (x < Time);
                     break;
+
                 case ComparisonOperator.EqualTo:
                     result = (x == Time);
                     break;
+
                 case ComparisonOperator.NotEqualTo:
                     result = (x != Time);
                     break;
+
                 default:
                     throw new ArgumentException("Operator");
             }
@@ -235,14 +248,13 @@ namespace OfficeOpenXml.Packaging.Ionic
         }
     }
 
-
-
     internal partial class NameCriterion : SelectionCriterion
     {
         private Regex _re;
         private String _regexString;
         internal ComparisonOperator Operator;
         private string _MatchingFileSpec;
+
         internal virtual string MatchingFileSpec
         {
             set
@@ -272,7 +284,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             }
         }
 
-
         public override String ToString()
         {
             StringBuilder sb = new StringBuilder();
@@ -282,7 +293,6 @@ namespace OfficeOpenXml.Packaging.Ionic
                 .Append("'");
             return sb.ToString();
         }
-
 
         internal override bool Evaluate(string filename)
         {
@@ -308,11 +318,11 @@ namespace OfficeOpenXml.Packaging.Ionic
         }
     }
 
-
     internal partial class TypeCriterion : SelectionCriterion
     {
         private char ObjectType;  // 'D' = Directory, 'F' = File
         internal ComparisonOperator Operator;
+
         internal string AttributeString
         {
             get
@@ -349,12 +359,13 @@ namespace OfficeOpenXml.Packaging.Ionic
         }
     }
 
-
 #if !SILVERLIGHT
+
     internal partial class AttributesCriterion : SelectionCriterion
     {
         private FileAttributes _Attributes;
         internal ComparisonOperator Operator;
+
         internal string AttributeString
         {
             get
@@ -425,7 +436,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             }
         }
 
-
         public override String ToString()
         {
             StringBuilder sb = new StringBuilder();
@@ -442,8 +452,6 @@ namespace OfficeOpenXml.Packaging.Ionic
                 result = true;
             return result;
         }
-
-
 
         internal override bool Evaluate(string filename)
         {
@@ -484,8 +492,8 @@ namespace OfficeOpenXml.Packaging.Ionic
             return result;
         }
     }
-#endif
 
+#endif
 
     internal partial class CompoundCriterion : SelectionCriterion
     {
@@ -493,6 +501,7 @@ namespace OfficeOpenXml.Packaging.Ionic
         internal SelectionCriterion Left;
 
         private SelectionCriterion _Right;
+
         internal SelectionCriterion Right
         {
             get { return _Right; }
@@ -506,7 +515,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             }
         }
 
-
         internal override bool Evaluate(string filename)
         {
             bool result = Left.Evaluate(filename);
@@ -516,19 +524,21 @@ namespace OfficeOpenXml.Packaging.Ionic
                     if (result)
                         result = Right.Evaluate(filename);
                     break;
+
                 case LogicalConjunction.OR:
                     if (!result)
                         result = Right.Evaluate(filename);
                     break;
+
                 case LogicalConjunction.XOR:
                     result ^= Right.Evaluate(filename);
                     break;
+
                 default:
                     throw new ArgumentException("Conjunction");
             }
             return result;
         }
-
 
         public override String ToString()
         {
@@ -543,8 +553,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             return sb.ToString();
         }
     }
-
-
 
     /// <summary>
     ///   FileSelector encapsulates logic that selects files from a source - a zip file
@@ -595,6 +603,7 @@ namespace OfficeOpenXml.Packaging.Ionic
         /// </remarks>
         protected FileSelector() { }
 #endif
+
         /// <summary>
         ///   Constructor that allows the caller to specify file selection criteria.
         /// </summary>
@@ -649,8 +658,6 @@ namespace OfficeOpenXml.Packaging.Ionic
                 _Criterion = _ParseCriterion(selectionCriteria);
             TraverseReparsePoints = traverseDirectoryReparsePoints;
         }
-
-
 
         /// <summary>
         ///   The string specifying which files to include when retrieving.
@@ -860,7 +867,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             get; set;
         }
 
-
         private enum ParseState
         {
             Start,
@@ -870,7 +876,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             Whitespace,
         }
 
-
         private static class RegexAssertions
         {
             public static readonly String PrecededByOddNumberOfSingleQuotes = "(?<=(?:[^']*'[^']*')*'[^']*)";
@@ -879,7 +884,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             public static readonly String PrecededByEvenNumberOfSingleQuotes = "(?<=(?:[^']*'[^']*')*[^']*)";
             public static readonly String FollowedByEvenNumberOfSingleQuotesAndLineEnd = "(?=(?:[^']*'[^']*')*[^']*$)";
         }
-
 
         private static string NormalizeCriteriaExpression(string source)
         {
@@ -992,7 +996,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             // spaces within quotes.
             return Regex.Replace(interim, regexPattern, "\u0006");
         }
-
 
         private static SelectionCriterion _ParseCriterion(String s)
         {
@@ -1107,7 +1110,6 @@ namespace OfficeOpenXml.Packaging.Ionic
                         i += 2;
                         stateStack.Push(ParseState.CriterionDone);
                         break;
-
 
                     case "length":
                     case "size":
@@ -1252,7 +1254,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             return current;
         }
 
-
         /// <summary>
         /// Returns a string representation of the FileSelector object.
         /// </summary>
@@ -1262,7 +1263,6 @@ namespace OfficeOpenXml.Packaging.Ionic
         {
             return "FileSelector("+_Criterion.ToString()+")";
         }
-
 
         private bool Evaluate(string filename)
         {
@@ -1302,7 +1302,6 @@ namespace OfficeOpenXml.Packaging.Ionic
         {
             return SelectFiles(directory, false);
         }
-
 
         /// <summary>
         ///   Returns the names of the files in the specified directory that fit the
@@ -1383,14 +1382,15 @@ namespace OfficeOpenXml.Packaging.Ionic
         }
     }
 
-
-
     /// <summary>
     /// Summary description for EnumUtil.
     /// </summary>
     internal sealed class EnumUtil
     {
-        private EnumUtil() { }
+        private EnumUtil()
+        {
+        }
+
         /// <summary>
         ///   Returns the value of the DescriptionAttribute if the specified Enum
         ///   value has one.  If not, returns the ToString() representation of the
@@ -1422,7 +1422,6 @@ namespace OfficeOpenXml.Packaging.Ionic
         {
             return Parse(enumType, stringRepresentation, false);
         }
-
 
 #if SILVERLIGHT
        public static System.Enum[] GetEnumValues(Type type)
@@ -1486,7 +1485,6 @@ namespace OfficeOpenXml.Packaging.Ionic
         }
     }
 
-
 #if DEMO
     internal class DemonstrateFileSelector
     {
@@ -1513,12 +1511,14 @@ namespace OfficeOpenXml.Packaging.Ionic
                     Usage();
                     Environment.Exit(0);
                     break;
+
                 case "-d":
                     i++;
                     if (args.Length <= i)
                         throw new ArgumentException("-directory");
                     this._directory = args[i];
                     break;
+
                 case "-norecurse":
                     this._recurse = false;
                     break;
@@ -1547,7 +1547,6 @@ namespace OfficeOpenXml.Packaging.Ionic
             }
         }
 
-
         public static void Main(string[] args)
         {
             try
@@ -1561,7 +1560,6 @@ namespace OfficeOpenXml.Packaging.Ionic
                 Usage();
             }
         }
-
 
         public void Run()
         {
@@ -1601,9 +1599,4 @@ namespace OfficeOpenXml.Packaging.Ionic
     }
 
 #endif
-
-
-
 }
-
-

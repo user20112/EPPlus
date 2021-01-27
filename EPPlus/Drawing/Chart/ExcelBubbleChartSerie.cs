@@ -13,24 +13,23 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
+
 using System.Text;
 using System.Xml;
 
@@ -41,6 +40,16 @@ namespace OfficeOpenXml.Drawing.Chart
     /// </summary>
     public sealed class ExcelBubbleChartSerie : ExcelChartSerie
     {
+        private const string BUBBLE3D_PATH = "c:bubble3D/@val";
+
+        private const string BUBBLESIZE_PATH = BUBBLESIZE_TOPPATH + "/c:numRef/c:f";
+
+        private const string BUBBLESIZE_TOPPATH = "c:bubbleSize";
+
+        private const string INVERTIFNEGATIVE_PATH = "c:invertIfNegative/@val";
+
+        private ExcelChartSerieDataLabel _DataLabel = null;
+
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -51,9 +60,40 @@ namespace OfficeOpenXml.Drawing.Chart
         internal ExcelBubbleChartSerie(ExcelChartSeries chartSeries, XmlNamespaceManager ns, XmlNode node, bool isPivot) :
             base(chartSeries, ns, node, isPivot)
         {
-
         }
-        ExcelChartSerieDataLabel _DataLabel = null;
+
+        public string BubbleSize
+        {
+            get
+            {
+                return GetXmlNodeString(BUBBLESIZE_PATH);
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    GenerateLit();
+                }
+                else
+                {
+                    SetXmlNodeString(BUBBLESIZE_PATH, ExcelCellBase.GetFullAddress(_chartSeries.Chart.WorkSheet.Name, value));
+
+                    XmlNode cache = TopNode.SelectSingleNode(string.Format("{0}/c:numCache", BUBBLESIZE_PATH), _ns);
+                    if (cache != null)
+                    {
+                        cache.ParentNode.RemoveChild(cache);
+                    }
+
+                    DeleteNode(string.Format("{0}/c:numLit", BUBBLESIZE_TOPPATH));
+                    //XmlNode lit = TopNode.SelectSingleNode(string.Format("{0}/c:numLit", _xSeriesTopPath), _ns);
+                    //if (lit != null)
+                    //{
+                    //    lit.ParentNode.RemoveChild(lit);
+                    //}
+                }
+            }
+        }
+
         /// <summary>
         /// Datalabel
         /// </summary>
@@ -68,30 +108,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 return _DataLabel;
             }
         }
-        const string BUBBLE3D_PATH = "c:bubble3D/@val";
-        internal bool Bubble3D
-        {
-            get
-            {
-                return GetXmlNodeBool(BUBBLE3D_PATH, true);
-            }
-            set
-            {
-                SetXmlNodeBool(BUBBLE3D_PATH, value);    
-            }
-        }
-        const string INVERTIFNEGATIVE_PATH = "c:invertIfNegative/@val";
-        internal bool InvertIfNegative
-        {
-            get
-            {
-                return GetXmlNodeBool(INVERTIFNEGATIVE_PATH, true);
-            }
-            set
-            {
-                SetXmlNodeBool(INVERTIFNEGATIVE_PATH, value);
-            }
-        }
+
         public override string Series
         {
             get
@@ -101,43 +118,34 @@ namespace OfficeOpenXml.Drawing.Chart
             set
             {
                 base.Series = value;
-                if(string.IsNullOrEmpty(BubbleSize))
+                if (string.IsNullOrEmpty(BubbleSize))
                 {
                     GenerateLit();
                 }
             }
         }
-        const string BUBBLESIZE_TOPPATH = "c:bubbleSize";
-        const string BUBBLESIZE_PATH = BUBBLESIZE_TOPPATH + "/c:numRef/c:f";
-        public string BubbleSize
+
+        internal bool Bubble3D
         {
             get
             {
-                return GetXmlNodeString(BUBBLESIZE_PATH);
+                return GetXmlNodeBool(BUBBLE3D_PATH, true);
             }
             set
             {
-                if(string.IsNullOrEmpty(value))
-                {
-                    GenerateLit();
-                }
-                else
-                {
-                    SetXmlNodeString(BUBBLESIZE_PATH, ExcelCellBase.GetFullAddress(_chartSeries.Chart.WorkSheet.Name, value));
-                
-                    XmlNode cache = TopNode.SelectSingleNode(string.Format("{0}/c:numCache", BUBBLESIZE_PATH), _ns);
-                    if (cache != null)
-                    {
-                        cache.ParentNode.RemoveChild(cache);
-                    }
+                SetXmlNodeBool(BUBBLE3D_PATH, value);
+            }
+        }
 
-                    DeleteNode(string.Format("{0}/c:numLit", BUBBLESIZE_TOPPATH));
-                    //XmlNode lit = TopNode.SelectSingleNode(string.Format("{0}/c:numLit", _xSeriesTopPath), _ns);
-                    //if (lit != null)
-                    //{
-                    //    lit.ParentNode.RemoveChild(lit);
-                    //}
-                }
+        internal bool InvertIfNegative
+        {
+            get
+            {
+                return GetXmlNodeBool(INVERTIFNEGATIVE_PATH, true);
+            }
+            set
+            {
+                SetXmlNodeBool(INVERTIFNEGATIVE_PATH, value);
             }
         }
 

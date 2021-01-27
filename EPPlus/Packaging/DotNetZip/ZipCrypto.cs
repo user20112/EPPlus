@@ -29,6 +29,120 @@ using System;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
+    internal enum CryptoMode
+    {
+        Encrypt,
+        Decrypt
+    }
+
+    /// <summary>
+    ///   A Stream for reading and concurrently decrypting data from a zip file,
+    ///   or for writing and concurrently encrypting data to a zip file.
+    /// </summary>
+    internal class ZipCipherStream : System.IO.Stream
+    {
+        private ZipCrypto _cipher;
+        private CryptoMode _mode;
+        private System.IO.Stream _s;
+
+        /// <summary>  The constructor. </summary>
+        /// <param name="s">The underlying stream</param>
+        /// <param name="mode">To either encrypt or decrypt.</param>
+        /// <param name="cipher">The pre-initialized ZipCrypto object.</param>
+        public ZipCipherStream(System.IO.Stream s, ZipCrypto cipher, CryptoMode mode)
+            : base()
+        {
+            _cipher = cipher;
+            _s = s;
+            _mode = mode;
+        }
+
+        public override bool CanRead
+        {
+            get { return (_mode == CryptoMode.Decrypt); }
+        }
+
+        public override bool CanSeek
+        {
+            get { return false; }
+        }
+
+        public override bool CanWrite
+        {
+            get { return (_mode == CryptoMode.Encrypt); }
+        }
+
+        public override long Length
+        {
+            get { throw new NotSupportedException(); }
+        }
+
+        public override long Position
+        {
+            get { throw new NotSupportedException(); }
+            set { throw new NotSupportedException(); }
+        }
+
+        public override void Flush()
+        {
+            //throw new NotSupportedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (_mode == CryptoMode.Encrypt)
+                throw new NotSupportedException("This stream does not encrypt via Read()");
+
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+
+            byte[] db = new byte[count];
+            int n = _s.Read(db, 0, count);
+            byte[] decrypted = _cipher.DecryptMessage(db, n);
+            for (int i = 0; i < n; i++)
+            {
+                buffer[offset + i] = decrypted[i];
+            }
+            return n;
+        }
+
+        public override long Seek(long offset, System.IO.SeekOrigin origin)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotSupportedException();
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            if (_mode == CryptoMode.Decrypt)
+                throw new NotSupportedException("This stream does not Decrypt via Write()");
+
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+
+            // workitem 7696
+            if (count == 0) return;
+
+            byte[] plaintext = null;
+            if (offset != 0)
+            {
+                plaintext = new byte[count];
+                for (int i = 0; i < count; i++)
+                {
+                    plaintext[i] = buffer[offset + i];
+                }
+            }
+            else plaintext = buffer;
+
+            byte[] encrypted = _cipher.EncryptMessage(plaintext, count);
+            _s.Write(encrypted, 0, encrypted.Length);
+        }
+    }
+
     /// <summary>
     ///   This class implements the "traditional" or "classic" PKZip encryption,
     ///   which today is considered to be weak. On the other hand it is
@@ -48,6 +162,36 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
     /// </remarks>
     internal class ZipCrypto
     {
+        // private fields for the crypto stuff:
+        private UInt32[] _Keys = { 0x12345678, 0x23456789, 0x34567890 };
+
+        ///// <summary>
+        ///// The byte array representing the seed keys used.
+        ///// Get this after calling InitCipher.  The 12 bytes represents
+        ///// what the zip spec calls the "EncryptionHeader".
+        ///// </summary>
+        //public byte[] KeyHeader
+        //{
+        //    get
+        //    {
+        //        byte[] result = new byte[12];
+        //        result[0] = (byte)(_Keys[0] & 0xff);
+        //        result[1] = (byte)((_Keys[0] >> 8) & 0xff);
+        //        result[2] = (byte)((_Keys[0] >> 16) & 0xff);
+        //        result[3] = (byte)((_Keys[0] >> 24) & 0xff);
+        //        result[4] = (byte)(_Keys[1] & 0xff);
+        //        result[5] = (byte)((_Keys[1] >> 8) & 0xff);
+        //        result[6] = (byte)((_Keys[1] >> 16) & 0xff);
+        //        result[7] = (byte)((_Keys[1] >> 24) & 0xff);
+        //        result[8] = (byte)(_Keys[2] & 0xff);
+        //        result[9] = (byte)((_Keys[2] >> 8) & 0xff);
+        //        result[10] = (byte)((_Keys[2] >> 16) & 0xff);
+        //        result[11] = (byte)((_Keys[2] >> 24) & 0xff);
+        //        return result;
+        //    }
+        //}
+        private Ionic.Crc.CRC32 crc32 = new Ionic.Crc.CRC32();
+
         /// <summary>
         ///   The default constructor for ZipCrypto.
         /// </summary>
@@ -62,15 +206,22 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         ///
         private ZipCrypto() { }
 
-        public static ZipCrypto ForWrite(string password)
+        /// <summary>
+        /// From AppNote.txt:
+        /// unsigned char decrypt_byte()
+        ///     local unsigned short temp
+        ///     temp :=- Key(2) | 2
+        ///     decrypt_byte := (temp * (temp ^ 1)) bitshift-right 8
+        /// end decrypt_byte
+        /// </summary>
+        private byte MagicByte
         {
-            ZipCrypto z = new ZipCrypto();
-            if (password == null)
-                throw new BadPasswordException("This entry requires a password.");
-            z.InitCipher(password);
-            return z;
+            get
+            {
+                UInt16 t = (UInt16)((UInt16)(_Keys[2] & 0xFFFF) | 2);
+                return (byte)((t * (t ^ 1)) >> 8);
+            }
         }
-
 
         public static ZipCrypto ForRead(string password, ZipEntry e)
         {
@@ -139,24 +290,13 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return z;
         }
 
-
-
-
-        /// <summary>
-        /// From AppNote.txt:
-        /// unsigned char decrypt_byte()
-        ///     local unsigned short temp
-        ///     temp :=- Key(2) | 2
-        ///     decrypt_byte := (temp * (temp ^ 1)) bitshift-right 8
-        /// end decrypt_byte
-        /// </summary>
-        private byte MagicByte
+        public static ZipCrypto ForWrite(string password)
         {
-            get
-            {
-                UInt16 t = (UInt16)((UInt16)(_Keys[2] & 0xFFFF) | 2);
-                return (byte)((t * (t ^ 1)) >> 8);
-            }
+            ZipCrypto z = new ZipCrypto();
+            if (password == null)
+                throw new BadPasswordException("This entry requires a password.");
+            z.InitCipher(password);
+            return z;
         }
 
         // Decrypting:
@@ -166,7 +306,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         //     update_keys(C)
         //     buffer(i) := C
         // end loop
-
 
         /// <summary>
         ///   Call this method on a cipher text to render the plaintext. You must
@@ -241,7 +380,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return cipherText;
         }
 
-
         /// <summary>
         ///   This initializes the cipher with the given password.
         ///   See AppNote.txt for details.
@@ -299,157 +437,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 UpdateKeys(p[i]);
         }
 
-
         private void UpdateKeys(byte byteValue)
         {
             _Keys[0] = (UInt32)crc32.ComputeCrc32((int)_Keys[0], byteValue);
             _Keys[1] = _Keys[1] + (byte)_Keys[0];
             _Keys[1] = _Keys[1] * 0x08088405 + 1;
             _Keys[2] = (UInt32)crc32.ComputeCrc32((int)_Keys[2], (byte)(_Keys[1] >> 24));
-        }
-
-        ///// <summary>
-        ///// The byte array representing the seed keys used.
-        ///// Get this after calling InitCipher.  The 12 bytes represents
-        ///// what the zip spec calls the "EncryptionHeader".
-        ///// </summary>
-        //public byte[] KeyHeader
-        //{
-        //    get
-        //    {
-        //        byte[] result = new byte[12];
-        //        result[0] = (byte)(_Keys[0] & 0xff);
-        //        result[1] = (byte)((_Keys[0] >> 8) & 0xff);
-        //        result[2] = (byte)((_Keys[0] >> 16) & 0xff);
-        //        result[3] = (byte)((_Keys[0] >> 24) & 0xff);
-        //        result[4] = (byte)(_Keys[1] & 0xff);
-        //        result[5] = (byte)((_Keys[1] >> 8) & 0xff);
-        //        result[6] = (byte)((_Keys[1] >> 16) & 0xff);
-        //        result[7] = (byte)((_Keys[1] >> 24) & 0xff);
-        //        result[8] = (byte)(_Keys[2] & 0xff);
-        //        result[9] = (byte)((_Keys[2] >> 8) & 0xff);
-        //        result[10] = (byte)((_Keys[2] >> 16) & 0xff);
-        //        result[11] = (byte)((_Keys[2] >> 24) & 0xff);
-        //        return result;
-        //    }
-        //}
-
-        // private fields for the crypto stuff:
-        private UInt32[] _Keys = { 0x12345678, 0x23456789, 0x34567890 };
-        private Ionic.Crc.CRC32 crc32 = new Ionic.Crc.CRC32();
-
-    }
-
-    internal enum CryptoMode
-    {
-        Encrypt,
-        Decrypt
-    }
-
-    /// <summary>
-    ///   A Stream for reading and concurrently decrypting data from a zip file,
-    ///   or for writing and concurrently encrypting data to a zip file.
-    /// </summary>
-    internal class ZipCipherStream : System.IO.Stream
-    {
-        private ZipCrypto _cipher;
-        private System.IO.Stream _s;
-        private CryptoMode _mode;
-
-        /// <summary>  The constructor. </summary>
-        /// <param name="s">The underlying stream</param>
-        /// <param name="mode">To either encrypt or decrypt.</param>
-        /// <param name="cipher">The pre-initialized ZipCrypto object.</param>
-        public ZipCipherStream(System.IO.Stream s, ZipCrypto cipher, CryptoMode mode)
-            : base()
-        {
-            _cipher = cipher;
-            _s = s;
-            _mode = mode;
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            if (_mode == CryptoMode.Encrypt)
-                throw new NotSupportedException("This stream does not encrypt via Read()");
-
-            if (buffer == null)
-                throw new ArgumentNullException("buffer");
-
-            byte[] db = new byte[count];
-            int n = _s.Read(db, 0, count);
-            byte[] decrypted = _cipher.DecryptMessage(db, n);
-            for (int i = 0; i < n; i++)
-            {
-                buffer[offset + i] = decrypted[i];
-            }
-            return n;
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            if (_mode == CryptoMode.Decrypt)
-                throw new NotSupportedException("This stream does not Decrypt via Write()");
-
-            if (buffer == null)
-                throw new ArgumentNullException("buffer");
-
-            // workitem 7696
-            if (count == 0) return;
-
-            byte[] plaintext = null;
-            if (offset != 0)
-            {
-                plaintext = new byte[count];
-                for (int i = 0; i < count; i++)
-                {
-                    plaintext[i] = buffer[offset + i];
-                }
-            }
-            else plaintext = buffer;
-
-            byte[] encrypted = _cipher.EncryptMessage(plaintext, count);
-            _s.Write(encrypted, 0, encrypted.Length);
-        }
-
-
-        public override bool CanRead
-        {
-            get { return (_mode == CryptoMode.Decrypt); }
-        }
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
-
-        public override bool CanWrite
-        {
-            get { return (_mode == CryptoMode.Encrypt); }
-        }
-
-        public override void Flush()
-        {
-            //throw new NotSupportedException();
-        }
-
-        public override long Length
-        {
-            get { throw new NotSupportedException(); }
-        }
-
-        public override long Position
-        {
-            get { throw new NotSupportedException(); }
-            set { throw new NotSupportedException(); }
-        }
-        public override long Seek(long offset, System.IO.SeekOrigin origin)
-        {
-            throw new NotSupportedException();
-        }
-
-        public override void SetLength(long value)
-        {
-            throw new NotSupportedException();
         }
     }
 }

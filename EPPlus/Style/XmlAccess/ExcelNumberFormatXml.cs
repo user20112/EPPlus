@@ -13,28 +13,30 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml;
 using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml;
+
 namespace OfficeOpenXml.Style.XmlAccess
 {
     /// <summary>
@@ -42,77 +44,39 @@ namespace OfficeOpenXml.Style.XmlAccess
     /// </summary>
     public sealed class ExcelNumberFormatXml : StyleXmlHelper
     {
+        private const string fmtPath = "@formatCode";
+
+        private string _format = string.Empty;
+
+        private int _numFmtId;
+
+        private ExcelFormatTranslator _translator = null;
+
         internal ExcelNumberFormatXml(XmlNamespaceManager nameSpaceManager) : base(nameSpaceManager)
         {
-            
-        }        
+        }
+
         internal ExcelNumberFormatXml(XmlNamespaceManager nameSpaceManager, bool buildIn): base(nameSpaceManager)
         {
             BuildIn = buildIn;
         }
+
         internal ExcelNumberFormatXml(XmlNamespaceManager nsm, XmlNode topNode) :
             base(nsm, topNode)
         {
             _numFmtId = GetXmlNodeInt("@numFmtId");
             _format = GetXmlNodeString("@formatCode");
         }
+
+        internal enum eFormatType
+        {
+            Unknown = 0,
+            Number = 1,
+            DateTime = 2,
+        }
+
         public bool BuildIn { get; private set; }
-        int _numFmtId;
-//        const string idPath = "@numFmtId";
-        /// <summary>
-        /// Id for number format
-        /// 
-        /// Build in ID's
-        /// 
-        /// 0   General 
-        /// 1   0 
-        /// 2   0.00 
-        /// 3   #,##0 
-        /// 4   #,##0.00 
-        /// 9   0% 
-        /// 10  0.00% 
-        /// 11  0.00E+00 
-        /// 12  # ?/? 
-        /// 13  # ??/?? 
-        /// 14  mm-dd-yy 
-        /// 15  d-mmm-yy 
-        /// 16  d-mmm 
-        /// 17  mmm-yy 
-        /// 18  h:mm AM/PM 
-        /// 19  h:mm:ss AM/PM 
-        /// 20  h:mm 
-        /// 21  h:mm:ss 
-        /// 22  m/d/yy h:mm 
-        /// 37  #,##0 ;(#,##0) 
-        /// 38  #,##0 ;[Red](#,##0) 
-        /// 39  #,##0.00;(#,##0.00) 
-        /// 40  #,##0.00;[Red](#,##0.00) 
-        /// 45  mm:ss 
-        /// 46  [h]:mm:ss 
-        /// 47  mmss.0 
-        /// 48  ##0.0E+0 
-        /// 49  @
-        /// </summary>            
-        public int NumFmtId
-        {
-            get
-            {
-                return _numFmtId;
-            }
-            set
-            {
-                _numFmtId = value;
-            }
-        }
-        internal override string Id
-        {
-            get
-            {
-                return _format;
-            }
-        }
-        const string fmtPath = "@formatCode";
-        string _format = string.Empty;
+
         public string Format
         {
             get
@@ -125,29 +89,87 @@ namespace OfficeOpenXml.Style.XmlAccess
                 _format = value;
             }
         }
-        internal string GetNewID(int NumFmtId, string Format)
+
+        //        const string idPath = "@numFmtId";
+        /// <summary>
+        /// Id for number format
+        ///
+        /// Build in ID's
+        ///
+        /// 0   General
+        /// 1   0
+        /// 2   0.00
+        /// 3   #,##0
+        /// 4   #,##0.00
+        /// 9   0%
+        /// 10  0.00%
+        /// 11  0.00E+00
+        /// 12  # ?/?
+        /// 13  # ??/??
+        /// 14  mm-dd-yy
+        /// 15  d-mmm-yy
+        /// 16  d-mmm
+        /// 17  mmm-yy
+        /// 18  h:mm AM/PM
+        /// 19  h:mm:ss AM/PM
+        /// 20  h:mm
+        /// 21  h:mm:ss
+        /// 22  m/d/yy h:mm
+        /// 37  #,##0 ;(#,##0)
+        /// 38  #,##0 ;[Red](#,##0)
+        /// 39  #,##0.00;(#,##0.00)
+        /// 40  #,##0.00;[Red](#,##0.00)
+        /// 45  mm:ss
+        /// 46  [h]:mm:ss
+        /// 47  mmss.0
+        /// 48  ##0.0E+0
+        /// 49  @
+        /// </summary>
+        public int NumFmtId
         {
-            
-            if (NumFmtId < 0)
+            get
             {
-                NumFmtId = ExcelNumberFormat.GetFromBuildIdFromFormat(Format);                
+                return _numFmtId;
             }
-            return NumFmtId.ToString();
+            set
+            {
+                _numFmtId = value;
+            }
+        }
+
+        internal ExcelFormatTranslator FormatTranslator
+        {
+            get
+            {
+                if (_translator == null)
+                {
+                    _translator = new ExcelFormatTranslator(Format, NumFmtId);
+                }
+                return _translator;
+            }
+        }
+
+        internal override string Id
+        {
+            get
+            {
+                return _format;
+            }
         }
 
         internal static void AddBuildIn(XmlNamespaceManager NameSpaceManager, ExcelStyleCollection<ExcelNumberFormatXml> NumberFormats)
         {
-            NumberFormats.Add("General",new ExcelNumberFormatXml(NameSpaceManager,true){NumFmtId=0,Format="General"});
-            NumberFormats.Add("0", new ExcelNumberFormatXml(NameSpaceManager,true) { NumFmtId = 1, Format = "0" });
-            NumberFormats.Add("0.00", new ExcelNumberFormatXml(NameSpaceManager,true) { NumFmtId = 2, Format = "0.00" });
+            NumberFormats.Add("General", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 0, Format = "General" });
+            NumberFormats.Add("0", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 1, Format = "0" });
+            NumberFormats.Add("0.00", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 2, Format = "0.00" });
             NumberFormats.Add("#,##0", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 3, Format = "#,##0" });
             NumberFormats.Add("#,##0.00", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 4, Format = "#,##0.00" });
-            NumberFormats.Add("0%", new ExcelNumberFormatXml(NameSpaceManager,true) { NumFmtId = 9, Format = "0%" });
-            NumberFormats.Add("0.00%", new ExcelNumberFormatXml(NameSpaceManager,true) { NumFmtId = 10, Format = "0.00%" });
+            NumberFormats.Add("0%", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 9, Format = "0%" });
+            NumberFormats.Add("0.00%", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 10, Format = "0.00%" });
             NumberFormats.Add("0.00E+00", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 11, Format = "0.00E+00" });
             NumberFormats.Add("# ?/?", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 12, Format = "# ?/?" });
-            NumberFormats.Add("# ??/??", new ExcelNumberFormatXml(NameSpaceManager,true) { NumFmtId = 13, Format = "# ??/??" });
-            NumberFormats.Add("mm-dd-yy", new ExcelNumberFormatXml(NameSpaceManager,true) { NumFmtId = 14, Format = "mm-dd-yy" });
+            NumberFormats.Add("# ??/??", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 13, Format = "# ??/??" });
+            NumberFormats.Add("mm-dd-yy", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 14, Format = "mm-dd-yy" });
             NumberFormats.Add("d-mmm-yy", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 15, Format = "d-mmm-yy" });
             NumberFormats.Add("d-mmm", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 16, Format = "d-mmm" });
             NumberFormats.Add("mmm-yy", new ExcelNumberFormatXml(NameSpaceManager, true) { NumFmtId = 17, Format = "mmm-yy" });
@@ -177,35 +199,19 @@ namespace OfficeOpenXml.Style.XmlAccess
             return TopNode;
         }
 
-        internal enum eFormatType
+        internal string GetNewID(int NumFmtId, string Format)
         {
-            Unknown = 0,
-            Number = 1,
-            DateTime = 2,
-        }
-        ExcelFormatTranslator _translator = null;
-        internal ExcelFormatTranslator FormatTranslator
-        {
-            get
+            if (NumFmtId < 0)
             {
-                if (_translator == null)
-                {
-                    _translator = new ExcelFormatTranslator(Format, NumFmtId);
-                }
-                return _translator;
+                NumFmtId = ExcelNumberFormat.GetFromBuildIdFromFormat(Format);
             }
+            return NumFmtId.ToString();
         }
-        #region Excel --> .Net Format
+
         internal class ExcelFormatTranslator
         {
-            internal enum eSystemDateFormat
-            {
-                None,
-                SystemLongDate,
-                SystemLongTime,
-                Conditional,
-                SystemShortDate,
-            }
+            private CultureInfo _ci = null;
+
             internal ExcelFormatTranslator(string format, int numFmtID)
             {
                 if (numFmtID == 14)
@@ -215,7 +221,7 @@ namespace OfficeOpenXml.Style.XmlAccess
                     SpecialDateFormat = eSystemDateFormat.SystemShortDate;
                     DataType = eFormatType.DateTime;
                 }
-                else if (format.Equals("general",StringComparison.OrdinalIgnoreCase))
+                else if (format.Equals("general", StringComparison.OrdinalIgnoreCase))
                 {
                     NetFormat = NetFormatForWidth = "0.#####";
                     NetTextFormat = NetTextFormatForWidth = "";
@@ -225,11 +231,18 @@ namespace OfficeOpenXml.Style.XmlAccess
                 {
                     ToNetFormat(format, false);
                     ToNetFormat(format, true);
-                }                
+                }
             }
-            internal string NetTextFormat { get; private set; }
-            internal string NetFormat { get; private set; }
-            CultureInfo _ci = null;
+
+            internal enum eSystemDateFormat
+            {
+                None,
+                SystemLongDate,
+                SystemLongTime,
+                Conditional,
+                SystemShortDate,
+            }
+
             internal CultureInfo Culture
             {
                 get
@@ -245,11 +258,146 @@ namespace OfficeOpenXml.Style.XmlAccess
                     _ci = value;
                 }
             }
+
             internal eFormatType DataType { get; private set; }
-            internal string NetTextFormatForWidth { get; private set; }
-            internal string NetFormatForWidth { get; private set; }
             internal string FractionFormat { get; private set; }
+            internal string NetFormat { get; private set; }
+            internal string NetFormatForWidth { get; private set; }
+            internal string NetTextFormat { get; private set; }
+            internal string NetTextFormatForWidth { get; private set; }
             internal eSystemDateFormat SpecialDateFormat { get; private set; }
+
+            internal string FormatFraction(double d)
+            {
+                int numerator, denomerator;
+
+                int intPart = (int)d;
+
+                string[] fmt = FractionFormat.Split('/');
+
+                int fixedDenominator;
+                if (!int.TryParse(fmt[1], out fixedDenominator))
+                {
+                    fixedDenominator = 0;
+                }
+
+                if (d == 0 || double.IsNaN(d))
+                {
+                    if (fmt[0].Trim() == "" && fmt[1].Trim() == "")
+                    {
+                        return new string(' ', FractionFormat.Length);
+                    }
+                    else
+                    {
+                        return 0.ToString(fmt[0]) + "/" + 1.ToString(fmt[0]);
+                    }
+                }
+
+                int maxDigits = fmt[1].Length;
+                string sign = d < 0 ? "-" : "";
+                if (fixedDenominator == 0)
+                {
+                    List<double> numerators = new List<double>() { 1, 0 };
+                    List<double> denominators = new List<double>() { 0, 1 };
+
+                    if (maxDigits < 1 && maxDigits > 12)
+                    {
+                        throw (new ArgumentException("Number of digits out of range (1-12)"));
+                    }
+
+                    int maxNum = 0;
+                    for (int i = 0; i < maxDigits; i++)
+                    {
+                        maxNum += 9 * (int)(Math.Pow((double)10, (double)i));
+                    }
+
+                    double divRes = 1 / ((double)Math.Abs(d) - intPart);
+                    double result, prevResult = double.NaN;
+                    int listPos = 2, index = 1;
+                    while (true)
+                    {
+                        index++;
+                        double intDivRes = Math.Floor(divRes);
+                        numerators.Add((intDivRes * numerators[index - 1] + numerators[index - 2]));
+                        if (numerators[index] > maxNum)
+                        {
+                            break;
+                        }
+
+                        denominators.Add((intDivRes * denominators[index - 1] + denominators[index - 2]));
+
+                        result = numerators[index] / denominators[index];
+                        if (denominators[index] > maxNum)
+                        {
+                            break;
+                        }
+                        listPos = index;
+
+                        if (result == prevResult) break;
+
+                        if (result == d) break;
+
+                        prevResult = result;
+
+                        divRes = 1 / (divRes - intDivRes);  //Rest
+                    }
+
+                    numerator = (int)numerators[listPos];
+                    denomerator = (int)denominators[listPos];
+                }
+                else
+                {
+                    numerator = (int)Math.Round((d - intPart) / (1D / fixedDenominator), 0);
+                    denomerator = fixedDenominator;
+                }
+                if (numerator == denomerator || numerator == 0)
+                {
+                    if (numerator == denomerator) intPart++;
+                    return sign + intPart.ToString(NetFormat).Replace("?", new string(' ', FractionFormat.Length));
+                }
+                else if (intPart == 0)
+                {
+                    return sign + FmtInt(numerator, fmt[0]) + "/" + FmtInt(denomerator, fmt[1]);
+                }
+                else
+                {
+                    return sign + intPart.ToString(NetFormat).Replace("?", FmtInt(numerator, fmt[0]) + "/" + FmtInt(denomerator, fmt[1]));
+                }
+            }
+
+            private static void SetDecimal(List<int> lstDec, StringBuilder sb)
+            {
+                if (lstDec.Count > 1)
+                {
+                    for (int i = lstDec.Count - 1; i >= 0; i--)
+                    {
+                        sb.Insert(lstDec[i] + 1, '\'');
+                        sb.Insert(lstDec[i], '\'');
+                    }
+                }
+            }
+
+            private string FmtInt(double value, string format)
+            {
+                string v = value.ToString("#");
+                string pad = "";
+                if (v.Length < format.Length)
+                {
+                    for (int i = format.Length - v.Length - 1; i >= 0; i--)
+                    {
+                        if (format[i] == '?')
+                        {
+                            pad += " ";
+                        }
+                        else if (format[i] == ' ')
+                        {
+                            pad += "0";
+                        }
+                    }
+                }
+                return pad + v;
+            }
+
             private void ToNetFormat(string ExcelFormat, bool forColWidth)
             {
                 DataType = eFormatType.Unknown;
@@ -336,7 +484,7 @@ namespace OfficeOpenXml.Style.XmlAccess
                                 {
                                     SpecialDateFormat = eSystemDateFormat.Conditional;
                                 }
-                                else 
+                                else
                                 {
                                     sb.Append(bracketText);
                                     SpecialDateFormat = eSystemDateFormat.Conditional;
@@ -394,7 +542,7 @@ namespace OfficeOpenXml.Style.XmlAccess
                                     if (c == '.' || c == ',')
                                     {
                                         sb.Append('\\');
-                                    }                                    
+                                    }
                                     sb.Append(c);
                                     prevBslsh = false;
                                 }
@@ -516,7 +664,6 @@ namespace OfficeOpenXml.Style.XmlAccess
                     format += "tt";
                 }
 
-
                 if (format == "")
                     format = sb.ToString();
                 else
@@ -537,138 +684,6 @@ namespace OfficeOpenXml.Style.XmlAccess
                     Culture = CultureInfo.CurrentCulture;
                 }
             }
-
-            private static void SetDecimal(List<int> lstDec, StringBuilder sb)
-            {
-                if (lstDec.Count > 1)
-                {
-                    for (int i = lstDec.Count - 1; i >= 0; i--)
-                    {
-                        sb.Insert(lstDec[i] + 1, '\'');
-                        sb.Insert(lstDec[i], '\'');
-                    }
-                }
-            }
-
-            internal string FormatFraction(double d)
-            {
-                int numerator, denomerator;
-
-                int intPart = (int)d;
-
-                string[] fmt = FractionFormat.Split('/');
-
-                int fixedDenominator;
-                if (!int.TryParse(fmt[1], out fixedDenominator))
-                {
-                    fixedDenominator = 0;
-                }
-                
-                if (d == 0 || double.IsNaN(d))
-                {
-                    if (fmt[0].Trim() == "" && fmt[1].Trim() == "")
-                    {
-                        return new string(' ', FractionFormat.Length);
-                    }
-                    else
-                    {
-                        return 0.ToString(fmt[0]) + "/" + 1.ToString(fmt[0]);
-                    }
-                }
-
-                int maxDigits = fmt[1].Length;
-                string sign = d < 0 ? "-" : "";
-                if (fixedDenominator == 0)
-                {
-                    List<double> numerators = new List<double>() { 1, 0 };
-                    List<double> denominators = new List<double>() { 0, 1 };
-
-                    if (maxDigits < 1 && maxDigits > 12)
-                    {
-                        throw (new ArgumentException("Number of digits out of range (1-12)"));
-                    }
-
-                    int maxNum = 0;
-                    for (int i = 0; i < maxDigits; i++)
-                    {
-                        maxNum += 9 * (int)(Math.Pow((double)10, (double)i));
-                    }
-
-                    double divRes = 1 / ((double)Math.Abs(d) - intPart);
-                    double result, prevResult = double.NaN;
-                    int listPos = 2, index = 1;
-                    while (true)
-                    {
-                        index++;
-                        double intDivRes = Math.Floor(divRes);
-                        numerators.Add((intDivRes * numerators[index - 1] + numerators[index - 2]));
-                        if (numerators[index] > maxNum)
-                        {
-                            break;
-                        }
-
-                        denominators.Add((intDivRes * denominators[index - 1] + denominators[index - 2]));
-
-                        result = numerators[index] / denominators[index];
-                        if (denominators[index] > maxNum)
-                        {
-                            break;
-                        }
-                        listPos = index;
-
-                        if (result == prevResult) break;
-
-                        if (result == d) break;
-
-                        prevResult = result;
-
-                        divRes = 1 / (divRes - intDivRes);  //Rest
-                    }
-                    
-                    numerator = (int)numerators[listPos];
-                    denomerator = (int)denominators[listPos];
-                }
-                else
-                {
-                    numerator = (int)Math.Round((d - intPart) / (1D / fixedDenominator), 0);
-                    denomerator = fixedDenominator;
-                }
-                if (numerator == denomerator || numerator==0)
-                {
-                    if(numerator == denomerator) intPart++;
-                    return sign + intPart.ToString(NetFormat).Replace("?", new string(' ', FractionFormat.Length));
-                }
-                else if (intPart == 0)
-                {
-                    return sign + FmtInt(numerator, fmt[0]) + "/" + FmtInt(denomerator, fmt[1]);
-                }
-                else
-                {
-                    return sign + intPart.ToString(NetFormat).Replace("?", FmtInt(numerator, fmt[0]) + "/" + FmtInt(denomerator, fmt[1]));
-                }
-            }
-
-            private string FmtInt(double value, string format)
-            {
-                string v = value.ToString("#");
-                string pad = "";
-                if (v.Length < format.Length)
-                {
-                    for (int i = format.Length - v.Length-1; i >= 0; i--)
-                    {
-                        if (format[i] == '?')
-                        {
-                            pad += " ";
-                        }
-                        else if (format[i] == ' ')
-                        {
-                            pad += "0";
-                        }
-                    }
-                }
-                return pad + v;
-            }
         }
-#endregion
     }
 }

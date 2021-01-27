@@ -13,33 +13,34 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2013-03-01 (Prior file history on https://github.com/swmal/ExcelFormulaParser)
  *******************************************************************************/
+
+using OfficeOpenXml.FormulaParsing.Excel.Functions;
+using OfficeOpenXml.FormulaParsing.Logging;
+using OfficeOpenXml.FormulaParsing.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.Excel.Functions;
-using OfficeOpenXml.FormulaParsing.Logging;
-using OfficeOpenXml.FormulaParsing.Utilities;
+
 namespace OfficeOpenXml.FormulaParsing
 {
     /// <summary>
-    /// Provides access to various functionality regarding 
+    /// Provides access to various functionality regarding
     /// excel formula evaluation.
     /// </summary>
     public class FormulaParserManager
@@ -50,17 +51,6 @@ namespace OfficeOpenXml.FormulaParsing
         {
             Require.That(parser).Named("parser").IsNotNull();
             _parser = parser;
-        }
-
-        /// <summary>
-        /// Loads a module containing custom functions to the formula parser. By using
-        /// this method you can add your own implementations of Excel functions, by
-        /// implementing a <see cref="IFunctionModule"/>.
-        /// </summary>
-        /// <param name="module">A <see cref="IFunctionModule"/> containing <see cref="ExcelFunction"/>s.</param>
-        public void LoadFunctionModule(IFunctionModule module)
-        {
-            _parser.Configure(x => x.FunctionRepository.LoadModule(module));
         }
 
         /// <summary>
@@ -76,6 +66,25 @@ namespace OfficeOpenXml.FormulaParsing
         }
 
         /// <summary>
+        /// Attaches a logger to the <see cref="FormulaParser"/>.
+        /// </summary>
+        /// <param name="logger">An instance of <see cref="IFormulaParserLogger"/></param>
+        /// <see cref="OfficeOpenXml.FormulaParsing.Logging.LoggerFactory"/>
+        public void AttachLogger(IFormulaParserLogger logger)
+        {
+            _parser.Configure(c => c.AttachLogger(logger));
+        }
+
+        /// <summary>
+        /// Attaches a logger to the formula parser that produces output to the supplied logfile.
+        /// </summary>
+        /// <param name="logfile"></param>
+        public void AttachLogger(FileInfo logfile)
+        {
+            _parser.Configure(c => c.AttachLogger(LoggerFactory.CreateTextFileLogger(logfile)));
+        }
+
+        /// <summary>
         /// Copies existing <see cref="ExcelFunction"/>´s from one workbook to another.
         /// </summary>
         /// <param name="otherWorkbook">The workbook containing the forumulas to be copied.</param>
@@ -86,6 +95,14 @@ namespace OfficeOpenXml.FormulaParsing
             {
                 AddOrReplaceFunction(func.Key, func.Value);
             }
+        }
+
+        /// <summary>
+        /// Detaches any attached logger from the formula parser.
+        /// </summary>
+        public void DetachLogger()
+        {
+            _parser.Configure(c => c.DetachLogger());
         }
 
         /// <summary>
@@ -115,7 +132,18 @@ namespace OfficeOpenXml.FormulaParsing
                 }
             });
             return functions;
-        } 
+        }
+
+        /// <summary>
+        /// Loads a module containing custom functions to the formula parser. By using
+        /// this method you can add your own implementations of Excel functions, by
+        /// implementing a <see cref="IFunctionModule"/>.
+        /// </summary>
+        /// <param name="module">A <see cref="IFunctionModule"/> containing <see cref="ExcelFunction"/>s.</param>
+        public void LoadFunctionModule(IFunctionModule module)
+        {
+            _parser.Configure(x => x.FunctionRepository.LoadModule(module));
+        }
 
         /// <summary>
         /// Parses the supplied <paramref name="formula"/> and returns the result.
@@ -125,32 +153,6 @@ namespace OfficeOpenXml.FormulaParsing
         public object Parse(string formula)
         {
             return _parser.Parse(formula);
-        }
-
-        /// <summary>
-        /// Attaches a logger to the <see cref="FormulaParser"/>.
-        /// </summary>
-        /// <param name="logger">An instance of <see cref="IFormulaParserLogger"/></param>
-        /// <see cref="OfficeOpenXml.FormulaParsing.Logging.LoggerFactory"/>
-        public void AttachLogger(IFormulaParserLogger logger)
-        {
-            _parser.Configure(c => c.AttachLogger(logger));
-        }
-
-        /// <summary>
-        /// Attaches a logger to the formula parser that produces output to the supplied logfile.
-        /// </summary>
-        /// <param name="logfile"></param>
-        public void AttachLogger(FileInfo logfile)
-        {
-            _parser.Configure(c => c.AttachLogger(LoggerFactory.CreateTextFileLogger(logfile)));
-        }
-        /// <summary>
-        /// Detaches any attached logger from the formula parser.
-        /// </summary>
-        public void DetachLogger()
-        {
-            _parser.Configure(c => c.DetachLogger());
         }
     }
 }

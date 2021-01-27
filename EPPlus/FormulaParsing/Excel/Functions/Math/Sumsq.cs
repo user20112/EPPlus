@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.ExpressionGraph;
+﻿using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 using OfficeOpenXml.Utils;
+using System.Collections.Generic;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
 {
@@ -21,7 +18,6 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
             }
             return CreateResult(retVal, DataType.Decimal);
         }
-
 
         private double Calculate(FunctionArgument arg, ParsingContext context, bool isInArray = false)
         {

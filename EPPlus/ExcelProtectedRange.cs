@@ -1,8 +1,6 @@
 ﻿using OfficeOpenXml.Utils;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
@@ -18,43 +16,53 @@ namespace OfficeOpenXml
         /// Specifies that the MD2 algorithm, as defined by RFC 1319, shall be used.
         /// </summary>
         MD2,
+
         /// <summary>
         /// Specifies that the MD4 algorithm, as defined by RFC 1319, shall be used.
         /// </summary>
         MD4,
+
         /// <summary>
         /// Specifies that the MD5 algorithm, as defined by RFC 1319, shall be used.
         /// </summary>
         MD5,
+
         /// <summary>
         /// Specifies that the RIPEMD-128 algorithm, as defined by RFC 1319, shall be used.
         /// </summary>
         RIPEMD128,
+
         /// <summary>
         /// Specifies that the RIPEMD-160 algorithm, as defined by ISO/IEC10118-3:2004 shall be used.
         /// </summary>
-        RIPEMD160, 
+        RIPEMD160,
+
         /// <summary>
         /// Specifies that the SHA-1 algorithm, as defined by ISO/IEC 10118-3:2004 shall be used.
         /// </summary>
         SHA1,
+
         /// <summary>
         /// Specifies that the SHA-256 algorithm, as defined by ISO/IEC10118-3:2004 shall be used.
         /// </summary>
-        SHA256, 
+        SHA256,
+
         /// <summary>
         /// Specifies that the SHA-384 algorithm, as defined by ISO/IEC 10118-3:2004 shall be used.
         /// </summary>
         SHA384,
+
         /// <summary>
         /// Specifies that the SHA-512 algorithm, as defined by ISO/IEC10118-3:2004 shall be used.
         /// </summary>
-        SHA512, 
+        SHA512,
+
         /// <summary>
         /// Specifies that the WHIRLPOOL algorithm, as defined by ISO/IEC 10118-3:2004 shall be used.
         /// </summary>
         WHIRLPOOL
     }
+
     public class ExcelProtectedRange : XmlHelper
     {
         public string Name
@@ -68,9 +76,11 @@ namespace OfficeOpenXml
                 SetXmlNodeString("@name",value);
             }
         }
-        ExcelAddress _address=null;
-        public ExcelAddress Address 
-        { 
+
+        private ExcelAddress _address = null;
+
+        public ExcelAddress Address
+        {
             get
             {
                 if(_address==null)
@@ -92,6 +102,7 @@ namespace OfficeOpenXml
             Name = name;
             Address = address;
         }
+
         /// <summary>
         /// Sets the password for the range
         /// </summary>
@@ -102,13 +113,13 @@ namespace OfficeOpenXml
             var rnd = RandomNumberGenerator.Create();
             var bySalt=new byte[16];
             rnd.GetBytes(bySalt);
-            
+
             //Default SHA512 and 10000 spins
             Algorithm=eProtectedRangeAlgorithm.SHA512;
             SpinCount = SpinCount < 100000 ? 100000 : SpinCount;
 
             //Combine salt and password and calculate the initial hash
-#if Core 
+#if Core
             var hp = SHA512.Create();
 #else
             var hp=new SHA512CryptoServiceProvider();
@@ -127,8 +138,9 @@ namespace OfficeOpenXml
                 hash = hp.ComputeHash(buffer);
             }
             Salt = Convert.ToBase64String(bySalt);
-            Hash = Convert.ToBase64String(hash);            
+            Hash = Convert.ToBase64String(hash);
         }
+
         public string SecurityDescriptor
         {
             get
@@ -140,6 +152,7 @@ namespace OfficeOpenXml
                 SetXmlNodeString("@securityDescriptor",value);
             }
         }
+
         internal int SpinCount
         {
             get
@@ -151,6 +164,7 @@ namespace OfficeOpenXml
                 SetXmlNodeString("@spinCount",value.ToString(CultureInfo.InvariantCulture));
             }
         }
+
         internal string Salt
         {
             get
@@ -162,6 +176,7 @@ namespace OfficeOpenXml
                 SetXmlNodeString("@saltValue", value);
             }
         }
+
         internal string Hash
         {
             get
@@ -173,6 +188,7 @@ namespace OfficeOpenXml
                 SetXmlNodeString("@hashValue", value);
             }
         }
+
         internal eProtectedRangeAlgorithm Algorithm
         {
             get

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
-using System.Xml;
-
-namespace OfficeOpenXml.Style.Dxf
+﻿namespace OfficeOpenXml.Style.Dxf
 {
     public class ExcelDxfFontBase : DxfStyleBase<ExcelDxfFontBase>
     {
@@ -14,6 +7,7 @@ namespace OfficeOpenXml.Style.Dxf
         {
             Color = new ExcelDxfColor(styles);
         }
+
         /// <summary>
         /// Font bold
         /// </summary>
@@ -22,6 +16,10 @@ namespace OfficeOpenXml.Style.Dxf
             get;
             set;
         }
+
+        //public float? Size { get; set; }
+        public ExcelDxfColor Color { get; set; }
+
         /// <summary>
         /// Font Italic
         /// </summary>
@@ -30,12 +28,12 @@ namespace OfficeOpenXml.Style.Dxf
             get;
             set;
         }
+
         /// <summary>
         /// Font-Strikeout
         /// </summary>
         public bool? Strike { get; set; }
-        //public float? Size { get; set; }
-        public ExcelDxfColor Color { get; set; }
+
         //public string Name { get; set; }
         //public int? Family { get; set; }
         ///// <summary>
@@ -49,23 +47,6 @@ namespace OfficeOpenXml.Style.Dxf
 
         public ExcelUnderLineType? Underline { get; set; }
 
-        protected internal override string Id
-        {
-            get
-            {
-                return GetAsString(Bold) + "|" + GetAsString(Italic) + "|" + GetAsString(Strike) + "|" + (Color ==null ? "" : Color.Id) + "|" /*+ GetAsString(VerticalAlign) + "|"*/ + GetAsString(Underline);
-            }
-        }
-
-        protected internal override void CreateNodes(XmlHelper helper, string path)
-        {
-            helper.CreateNode(path);
-            SetValueBool(helper, path + "/d:b/@val", Bold);
-            SetValueBool(helper, path + "/d:i/@val", Italic);
-            SetValueBool(helper, path + "/d:strike", Strike);
-            SetValue(helper, path + "/d:u/@val", Underline);
-            SetValueColor(helper, path + "/d:color", Color);
-        }
         protected internal override bool HasValue
         {
             get
@@ -77,9 +58,28 @@ namespace OfficeOpenXml.Style.Dxf
                        Color.HasValue;
             }
         }
+
+        protected internal override string Id
+        {
+            get
+            {
+                return GetAsString(Bold) + "|" + GetAsString(Italic) + "|" + GetAsString(Strike) + "|" + (Color ==null ? "" : Color.Id) + "|" /*+ GetAsString(VerticalAlign) + "|"*/ + GetAsString(Underline);
+            }
+        }
+
         protected internal override ExcelDxfFontBase Clone()
         {
             return new ExcelDxfFontBase(_styles) { Bold = Bold, Color = Color.Clone(), Italic = Italic, Strike = Strike, Underline = Underline };
+        }
+
+        protected internal override void CreateNodes(XmlHelper helper, string path)
+        {
+            helper.CreateNode(path);
+            SetValueBool(helper, path + "/d:b/@val", Bold);
+            SetValueBool(helper, path + "/d:i/@val", Italic);
+            SetValueBool(helper, path + "/d:strike", Strike);
+            SetValue(helper, path + "/d:u/@val", Underline);
+            SetValueColor(helper, path + "/d:color", Color);
         }
     }
 }

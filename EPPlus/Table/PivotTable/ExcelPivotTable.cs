@@ -13,29 +13,28 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Added		21-MAR-2011
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using System.Text.RegularExpressions;
-using OfficeOpenXml.Table;
+
 using OfficeOpenXml.Utils;
+using System;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace OfficeOpenXml.Table.PivotTable
 {
@@ -44,8 +43,45 @@ namespace OfficeOpenXml.Table.PivotTable
     /// </summary>
     public class ExcelPivotTable : XmlHelper
     {
-        internal ExcelPivotTable(Packaging.ZipPackageRelationship rel, ExcelWorksheet sheet) : 
-            base(sheet.NameSpaceManager)
+        private const string DISPLAY_NAME_PATH = "@displayName";
+
+        private const string FIRSTDATACOL_PATH = "d:location/@firstDataCol";
+
+        private const string FIRSTDATAROW_PATH = "d:location/@firstDataRow";
+
+        private const string FIRSTHEADERROW_PATH = "d:location/@firstHeaderRow";
+
+        //const string ID_PATH = "@id";
+        //internal int Id
+        //{
+        //    get
+        //    {
+        //        return GetXmlNodeInt(ID_PATH);
+        //    }
+        //    set
+        //    {
+        //        SetXmlNodeString(ID_PATH, value.ToString());
+        //    }
+        //}
+        private const string NAME_PATH = "@name";
+
+        private const string STYLENAME_PATH = "d:pivotTableStyleInfo/@name";
+        private ExcelPivotCacheDefinition _cacheDefinition = null;
+
+        private ExcelPivotTableRowColumnFieldCollection _columnFields = null;
+
+        private ExcelPivotTableDataFieldCollection _dataFields = null;
+
+        private ExcelPivotTableFieldCollection _fields = null;
+
+        private ExcelPivotTableRowColumnFieldCollection _pageFields = null;
+
+        private ExcelPivotTableRowColumnFieldCollection _rowFields = null;
+
+        private TableStyles _tableStyle = Table.TableStyles.Medium6;
+
+        internal ExcelPivotTable(Packaging.ZipPackageRelationship rel, ExcelWorksheet sheet) :
+                                                                                    base(sheet.NameSpaceManager)
         {
             WorkSheet = sheet;
             PivotTableUri = UriHelper.ResolvePartUri(rel.SourceUri, rel.TargetUri);
@@ -116,6 +152,7 @@ namespace OfficeOpenXml.Table.PivotTable
                 }
             }
         }
+
         /// <summary>
         /// Add a new pivottable
         /// </summary>
@@ -124,7 +161,7 @@ namespace OfficeOpenXml.Table.PivotTable
         /// <param name="sourceAddress">The address of the Source data</param>
         /// <param name="name"></param>
         /// <param name="tblId"></param>
-        internal ExcelPivotTable(ExcelWorksheet sheet, ExcelAddressBase address,ExcelRangeBase sourceAddress, string name, int tblId) : 
+        internal ExcelPivotTable(ExcelWorksheet sheet, ExcelAddressBase address,ExcelRangeBase sourceAddress, string name, int tblId) :
             base(sheet.NameSpaceManager)
 	    {
             WorkSheet = sheet;
@@ -139,7 +176,7 @@ namespace OfficeOpenXml.Table.PivotTable
 
             Part = pck.CreatePart(PivotTableUri, ExcelPackage.schemaPivotTable);
             PivotTableXml.Save(Part.GetStream());
-            
+
             //Worksheet-Pivottable relationship
             Relationship = sheet.Part.CreateRelationship(UriHelper.ResolvePartUri(sheet.WorksheetUri, PivotTableUri), Packaging.TargetMode.Internal, ExcelPackage.schemaRelationships + "/pivotTable");
 
@@ -155,89 +192,438 @@ namespace OfficeOpenXml.Table.PivotTable
                 r.Clear();
             }
         }
-        private void init()
-        {
-            SchemaNodeOrder = new string[] { "location", "pivotFields", "rowFields", "rowItems", "colFields", "colItems", "pageFields", "pageItems", "dataFields", "dataItems", "formats", "pivotTableStyleInfo" };
-        }
-        private void LoadFields()
-        {
-            //Fields.Clear();
-            //int ix=0;
-            //foreach(XmlElement fieldNode in PivotXml.SelectNodes("//d:pivotFields/d:pivotField",NameSpaceManager))
-            //{
-            //    Fields.AddInternal(new ExcelPivotTableField(NameSpaceManager, fieldNode, this, ix++));
-            //}
 
-            int index = 0;
-            //Add fields.
-            foreach (XmlElement fieldElem in TopNode.SelectNodes("d:pivotFields/d:pivotField", NameSpaceManager))
-            {
-                var fld = new ExcelPivotTableField(NameSpaceManager, fieldElem, this, index, index++);
-                Fields.AddInternal(fld);
-            }
-
-            //Add fields.
-            index = 0;
-            foreach (XmlElement fieldElem in _cacheDefinition.TopNode.SelectNodes("d:cacheFields/d:cacheField", NameSpaceManager))
-            {
-                var fld = Fields[index++];
-                fld.SetCacheFieldNode(fieldElem);
-            }
-
-
-        }
-        private string GetStartXml(string name, int id, ExcelAddressBase address, ExcelAddressBase sourceAddress)
-        {
-            string xml = string.Format("<pivotTableDefinition xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" name=\"{0}\" cacheId=\"{1}\" dataOnRows=\"1\" applyNumberFormats=\"0\" applyBorderFormats=\"0\" applyFontFormats=\"0\" applyPatternFormats=\"0\" applyAlignmentFormats=\"0\" applyWidthHeightFormats=\"1\" dataCaption=\"Data\"  createdVersion=\"4\" showMemberPropertyTips=\"0\" useAutoFormatting=\"1\" itemPrintTitles=\"1\" indent=\"0\" compact=\"0\" compactData=\"0\" gridDropZones=\"1\">", ConvertUtil.ExcelEscapeString(name), id);
-
-            xml += string.Format("<location ref=\"{0}\" firstHeaderRow=\"1\" firstDataRow=\"1\" firstDataCol=\"1\" /> ", address.FirstAddress);
-            xml += string.Format("<pivotFields count=\"{0}\">", sourceAddress._toCol-sourceAddress._fromCol+1);
-            for (int col = sourceAddress._fromCol; col <= sourceAddress._toCol; col++)
-            {
-                xml += "<pivotField showAll=\"0\" />"; //compact=\"0\" outline=\"0\" subtotalTop=\"0\" includeNewItemsInFilter=\"1\"     
-            }
-
-            xml += "</pivotFields>";
-            xml += "<pivotTableStyleInfo name=\"PivotStyleMedium9\" showRowHeaders=\"1\" showColHeaders=\"1\" showRowStripes=\"0\" showColStripes=\"0\" showLastColumn=\"1\" />";
-            xml += "</pivotTableDefinition>";
-            return xml;
-        }
-        internal Packaging.ZipPackagePart Part
-        {
-            get;
-            set;
-        }
         /// <summary>
-        /// Provides access to the XML data representing the pivottable in the package.
+        /// The location of the pivot table
         /// </summary>
-        public XmlDocument PivotTableXml { get; private set; }
-        /// <summary>
-        /// The package internal URI to the pivottable Xml Document.
-        /// </summary>
-        public Uri PivotTableUri
+        public ExcelAddressBase Address
         {
             get;
             internal set;
         }
-        internal Packaging.ZipPackageRelationship Relationship
+
+        /// <summary>
+        /// If true apply legacy table autoformat border properties
+        /// </summary>
+        public bool ApplyBorderFormats
         {
-            get;
-            set;
+            get
+            {
+                return GetXmlNodeBool("@applyBorderFormats");
+            }
+            set
+            {
+                SetXmlNodeBool("@applyBorderFormats", value);
+            }
         }
-        //const string ID_PATH = "@id";
-        //internal int Id
-        //{
-        //    get
-        //    {
-        //        return GetXmlNodeInt(ID_PATH);
-        //    }
-        //    set
-        //    {
-        //        SetXmlNodeString(ID_PATH, value.ToString());
-        //    }
-        //}
-        const string NAME_PATH = "@name";
-        const string DISPLAY_NAME_PATH = "@displayName";
+
+        /// <summary>
+        /// If true apply legacy table autoformat font properties
+        /// </summary>
+        public bool ApplyFontFormats
+        {
+            get
+            {
+                return GetXmlNodeBool("@applyFontFormats");
+            }
+            set
+            {
+                SetXmlNodeBool("@applyFontFormats", value);
+            }
+        }
+
+        /// <summary>
+        /// if true apply legacy table autoformat number format properties.
+        /// </summary>
+        public bool ApplyNumberFormats
+        {
+            get
+            {
+                return GetXmlNodeBool("@applyNumberFormats");
+            }
+            set
+            {
+                SetXmlNodeBool("@applyNumberFormats", value);
+            }
+        }
+
+        /// <summary>
+        /// If true apply legacy table autoformat pattern properties
+        /// </summary>
+        public bool ApplyPatternFormats
+        {
+            get
+            {
+                return GetXmlNodeBool("@applyPatternFormats");
+            }
+            set
+            {
+                SetXmlNodeBool("@applyPatternFormats", value);
+            }
+        }
+
+        /// <summary>
+        /// If true apply legacy table autoformat width/height properties.
+        /// </summary>
+        public bool ApplyWidthHeightFormats
+        {
+            get
+            {
+                return GetXmlNodeBool("@applyWidthHeightFormats");
+            }
+            set
+            {
+                SetXmlNodeBool("@applyWidthHeightFormats", value);
+            }
+        }
+
+        /// <summary>
+        /// Reference to the pivot table cache definition object
+        /// </summary>
+        public ExcelPivotCacheDefinition CacheDefinition
+        {
+            get
+            {
+                if (_cacheDefinition == null)
+                {
+                    _cacheDefinition = new ExcelPivotCacheDefinition(NameSpaceManager, this, null, 1);
+                }
+                return _cacheDefinition;
+            }
+        }
+
+        /// <summary>
+        /// If the grand totals should be displayed for the PivotTable columns
+        /// </summary>
+        [Obsolete("Use correctly spelled property 'ColumnGrandTotals'")]
+        public bool ColumGrandTotals
+        {
+            get
+            {
+                return ColumnGrandTotals;
+            }
+            set
+            {
+                ColumnGrandTotals = value;
+            }
+        }
+
+        /// <summary>
+        /// Column label fields
+        /// </summary>
+        public ExcelPivotTableRowColumnFieldCollection ColumnFields
+        {
+            get
+            {
+                if (_columnFields == null)
+                {
+                    _columnFields = new ExcelPivotTableRowColumnFieldCollection(this, "colFields");
+                }
+                return _columnFields;
+            }
+        }
+
+        /// <summary>
+        /// If the grand totals should be displayed for the PivotTable columns
+        /// </summary>
+        public bool ColumnGrandTotals
+        {
+            get
+            {
+                return GetXmlNodeBool("@colGrandTotals");
+            }
+            set
+            {
+                SetXmlNodeBool("@colGrandTotals", value);
+            }
+        }
+
+        /// <summary>
+        /// Specifies the string to be displayed in column header in compact mode.
+        /// </summary>
+        public string ColumnHeaderCaption
+        {
+            get
+            {
+                return GetXmlNodeString("@colHeaderCaption");
+            }
+            set
+            {
+                SetXmlNodeString("@colHeaderCaption", value);
+            }
+        }
+
+        /// <summary>
+        /// A boolean that indicates whether new fields should have their compact flag set to true
+        /// </summary>
+        public bool Compact
+        {
+            get
+            {
+                return GetXmlNodeBool("@compact");
+            }
+            set
+            {
+                SetXmlNodeBool("@compact", value);
+            }
+        }
+
+        /// <summary>
+        /// A boolean that indicates whether the field next to the data field in the PivotTable should be displayed in the same column of the spreadsheet
+        /// </summary>
+        public bool CompactData
+        {
+            get
+            {
+                return GetXmlNodeBool("@compactData");
+            }
+            set
+            {
+                SetXmlNodeBool("@compactData", value);
+            }
+        }
+
+        /// <summary>
+        /// Specifies the name of the value area field header in the PivotTable.
+        /// This caption is shown when the PivotTable when two or more fields are in the values area.
+        /// </summary>
+        public string DataCaption
+        {
+            get
+            {
+                return GetXmlNodeString("@dataCaption");
+            }
+            set
+            {
+                SetXmlNodeString("@dataCaption", value);
+            }
+        }
+
+        /// <summary>
+        /// Value fields
+        /// </summary>
+        public ExcelPivotTableDataFieldCollection DataFields
+        {
+            get
+            {
+                if (_dataFields == null)
+                {
+                    _dataFields = new ExcelPivotTableDataFieldCollection(this);
+                }
+                return _dataFields;
+            }
+        }
+
+        /// <summary>
+        /// If multiple datafields are displayed in the row area or the column area
+        /// </summary>
+        public bool DataOnRows
+        {
+            get
+            {
+                return GetXmlNodeBool("@dataOnRows");
+            }
+            set
+            {
+                SetXmlNodeBool("@dataOnRows", value);
+            }
+        }
+
+        /// <summary>
+        /// If the user is prevented from drilling down on a PivotItem or aggregate value
+        /// </summary>
+        public bool EnableDrill
+        {
+            get
+            {
+                return GetXmlNodeBool("@enableDrill", true);
+            }
+            set
+            {
+                SetXmlNodeBool("@enableDrill", value);
+            }
+        }
+
+        /// <summary>
+        /// The string to be displayed in cells that contain errors.
+        /// </summary>
+        public string ErrorCaption
+        {
+            get
+            {
+                return GetXmlNodeString("@errorCaption");
+            }
+            set
+            {
+                SetXmlNodeString("@errorCaption", value);
+            }
+        }
+
+        /// <summary>
+        /// If the row and column titles from the PivotTable should be printed.
+        /// </summary>
+        public bool FieldPrintTitles
+        {
+            get
+            {
+                return GetXmlNodeBool("@fieldPrintTitles");
+            }
+            set
+            {
+                SetXmlNodeBool("@fieldPrintTitles", value);
+            }
+        }
+
+        /// <summary>
+        /// The fields in the table
+        /// </summary>
+        public ExcelPivotTableFieldCollection Fields
+        {
+            get
+            {
+                if (_fields == null)
+                {
+                    _fields = new ExcelPivotTableFieldCollection(this, "");
+                }
+                return _fields;
+            }
+        }
+
+        /// <summary>
+        /// Specifies the first column of the PivotTable data, relative to the top left cell in the ref value
+        /// </summary>
+        public int FirstDataCol
+        {
+            get
+            {
+                return GetXmlNodeInt(FIRSTDATACOL_PATH);
+            }
+            set
+            {
+                SetXmlNodeString(FIRSTDATACOL_PATH, value.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Specifies the first column of the PivotTable data, relative to the top left cell in the ref value
+        /// </summary>
+        public int FirstDataRow
+        {
+            get
+            {
+                return GetXmlNodeInt(FIRSTDATAROW_PATH);
+            }
+            set
+            {
+                SetXmlNodeString(FIRSTDATAROW_PATH, value.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Specifies the first row of the PivotTable header, relative to the top left cell in the ref value
+        /// </summary>
+        public int FirstHeaderRow
+        {
+            get
+            {
+                return GetXmlNodeInt(FIRSTHEADERROW_PATH);
+            }
+            set
+            {
+                SetXmlNodeString(FIRSTHEADERROW_PATH, value.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Specifies the string to be displayed for grand totals.
+        /// </summary>
+        public string GrandTotalCaption
+        {
+            get
+            {
+                return GetXmlNodeString("@grandTotalCaption");
+            }
+            set
+            {
+                SetXmlNodeString("@grandTotalCaption", value);
+            }
+        }
+
+        /// <summary>
+        /// A boolean that indicates whether the in-grid drop zones should be displayed at runtime, and whether classic layout is applied
+        /// </summary>
+        public bool GridDropZones
+        {
+            get
+            {
+                return GetXmlNodeBool("@gridDropZones");
+            }
+            set
+            {
+                SetXmlNodeBool("@gridDropZones", value);
+            }
+        }
+
+        /// <summary>
+        /// Specifies the indentation increment for compact axis and can be used to set the Report Layout to Compact Form
+        /// </summary>
+        public int Indent
+        {
+            get
+            {
+                return GetXmlNodeInt("@indent");
+            }
+            set
+            {
+                SetXmlNodeString("@indent", value.ToString());
+            }
+        }
+
+        /// <summary>
+        /// If the row and column titles from the PivotTable should be printed.
+        /// </summary>
+        public bool ItemPrintTitles
+        {
+            get
+            {
+                return GetXmlNodeBool("@itemPrintTitles");
+            }
+            set
+            {
+                SetXmlNodeBool("@itemPrintTitles", value);
+            }
+        }
+
+        /// <summary>
+        /// Specifies the string to be displayed in cells with no value
+        /// </summary>
+        public string MissingCaption
+        {
+            get
+            {
+                return GetXmlNodeString("@missingCaption");
+            }
+            set
+            {
+                SetXmlNodeString("@missingCaption", value);
+            }
+        }
+
+        /// <summary>
+        /// A boolean that indicates whether the fields of a PivotTable can have multiple filters set on them
+        /// </summary>
+        public bool MultipleFieldFilters
+        {
+            get
+            {
+                return GetXmlNodeBool("@multipleFieldFilters");
+            }
+            set
+            {
+                SetXmlNodeBool("@multipleFieldFilters", value);
+            }
+        }
+
         /// <summary>
         /// Name of the pivottable object in Excel
         /// </summary>
@@ -263,414 +649,8 @@ namespace OfficeOpenXml.Table.PivotTable
                 SetXmlNodeString(NAME_PATH, value);
                 SetXmlNodeString(DISPLAY_NAME_PATH, cleanDisplayName(value));
             }
-        }        
-        ExcelPivotCacheDefinition _cacheDefinition = null;
-        /// <summary>
-        /// Reference to the pivot table cache definition object
-        /// </summary>
-        public ExcelPivotCacheDefinition CacheDefinition
-        {
-            get
-            {
-                if (_cacheDefinition == null)
-                {
-                    _cacheDefinition = new ExcelPivotCacheDefinition(NameSpaceManager, this, null, 1);
-                }
-                return _cacheDefinition;
-            }
         }
-        private string cleanDisplayName(string name)
-        {
-            return Regex.Replace(name, @"[^\w\.-_]", "_");
-        }
-        #region "Public Properties"
 
-        /// <summary>
-        /// The worksheet where the pivottable is located
-        /// </summary>
-        public ExcelWorksheet WorkSheet
-        {
-            get;
-            set;
-        }
-        /// <summary>
-        /// The location of the pivot table
-        /// </summary>
-        public ExcelAddressBase Address
-        {
-            get;
-            internal set;
-        }
-        /// <summary>
-        /// If multiple datafields are displayed in the row area or the column area
-        /// </summary>
-        public bool DataOnRows 
-        { 
-            get
-            {
-                return GetXmlNodeBool("@dataOnRows");
-            }
-            set
-            {
-                SetXmlNodeBool("@dataOnRows",value);
-            }
-        }
-        /// <summary>
-        /// if true apply legacy table autoformat number format properties.
-        /// </summary>
-        public bool ApplyNumberFormats 
-        { 
-            get
-            {
-                return GetXmlNodeBool("@applyNumberFormats");
-            }
-            set
-            {
-                SetXmlNodeBool("@applyNumberFormats",value);
-            }
-        }
-        /// <summary>
-        /// If true apply legacy table autoformat border properties
-        /// </summary>
-        public bool ApplyBorderFormats 
-        { 
-            get
-            {
-                return GetXmlNodeBool("@applyBorderFormats");
-            }
-            set
-            {
-                SetXmlNodeBool("@applyBorderFormats",value);
-            }
-        }
-        /// <summary>
-        /// If true apply legacy table autoformat font properties
-        /// </summary>
-        public bool ApplyFontFormats
-        { 
-            get
-            {
-                return GetXmlNodeBool("@applyFontFormats");
-            }
-            set
-            {
-                SetXmlNodeBool("@applyFontFormats",value);
-            }
-        }
-        /// <summary>
-        /// If true apply legacy table autoformat pattern properties
-        /// </summary>
-        public bool ApplyPatternFormats
-        { 
-            get
-            {
-                return GetXmlNodeBool("@applyPatternFormats");
-            }
-            set
-            {
-                SetXmlNodeBool("@applyPatternFormats",value);
-            }
-        }
-        /// <summary>
-        /// If true apply legacy table autoformat width/height properties.
-        /// </summary>
-        public bool ApplyWidthHeightFormats
-        { 
-            get
-            {
-                return GetXmlNodeBool("@applyWidthHeightFormats");
-            }
-            set
-            {
-                SetXmlNodeBool("@applyWidthHeightFormats",value);
-            }
-        }
-        /// <summary>
-        /// Show member property information
-        /// </summary>
-        public bool ShowMemberPropertyTips
-        { 
-            get
-            {
-                return GetXmlNodeBool("@showMemberPropertyTips");
-            }
-            set
-            {
-                SetXmlNodeBool("@showMemberPropertyTips",value);
-            }
-        }
-        /// <summary>
-        /// Show the drill indicators
-        /// </summary>
-        public bool ShowCalcMember
-        {
-            get
-            {
-                return GetXmlNodeBool("@showCalcMbrs");
-            }
-            set
-            {
-                SetXmlNodeBool("@showCalcMbrs", value);
-            }
-        }       
-        /// <summary>
-        /// If the user is prevented from drilling down on a PivotItem or aggregate value
-        /// </summary>
-        public bool EnableDrill
-        {
-            get
-            {
-                return GetXmlNodeBool("@enableDrill", true);
-            }
-            set
-            {
-                SetXmlNodeBool("@enableDrill", value);
-            }
-        }
-        /// <summary>
-        /// Show the drill down buttons
-        /// </summary>
-        public bool ShowDrill
-        {
-            get
-            {
-                return GetXmlNodeBool("@showDrill", true);
-            }
-            set
-            {
-                SetXmlNodeBool("@showDrill", value);
-            }
-        }
-        /// <summary>
-        /// If the tooltips should be displayed for PivotTable data cells.
-        /// </summary>
-        public bool ShowDataTips
-        {
-            get
-            {
-                return GetXmlNodeBool("@showDataTips", true);
-            }
-            set
-            {
-                SetXmlNodeBool("@showDataTips", value, true);
-            }
-        }
-        /// <summary>
-        /// If the row and column titles from the PivotTable should be printed.
-        /// </summary>
-        public bool FieldPrintTitles
-        {
-            get
-            {
-                return GetXmlNodeBool("@fieldPrintTitles");
-            }
-            set
-            {
-                SetXmlNodeBool("@fieldPrintTitles", value);
-            }
-        }
-        /// <summary>
-        /// If the row and column titles from the PivotTable should be printed.
-        /// </summary>
-        public bool ItemPrintTitles
-        {
-            get
-            {
-                return GetXmlNodeBool("@itemPrintTitles");
-            }
-            set
-            {
-                SetXmlNodeBool("@itemPrintTitles", value);
-            }
-        }
-        /// <summary>
-        /// If the grand totals should be displayed for the PivotTable columns
-        /// </summary>
-        [Obsolete("Use correctly spelled property 'ColumnGrandTotals'")]
-        public bool ColumGrandTotals
-        {
-            get
-            {
-                return ColumnGrandTotals;
-            }
-            set
-            {
-                ColumnGrandTotals = value;
-            }
-        }
-        /// <summary>
-        /// If the grand totals should be displayed for the PivotTable columns
-        /// </summary>
-        public bool ColumnGrandTotals
-        {
-            get
-            {
-                return GetXmlNodeBool("@colGrandTotals");
-            }
-            set
-            {
-                SetXmlNodeBool("@colGrandTotals", value);
-            }
-        }
-        /// <summary>
-        /// If the grand totals should be displayed for the PivotTable rows
-        /// </summary>
-        public bool RowGrandTotals
-        {
-            get
-            {
-                return GetXmlNodeBool("@rowGrandTotals");
-            }
-            set
-            {
-                SetXmlNodeBool("@rowGrandTotals", value);
-            }
-        }        
-        /// <summary>
-        /// If the drill indicators expand collapse buttons should be printed.
-        /// </summary>
-        public bool PrintDrill
-        {
-            get
-            {
-                return GetXmlNodeBool("@printDrill");
-            }
-            set
-            {
-                SetXmlNodeBool("@printDrill", value);
-            }
-        }        
-        /// <summary>
-        /// Indicates whether to show error messages in cells.
-        /// </summary>
-        public bool ShowError
-        {
-            get
-            {
-                return GetXmlNodeBool("@showError");
-            }
-            set
-            {
-                SetXmlNodeBool("@showError", value);
-            }
-        }        
-        /// <summary>
-        /// The string to be displayed in cells that contain errors.
-        /// </summary>
-        public string ErrorCaption
-        {
-            get
-            {
-                return GetXmlNodeString("@errorCaption");
-            }
-            set
-            {
-                SetXmlNodeString("@errorCaption", value);
-            }
-        }        
-        /// <summary>
-        /// Specifies the name of the value area field header in the PivotTable. 
-        /// This caption is shown when the PivotTable when two or more fields are in the values area.
-        /// </summary>
-        public string DataCaption
-        {
-            get
-            {
-                return GetXmlNodeString("@dataCaption");
-            }
-            set
-            {
-                SetXmlNodeString("@dataCaption", value);
-            }
-        }        
-        /// <summary>
-        /// Show field headers
-        /// </summary>
-        public bool ShowHeaders
-        {
-            get
-            {
-                return GetXmlNodeBool("@showHeaders");
-            }
-            set
-            {
-                SetXmlNodeBool("@showHeaders", value);
-            }
-        }
-        /// <summary>
-        /// The number of page fields to display before starting another row or column
-        /// </summary>
-        public int PageWrap
-        {
-            get
-            {
-                return GetXmlNodeInt("@pageWrap");
-            }
-            set
-            {
-                if(value<0)
-                {
-                    throw new Exception("Value can't be negative");
-                }
-                SetXmlNodeString("@pageWrap", value.ToString());
-            }
-        }
-        /// <summary>
-        /// A boolean that indicates whether legacy auto formatting has been applied to the PivotTable view
-        /// </summary>
-        public bool UseAutoFormatting
-        { 
-            get
-            {
-                return GetXmlNodeBool("@useAutoFormatting");
-            }
-            set
-            {
-                SetXmlNodeBool("@useAutoFormatting",value);
-            }
-        } 
-        /// <summary>
-        /// A boolean that indicates whether the in-grid drop zones should be displayed at runtime, and whether classic layout is applied
-        /// </summary>
-        public bool GridDropZones
-        { 
-            get
-            {
-                return GetXmlNodeBool("@gridDropZones");
-            }
-            set
-            {
-                SetXmlNodeBool("@gridDropZones",value);
-            }
-        }
-        /// <summary>
-        /// Specifies the indentation increment for compact axis and can be used to set the Report Layout to Compact Form
-        /// </summary>
-        public int Indent
-        { 
-            get
-            {
-                return GetXmlNodeInt("@indent");
-            }
-            set
-            {
-                SetXmlNodeString("@indent",value.ToString());
-            }
-        }
-        /// <summary>
-        /// A boolean that indicates whether data fields in the PivotTable should be displayed in outline form
-        /// </summary>
-        public bool OutlineData
-        {
-            get
-            {
-                return GetXmlNodeBool("@outlineData");
-            }
-            set
-            {
-                SetXmlNodeBool("@outlineData", value);
-            }
-        }
         /// <summary>
         /// a boolean that indicates whether new fields should have their outline flag set to true
         /// </summary>
@@ -685,210 +665,22 @@ namespace OfficeOpenXml.Table.PivotTable
                 SetXmlNodeBool("@outline", value);
             }
         }
+
         /// <summary>
-        /// A boolean that indicates whether the fields of a PivotTable can have multiple filters set on them
+        /// A boolean that indicates whether data fields in the PivotTable should be displayed in outline form
         /// </summary>
-        public bool MultipleFieldFilters
+        public bool OutlineData
         {
             get
             {
-                return GetXmlNodeBool("@multipleFieldFilters");
+                return GetXmlNodeBool("@outlineData");
             }
             set
             {
-                SetXmlNodeBool("@multipleFieldFilters", value);
+                SetXmlNodeBool("@outlineData", value);
             }
         }
-        /// <summary>
-        /// A boolean that indicates whether new fields should have their compact flag set to true
-        /// </summary>
-        public bool Compact
-        { 
-            get
-            {
-                return GetXmlNodeBool("@compact");
-            }
-            set
-            {
-                SetXmlNodeBool("@compact",value);
-            }
-        }        
-        /// <summary>
-        /// A boolean that indicates whether the field next to the data field in the PivotTable should be displayed in the same column of the spreadsheet
-        /// </summary>
-        public bool CompactData
-        { 
-            get
-            {
-                return GetXmlNodeBool("@compactData");
-            }
-            set
-            {
-                SetXmlNodeBool("@compactData",value);
-            }
-        }
-        /// <summary>
-        /// Specifies the string to be displayed for grand totals.
-        /// </summary>
-        public string GrandTotalCaption
-        {
-            get
-            {
-                return GetXmlNodeString("@grandTotalCaption");
-            }
-            set
-            {
-                SetXmlNodeString("@grandTotalCaption", value);
-            }
-        }
-        /// <summary>
-        /// Specifies the string to be displayed in row header in compact mode.
-        /// </summary>
-        public string RowHeaderCaption 
-        {
-            get
-            {
-                return GetXmlNodeString("@rowHeaderCaption");
-            }
-            set
-            {
-                SetXmlNodeString("@rowHeaderCaption", value);                
-            }
-        }
-        /// <summary>
-        /// Specifies the string to be displayed in column header in compact mode.
-        /// </summary>
-        public string ColumnHeaderCaption
-        {
-            get
-            {
-                return GetXmlNodeString("@colHeaderCaption");
-            }
-            set
-            {
-                SetXmlNodeString("@colHeaderCaption", value);
-            }
-        }
-        /// <summary>
-        /// Specifies the string to be displayed in cells with no value
-        /// </summary>
-        public string MissingCaption
-        {
-            get
-            {
-                return GetXmlNodeString("@missingCaption");
-            }
-            set
-            {
-                SetXmlNodeString("@missingCaption", value);                
-            }
-        }
-        const string FIRSTHEADERROW_PATH="d:location/@firstHeaderRow";
-        /// <summary>
-        /// Specifies the first row of the PivotTable header, relative to the top left cell in the ref value
-        /// </summary>
-        public int FirstHeaderRow
-        {
-            get
-            {
-                return GetXmlNodeInt(FIRSTHEADERROW_PATH);
-            }
-            set
-            {
-                SetXmlNodeString(FIRSTHEADERROW_PATH, value.ToString());
-            }
-        }
-        const string FIRSTDATAROW_PATH = "d:location/@firstDataRow";
-        /// <summary>
-        /// Specifies the first column of the PivotTable data, relative to the top left cell in the ref value
-        /// </summary>
-        public int FirstDataRow
-        {
-            get
-            {
-                return GetXmlNodeInt(FIRSTDATAROW_PATH);
-            }
-            set
-            {
-                SetXmlNodeString(FIRSTDATAROW_PATH, value.ToString());
-            }
-        }
-        const string FIRSTDATACOL_PATH = "d:location/@firstDataCol";
-        /// <summary>
-        /// Specifies the first column of the PivotTable data, relative to the top left cell in the ref value
-        /// </summary>
-        public int FirstDataCol
-        {
-            get
-            {
-                return GetXmlNodeInt(FIRSTDATACOL_PATH);
-            }
-            set
-            {
-                SetXmlNodeString(FIRSTDATACOL_PATH, value.ToString());
-            }
-        }
-        ExcelPivotTableFieldCollection _fields = null;
-        /// <summary>
-        /// The fields in the table 
-        /// </summary>
-        public ExcelPivotTableFieldCollection Fields
-        {
-            get
-            {
-                if (_fields == null)
-                {
-                    _fields = new ExcelPivotTableFieldCollection(this, "");
-                }
-                return _fields;
-            }
-        }
-        ExcelPivotTableRowColumnFieldCollection _rowFields = null;
-        /// <summary>
-        /// Row label fields 
-        /// </summary>
-        public ExcelPivotTableRowColumnFieldCollection RowFields
-        {
-            get
-            {
-                if (_rowFields == null)
-                {
-                    _rowFields = new ExcelPivotTableRowColumnFieldCollection(this, "rowFields");
-                }
-                return _rowFields;
-            }
-        }
-        ExcelPivotTableRowColumnFieldCollection _columnFields = null;
-        /// <summary>
-        /// Column label fields 
-        /// </summary>
-        public ExcelPivotTableRowColumnFieldCollection ColumnFields
-        {
-            get
-            {
-                if (_columnFields == null)
-                {
-                    _columnFields = new ExcelPivotTableRowColumnFieldCollection(this, "colFields");
-                }
-                return _columnFields;
-            }
-        }
-        ExcelPivotTableDataFieldCollection _dataFields = null;
-        /// <summary>
-        /// Value fields 
-        /// </summary>
-        public ExcelPivotTableDataFieldCollection DataFields
-        {
-            get
-            {
-                if (_dataFields == null)
-                {
-                    _dataFields = new ExcelPivotTableDataFieldCollection(this);
-                }
-                return _dataFields;
-            }
-        }
-        ExcelPivotTableRowColumnFieldCollection _pageFields = null;
+
         /// <summary>
         /// Report filter fields
         /// </summary>
@@ -903,7 +695,190 @@ namespace OfficeOpenXml.Table.PivotTable
                 return _pageFields;
             }
         }
-        const string STYLENAME_PATH = "d:pivotTableStyleInfo/@name";
+
+        /// <summary>
+        /// The number of page fields to display before starting another row or column
+        /// </summary>
+        public int PageWrap
+        {
+            get
+            {
+                return GetXmlNodeInt("@pageWrap");
+            }
+            set
+            {
+                if (value < 0)
+                {
+                    throw new Exception("Value can't be negative");
+                }
+                SetXmlNodeString("@pageWrap", value.ToString());
+            }
+        }
+
+        /// <summary>
+        /// The package internal URI to the pivottable Xml Document.
+        /// </summary>
+        public Uri PivotTableUri
+        {
+            get;
+            internal set;
+        }
+
+        /// <summary>
+        /// Provides access to the XML data representing the pivottable in the package.
+        /// </summary>
+        public XmlDocument PivotTableXml { get; private set; }
+
+        /// <summary>
+        /// If the drill indicators expand collapse buttons should be printed.
+        /// </summary>
+        public bool PrintDrill
+        {
+            get
+            {
+                return GetXmlNodeBool("@printDrill");
+            }
+            set
+            {
+                SetXmlNodeBool("@printDrill", value);
+            }
+        }
+
+        /// <summary>
+        /// Row label fields
+        /// </summary>
+        public ExcelPivotTableRowColumnFieldCollection RowFields
+        {
+            get
+            {
+                if (_rowFields == null)
+                {
+                    _rowFields = new ExcelPivotTableRowColumnFieldCollection(this, "rowFields");
+                }
+                return _rowFields;
+            }
+        }
+
+        /// <summary>
+        /// If the grand totals should be displayed for the PivotTable rows
+        /// </summary>
+        public bool RowGrandTotals
+        {
+            get
+            {
+                return GetXmlNodeBool("@rowGrandTotals");
+            }
+            set
+            {
+                SetXmlNodeBool("@rowGrandTotals", value);
+            }
+        }
+
+        /// <summary>
+        /// Specifies the string to be displayed in row header in compact mode.
+        /// </summary>
+        public string RowHeaderCaption
+        {
+            get
+            {
+                return GetXmlNodeString("@rowHeaderCaption");
+            }
+            set
+            {
+                SetXmlNodeString("@rowHeaderCaption", value);
+            }
+        }
+
+        /// <summary>
+        /// Show the drill indicators
+        /// </summary>
+        public bool ShowCalcMember
+        {
+            get
+            {
+                return GetXmlNodeBool("@showCalcMbrs");
+            }
+            set
+            {
+                SetXmlNodeBool("@showCalcMbrs", value);
+            }
+        }
+
+        /// <summary>
+        /// If the tooltips should be displayed for PivotTable data cells.
+        /// </summary>
+        public bool ShowDataTips
+        {
+            get
+            {
+                return GetXmlNodeBool("@showDataTips", true);
+            }
+            set
+            {
+                SetXmlNodeBool("@showDataTips", value, true);
+            }
+        }
+
+        /// <summary>
+        /// Show the drill down buttons
+        /// </summary>
+        public bool ShowDrill
+        {
+            get
+            {
+                return GetXmlNodeBool("@showDrill", true);
+            }
+            set
+            {
+                SetXmlNodeBool("@showDrill", value);
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether to show error messages in cells.
+        /// </summary>
+        public bool ShowError
+        {
+            get
+            {
+                return GetXmlNodeBool("@showError");
+            }
+            set
+            {
+                SetXmlNodeBool("@showError", value);
+            }
+        }
+
+        /// <summary>
+        /// Show field headers
+        /// </summary>
+        public bool ShowHeaders
+        {
+            get
+            {
+                return GetXmlNodeBool("@showHeaders");
+            }
+            set
+            {
+                SetXmlNodeBool("@showHeaders", value);
+            }
+        }
+
+        /// <summary>
+        /// Show member property information
+        /// </summary>
+        public bool ShowMemberPropertyTips
+        {
+            get
+            {
+                return GetXmlNodeBool("@showMemberPropertyTips");
+            }
+            set
+            {
+                SetXmlNodeBool("@showMemberPropertyTips", value);
+            }
+        }
+
         /// <summary>
         /// Pivot style name. Used for custom styles
         /// </summary>
@@ -938,7 +913,7 @@ namespace OfficeOpenXml.Table.PivotTable
                 SetXmlNodeString(STYLENAME_PATH, value, true);
             }
         }
-        TableStyles _tableStyle = Table.TableStyles.Medium6;
+
         /// <summary>
         /// The table style. If this property is cusom the style from the StyleName propery is used.
         /// </summary>
@@ -950,7 +925,7 @@ namespace OfficeOpenXml.Table.PivotTable
             }
             set
             {
-                _tableStyle=value;
+                _tableStyle = value;
                 if (value != TableStyles.Custom)
                 {
                     SetXmlNodeString(STYLENAME_PATH, "PivotStyle" + value.ToString());
@@ -958,21 +933,105 @@ namespace OfficeOpenXml.Table.PivotTable
             }
         }
 
-        #endregion
-        #region "Internal Properties"
-        internal int CacheID 
-        { 
-                get
-                {
-                    return GetXmlNodeInt("@cacheId");
-                }
-                set
-                {
-                    SetXmlNodeString("@cacheId",value.ToString());
-                }
+        /// <summary>
+        /// A boolean that indicates whether legacy auto formatting has been applied to the PivotTable view
+        /// </summary>
+        public bool UseAutoFormatting
+        {
+            get
+            {
+                return GetXmlNodeBool("@useAutoFormatting");
+            }
+            set
+            {
+                SetXmlNodeBool("@useAutoFormatting", value);
+            }
         }
 
-        #endregion
+        /// <summary>
+        /// The worksheet where the pivottable is located
+        /// </summary>
+        public ExcelWorksheet WorkSheet
+        {
+            get;
+            set;
+        }
 
+        internal int CacheID
+        {
+            get
+            {
+                return GetXmlNodeInt("@cacheId");
+            }
+            set
+            {
+                SetXmlNodeString("@cacheId", value.ToString());
+            }
+        }
+
+        internal Packaging.ZipPackagePart Part
+        {
+            get;
+            set;
+        }
+
+        internal Packaging.ZipPackageRelationship Relationship
+        {
+            get;
+            set;
+        }
+
+        private string cleanDisplayName(string name)
+        {
+            return Regex.Replace(name, @"[^\w\.-_]", "_");
+        }
+
+        private string GetStartXml(string name, int id, ExcelAddressBase address, ExcelAddressBase sourceAddress)
+        {
+            string xml = string.Format("<pivotTableDefinition xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" name=\"{0}\" cacheId=\"{1}\" dataOnRows=\"1\" applyNumberFormats=\"0\" applyBorderFormats=\"0\" applyFontFormats=\"0\" applyPatternFormats=\"0\" applyAlignmentFormats=\"0\" applyWidthHeightFormats=\"1\" dataCaption=\"Data\"  createdVersion=\"4\" showMemberPropertyTips=\"0\" useAutoFormatting=\"1\" itemPrintTitles=\"1\" indent=\"0\" compact=\"0\" compactData=\"0\" gridDropZones=\"1\">", ConvertUtil.ExcelEscapeString(name), id);
+
+            xml += string.Format("<location ref=\"{0}\" firstHeaderRow=\"1\" firstDataRow=\"1\" firstDataCol=\"1\" /> ", address.FirstAddress);
+            xml += string.Format("<pivotFields count=\"{0}\">", sourceAddress._toCol - sourceAddress._fromCol + 1);
+            for (int col = sourceAddress._fromCol; col <= sourceAddress._toCol; col++)
+            {
+                xml += "<pivotField showAll=\"0\" />"; //compact=\"0\" outline=\"0\" subtotalTop=\"0\" includeNewItemsInFilter=\"1\"
+            }
+
+            xml += "</pivotFields>";
+            xml += "<pivotTableStyleInfo name=\"PivotStyleMedium9\" showRowHeaders=\"1\" showColHeaders=\"1\" showRowStripes=\"0\" showColStripes=\"0\" showLastColumn=\"1\" />";
+            xml += "</pivotTableDefinition>";
+            return xml;
+        }
+
+        private void init()
+        {
+            SchemaNodeOrder = new string[] { "location", "pivotFields", "rowFields", "rowItems", "colFields", "colItems", "pageFields", "pageItems", "dataFields", "dataItems", "formats", "pivotTableStyleInfo" };
+        }
+
+        private void LoadFields()
+        {
+            //Fields.Clear();
+            //int ix=0;
+            //foreach(XmlElement fieldNode in PivotXml.SelectNodes("//d:pivotFields/d:pivotField",NameSpaceManager))
+            //{
+            //    Fields.AddInternal(new ExcelPivotTableField(NameSpaceManager, fieldNode, this, ix++));
+            //}
+
+            int index = 0;
+            //Add fields.
+            foreach (XmlElement fieldElem in TopNode.SelectNodes("d:pivotFields/d:pivotField", NameSpaceManager))
+            {
+                var fld = new ExcelPivotTableField(NameSpaceManager, fieldElem, this, index, index++);
+                Fields.AddInternal(fld);
+            }
+
+            //Add fields.
+            index = 0;
+            foreach (XmlElement fieldElem in _cacheDefinition.TopNode.SelectNodes("d:cacheFields/d:cacheField", NameSpaceManager))
+            {
+                var fld = Fields[index++];
+                fld.SetCacheFieldNode(fieldElem);
+            }
+        }
     }
 }

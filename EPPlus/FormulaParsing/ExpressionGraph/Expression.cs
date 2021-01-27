@@ -13,43 +13,35 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2013-03-01 (Prior file history on https://github.com/swmal/ExcelFormulaParser)
  *******************************************************************************/
+
+using OfficeOpenXml.FormulaParsing.Excel.Operators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.Excel.Operators;
-using OfficeOpenXml.FormulaParsing.Exceptions;
 
 namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
 {
     public abstract class Expression
     {
-        protected string ExpressionString { get; private set; }
         private readonly List<Expression> _children = new List<Expression>();
-        public IEnumerable<Expression> Children { get { return _children; } }
-        public Expression Next { get; set; }
-        public Expression Prev { get; set; }
-        public IOperator Operator { get; set; }
-        public abstract bool IsGroupedExpression { get; }
 
         public Expression()
         {
-
         }
 
         public Expression(string expression)
@@ -58,15 +50,18 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
             Operator = null;
         }
 
+        public IEnumerable<Expression> Children { get { return _children; } }
+
         public virtual bool HasChildren
         {
             get { return _children.Any(); }
         }
 
-        public virtual Expression  PrepareForNextChild()
-        {
-            return this;
-        }
+        public abstract bool IsGroupedExpression { get; }
+        public Expression Next { get; set; }
+        public IOperator Operator { get; set; }
+        public Expression Prev { get; set; }
+        protected string ExpressionString { get; private set; }
 
         public virtual Expression AddChild(Expression child)
         {
@@ -79,6 +74,8 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
             _children.Add(child);
             return child;
         }
+
+        public abstract CompileResult Compile();
 
         public virtual Expression MergeWithNext()
         {
@@ -112,11 +109,13 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
             if (Prev != null)
             {
                 Prev.Next = expression;
-            }            
+            }
             return expression;
         }
 
-        public abstract CompileResult Compile();
-
+        public virtual Expression PrepareForNextChild()
+        {
+            return this;
+        }
     }
 }

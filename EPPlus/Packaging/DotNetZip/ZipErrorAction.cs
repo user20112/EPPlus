@@ -8,35 +8,34 @@
 //
 // ------------------------------------------------------------------
 //
-// This code is licensed under the Microsoft Public License. 
+// This code is licensed under the Microsoft Public License.
 // See the file License.txt for the license details.
 // More info on: http://dotnetzip.codeplex.com
 //
 // ------------------------------------------------------------------
 //
-// last saved (in emacs): 
+// last saved (in emacs):
 // Time-stamp: <2009-September-01 18:43:20>
 //
 // ------------------------------------------------------------------
 //
 // This module defines the ZipErrorAction enum, which provides
 // an action to take when errors occur when opening or reading
-// files to be added to a zip file. 
-// 
+// files to be added to a zip file.
+//
 // ------------------------------------------------------------------
-
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
     /// <summary>
     /// An enum providing the options when an error occurs during opening or reading
-    /// of a file or directory that is being saved to a zip file. 
+    /// of a file or directory that is being saved to a zip file.
     /// </summary>
     ///
     /// <remarks>
     ///  <para>
     ///    This enum describes the actions that the library can take when an error occurs
-    ///    opening or reading a file, as it is being saved into a Zip archive. 
+    ///    opening or reading a file, as it is being saved into a Zip archive.
     ///  </para>
     ///
     ///  <para>
@@ -44,7 +43,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
     ///     added to the zip archive.  In other cases, an error might occur after the
     ///     file has been successfully opened, while DotNetZip is reading the file.
     ///  </para>
-    /// 
+    ///
     ///  <para>
     ///    The first problem might occur when calling AddDirectory() on a directory
     ///    that contains a Clipper .dbf file; the file is locked by Clipper and
@@ -68,7 +67,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         /// this is a 1.)
         /// </summary>
         Skip,
-        
+
         /// <summary>
         /// When an error occurs during zipping, for example a file cannot be opened,
         /// retry the operation that caused the error. Be careful with this option. If
@@ -93,5 +92,4 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         /// </summary>
         InvokeErrorEvent,
     }
-
 }

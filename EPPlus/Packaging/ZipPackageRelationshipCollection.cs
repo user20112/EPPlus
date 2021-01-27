@@ -13,39 +13,50 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		25-Oct-2012
  *******************************************************************************/
+
+using OfficeOpenXml.Packaging.Ionic.Zip;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Ionic.Zip;
-using System.IO;
 using System.Security;
-using OfficeOpenXml.Packaging.Ionic.Zip;
+using System.Text;
 
 namespace OfficeOpenXml.Packaging
 {
     public class ZipPackageRelationshipCollection : IEnumerable<ZipPackageRelationship>
     {
-        internal protected Dictionary<string, ZipPackageRelationship> _rels = new Dictionary<string, ZipPackageRelationship>(StringComparer.OrdinalIgnoreCase);
-        internal void Add(ZipPackageRelationship item)
+        protected internal Dictionary<string, ZipPackageRelationship> _rels = new Dictionary<string, ZipPackageRelationship>(StringComparer.OrdinalIgnoreCase);
+
+        public int Count
         {
-            _rels.Add(item.Id, item);
+            get
+            {
+                return _rels.Count;
+            }
         }
+
+        internal ZipPackageRelationship this[string id]
+        {
+            get
+            {
+                return _rels[id];
+            }
+        }
+
         public IEnumerator<ZipPackageRelationship> GetEnumerator()
         {
             return _rels.Values.GetEnumerator();
@@ -56,21 +67,16 @@ namespace OfficeOpenXml.Packaging
             return _rels.Values.GetEnumerator();
         }
 
-        internal void Remove(string id)
+        internal void Add(ZipPackageRelationship item)
         {
-            _rels.Remove(id);
+            _rels.Add(item.Id, item);
         }
+
         internal bool ContainsKey(string id)
         {
             return _rels.ContainsKey(id);
         }
-        internal ZipPackageRelationship this[string id]
-        {
-            get
-            {
-                return _rels[id];
-            }
-        }
+
         internal ZipPackageRelationshipCollection GetRelationshipsByType(string relationshipType)
         {
             var ret = new ZipPackageRelationshipCollection();
@@ -82,6 +88,11 @@ namespace OfficeOpenXml.Packaging
                 }
             }
             return ret;
+        }
+
+        internal void Remove(string id)
+        {
+            _rels.Remove(id);
         }
 
         internal void WriteZip(ZipOutputStream os, string fileName)
@@ -96,14 +107,6 @@ namespace OfficeOpenXml.Packaging
             os.PutNextEntry(fileName);
             byte[] b = Encoding.UTF8.GetBytes(xml.ToString());
             os.Write(b, 0, b.Length);
-        }
-
-        public int Count
-        {
-            get
-            {
-                return _rels.Count;
-            }
         }
     }
 }

@@ -13,55 +13,50 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author          Change						                  Date
  * ******************************************************************************
  * Eyal Seagull    Conditional Formatting Adaption    2012-04-03
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-using OfficeOpenXml.ConditionalFormatting;
-using System.Drawing;
+using SkiaSharp;
 
 namespace OfficeOpenXml.ConditionalFormatting.Contracts
 {
-	/// <summary>
-	/// IExcelConditionalFormattingDataBar
-	/// </summary>
-	public interface IExcelConditionalFormattingDataBarGroup
+    /// <summary>
+    /// IExcelConditionalFormattingDataBar
+    /// </summary>
+    public interface IExcelConditionalFormattingDataBarGroup
         : IExcelConditionalFormattingRule
 	{
-		#region Public Properties
         /// <summary>
-        /// ShowValue
+        /// The color of the databar
         /// </summary>
-        bool ShowValue { get; set; }
-        /// <summary>
-        /// Databar Low Value
-        /// </summary>
-        ExcelConditionalFormattingIconDataBarValue LowValue { get;  }
+        SKColor Color { get; set; }
 
         /// <summary>
         /// Databar High Value
         /// </summary>
         ExcelConditionalFormattingIconDataBarValue HighValue { get; }
+
         /// <summary>
-        /// The color of the databar
+        /// Databar Low Value
         /// </summary>
-        Color Color { get; set;}
-        #endregion Public Properties
+        ExcelConditionalFormattingIconDataBarValue LowValue { get; }
+
+        /// <summary>
+        /// ShowValue
+        /// </summary>
+        bool ShowValue { get; set; }
 	}
 }

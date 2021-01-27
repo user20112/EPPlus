@@ -11,15 +11,11 @@
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author Change                      Date
  *******************************************************************************
  * Mats Alm Added		                2016-12-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace OfficeOpenXml.FormulaParsing
 {
@@ -35,10 +31,9 @@ namespace OfficeOpenXml.FormulaParsing
 
         public int ColIndex { get; private set; }
 
+        public string Formula { get; private set; }
         public int RowIndex { get; private set; }
 
         public object Value { get; private set; }
-
-        public string Formula { get; private set; }
     }
 }

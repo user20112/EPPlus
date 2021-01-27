@@ -13,30 +13,26 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
- * Jan Källman		Initial Release		     
+ * Jan Källman		Initial Release
  * Jan Källman		License changed GPL-->LGPL 2011-12-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
+using OfficeOpenXml.Drawing.Vml;
 using OfficeOpenXml.Style;
 using System.Xml;
-using OfficeOpenXml.Drawing;
-using OfficeOpenXml.Drawing.Vml;
 
 namespace OfficeOpenXml
 {
@@ -46,7 +42,10 @@ namespace OfficeOpenXml
     public class ExcelComment : ExcelVmlDrawingComment
     {
         internal XmlHelper _commentHelper;
+        private const string AUTHOR_PATH = "d:comments/d:authors/d:author";
+        private const string AUTHORS_PATH = "d:comments/d:authors";
         private string _text;
+
         internal ExcelComment(XmlNamespaceManager ns, XmlNode commentTopNode, ExcelRangeBase cell)
             : base(null, cell, cell.Worksheet.VmlDrawingsComments.NameSpaceManager)
         {
@@ -71,8 +70,7 @@ namespace OfficeOpenXml
                 _text = tNode.InnerText;
             }
         }
-        const string AUTHORS_PATH = "d:comments/d:authors";
-        const string AUTHOR_PATH = "d:comments/d:authors/d:author";
+
         /// <summary>
         /// Author
         /// </summary>
@@ -89,6 +87,72 @@ namespace OfficeOpenXml
                 _commentHelper.SetXmlNodeString("@authorId", authorRef.ToString());
             }
         }
+
+        /// <summary>
+        /// Sets the font of the first richtext item.
+        /// </summary>
+        public ExcelRichText Font
+        {
+            get
+            {
+                if (RichText.Count > 0)
+                {
+                    return RichText[0];
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Richtext collection
+        /// </summary>
+        public ExcelRichTextCollection RichText
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The comment text
+        /// </summary>
+        public string Text
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(RichText.Text)) return RichText.Text;
+                return _text;
+            }
+            set
+            {
+                RichText.Text = value;
+            }
+        }
+
+        /// <summary>
+        /// Reference
+        /// </summary>
+        internal string Reference
+        {
+            get { return _commentHelper.GetXmlNodeString("@ref"); }
+            set
+            {
+                var a = new ExcelAddressBase(value);
+                var rows = a._fromRow - Range._fromRow;
+                var cols = a._fromCol - Range._fromCol;
+                Range.Address = value;
+                _commentHelper.SetXmlNodeString("@ref", value);
+
+                From.Row += rows;
+                To.Row += rows;
+
+                From.Column += cols;
+                To.Column += cols;
+
+                Row = Range._fromRow - 1;
+                Column = Range._fromCol - 1;
+            }
+        }
+
         private int GetAuthor(string value)
         {
             int authorRef = 0;
@@ -109,68 +173,6 @@ namespace OfficeOpenXml
                 elem.InnerText = value;
             }
             return authorRef;
-        }
-        /// <summary>
-        /// The comment text 
-        /// </summary>
-        public string Text
-        {
-            get
-            {
-                if(!string.IsNullOrEmpty(RichText.Text)) return RichText.Text;
-                return _text;
-            }
-            set
-            {
-                RichText.Text = value;
-            }
-        }
-        /// <summary>
-        /// Sets the font of the first richtext item.
-        /// </summary>
-        public ExcelRichText Font
-        {
-            get
-            {
-                if (RichText.Count > 0)
-                {
-                    return RichText[0];
-                }
-                return null;
-            }
-        }
-        /// <summary>
-        /// Richtext collection
-        /// </summary>
-        public ExcelRichTextCollection RichText 
-        { 
-           get; 
-           set; 
-        }
-
-        /// <summary>
-        /// Reference
-        /// </summary>
-        internal string Reference
-		{
-			get { return _commentHelper.GetXmlNodeString("@ref"); }
-            set
-            {
-                var a = new ExcelAddressBase(value);
-                var rows = a._fromRow - Range._fromRow;
-                var cols= a._fromCol - Range._fromCol;
-                Range.Address = value;
-                _commentHelper.SetXmlNodeString("@ref", value);
-
-                From.Row += rows;
-                To.Row += rows;
-
-                From.Column += cols;
-                To.Column += cols;
-
-                Row = Range._fromRow - 1;
-                Column = Range._fromCol - 1;
-            }
         }
 	}
 }

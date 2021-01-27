@@ -13,45 +13,42 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		    Initial Release		        2009-10-01
  * Jan Källman		    License changed GPL-->LGPL 2011-12-27
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
-using System.Text;
-using OfficeOpenXml.Style;
-using System.Data;
+
 namespace OfficeOpenXml
 {
     /// <summary>
-    /// A range of cells. 
+    /// A range of cells.
     /// </summary>
     public class ExcelRange : ExcelRangeBase
     {
-        #region "Constructors"
-        internal ExcelRange(ExcelWorksheet sheet) : 
+        internal ExcelRange(ExcelWorksheet sheet) :
             base(sheet)
         {
-
         }
+
         internal ExcelRange(ExcelWorksheet sheet, string address)
             : base(sheet, address)
         {
-
         }
+
         internal ExcelRange(ExcelWorksheet sheet, int fromRow, int fromCol, int toRow, int toCol)
             : base(sheet)
         {
@@ -60,8 +57,7 @@ namespace OfficeOpenXml
             _toRow = toRow;
             _toCol = toCol;
         }
-        #endregion
-        #region "Indexers"
+
         /// <summary>
         /// Access the range using an address
         /// </summary>
@@ -91,23 +87,6 @@ namespace OfficeOpenXml
             }
         }
 
-        private ExcelRange GetTableAddess(ExcelWorksheet _worksheet, string address)
-        {
-            int ixStart = address.IndexOf('[');
-            if (ixStart == 0) //External Address
-            {
-                int ixEnd = address.IndexOf(']',ixStart+1);
-                if (ixStart >= 0 & ixEnd >= 0)
-                {
-                    var external = address.Substring(ixStart + 1, ixEnd - 1);
-                    //if (Worksheet.Workbook._externalReferences.Count < external)
-                    //{
-                    //foreach(var 
-                    //}
-                }
-            }
-            return null;
-        }
         /// <summary>
         /// Access a single cell
         /// </summary>
@@ -135,6 +114,7 @@ namespace OfficeOpenXml
                 return this;
             }
         }
+
         /// <summary>
         /// Access a range of cells
         /// </summary>
@@ -165,7 +145,7 @@ namespace OfficeOpenXml
                 return this;
             }
         }
-        #endregion
+
         private static void ValidateRowCol(int Row, int Col)
         {
             if (Row < 1 || Row > ExcelPackage.MaxRows)
@@ -178,5 +158,22 @@ namespace OfficeOpenXml
             }
         }
 
+        private ExcelRange GetTableAddess(ExcelWorksheet _worksheet, string address)
+        {
+            int ixStart = address.IndexOf('[');
+            if (ixStart == 0) //External Address
+            {
+                int ixEnd = address.IndexOf(']',ixStart+1);
+                if (ixStart >= 0 & ixEnd >= 0)
+                {
+                    var external = address.Substring(ixStart + 1, ixEnd - 1);
+                    //if (Worksheet.Workbook._externalReferences.Count < external)
+                    //{
+                    //foreach(var
+                    //}
+                }
+            }
+            return null;
+        }
     }
 }

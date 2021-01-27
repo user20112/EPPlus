@@ -13,28 +13,27 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
+
 using OfficeOpenXml.Table.PivotTable;
+using System;
 using System.Globalization;
+using System.Xml;
 
 namespace OfficeOpenXml.Drawing.Chart
 {
@@ -46,6 +45,9 @@ namespace OfficeOpenXml.Drawing.Chart
         //internal ExcelOfPieChart(ExcelDrawings drawings, XmlNode node) :
         //    base(drawings, node)
         //{
+        private const string pieTypePath = "c:ofPieType/@val";
+
+        private string _gapWidthPath = "c:gapWidth/@val";
 
         //}
         internal ExcelOfPieChart(ExcelDrawings drawings, XmlNode node, eChartType type, bool isPivot) :
@@ -53,6 +55,7 @@ namespace OfficeOpenXml.Drawing.Chart
         {
                 SetTypeProperties();
         }
+
         internal ExcelOfPieChart(ExcelDrawings drawings, XmlNode node, eChartType type, ExcelChart topChart, ExcelPivotTable PivotTableSource) :
             base(drawings, node, type, topChart, PivotTableSource)
         {
@@ -65,19 +68,21 @@ namespace OfficeOpenXml.Drawing.Chart
             SetTypeProperties();
         }
 
-        private void SetTypeProperties()
+        /// <summary>
+        /// The size of the gap between two adjacent bars/columns
+        /// </summary>
+        public int GapWidth
         {
-            if (ChartType == eChartType.BarOfPie)
+            get
             {
-                OfPieType = ePieType.Bar;
+                return _chartXmlHelper.GetXmlNodeInt(_gapWidthPath);
             }
-            else
+            set
             {
-                OfPieType = ePieType.Pie;
+                _chartXmlHelper.SetXmlNodeString(_gapWidthPath, value.ToString(CultureInfo.InvariantCulture));
             }
         }
 
-        const string pieTypePath = "c:ofPieType/@val";
         /// <summary>
         /// Type, pie or bar
         /// </summary>
@@ -98,26 +103,12 @@ namespace OfficeOpenXml.Drawing.Chart
                 _chartXmlHelper.SetXmlNodeString(pieTypePath, value == ePieType.Bar ? "bar" : "pie");
             }
         }
-        string _gapWidthPath = "c:gapWidth/@val";
-        /// <summary>
-        /// The size of the gap between two adjacent bars/columns
-        /// </summary>
-        public int GapWidth
-        {
-            get
-            {
-                return _chartXmlHelper.GetXmlNodeInt(_gapWidthPath);
-            }
-            set
-            {
-                _chartXmlHelper.SetXmlNodeString(_gapWidthPath, value.ToString(CultureInfo.InvariantCulture));
-            }
-        }
+
         internal override eChartType GetChartType(string name)
         {
             if (name == "ofPieChart")
             {
-                if (OfPieType==ePieType.Bar)
+                if (OfPieType == ePieType.Bar)
                 {
                     return eChartType.BarOfPie;
                 }
@@ -127,6 +118,18 @@ namespace OfficeOpenXml.Drawing.Chart
                 }
             }
             return base.GetChartType(name);
+        }
+
+        private void SetTypeProperties()
+        {
+            if (ChartType == eChartType.BarOfPie)
+            {
+                OfPieType = ePieType.Bar;
+            }
+            else
+            {
+                OfPieType = ePieType.Pie;
+            }
         }
     }
 }

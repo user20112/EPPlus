@@ -13,49 +13,28 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Initial Release		        2010-06-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Xml;
-using System.Globalization;
-using System.Drawing;
 
 namespace OfficeOpenXml.Drawing.Vml
 {
-    /// <summary>
-    /// Horizontal Alingment
-    /// </summary>
-    public enum eTextAlignHorizontalVml
-    {
-        Left,
-        Center,
-        Right
-    }
-    /// <summary>
-    /// Vertical Alingment
-    /// </summary>
-    public enum eTextAlignVerticalVml
-    {
-        Top,
-        Center,
-        Bottom
-    }
     /// <summary>
     /// Linestyle
     /// </summary>
@@ -70,6 +49,27 @@ namespace OfficeOpenXml.Drawing.Vml
         LongDashDot,
         LongDashDotDot
     }
+
+    /// <summary>
+    /// Horizontal Alingment
+    /// </summary>
+    public enum eTextAlignHorizontalVml
+    {
+        Left,
+        Center,
+        Right
+    }
+
+    /// <summary>
+    /// Vertical Alingment
+    /// </summary>
+    public enum eTextAlignVerticalVml
+    {
+        Top,
+        Center,
+        Bottom
+    }
+
     /// <summary>
     /// Drawing object used for comments
     /// </summary>
@@ -79,18 +79,8 @@ namespace OfficeOpenXml.Drawing.Vml
             base(ns, topNode)
         {
             SchemaNodeOrder = new string[] { "fill", "stroke", "shadow", "path", "textbox", "ClientData", "MoveWithCells", "SizeWithCells", "Anchor", "Locked", "AutoFill", "LockText", "TextHAlign", "TextVAlign", "Row", "Column", "Visible" };
-        }   
-        public string Id 
-        {
-            get
-            {
-                return GetXmlNodeString("@id");
-            }
-            set
-            {
-                SetXmlNodeString("@id",value);
-            }
         }
+
         /// <summary>
         /// Alternative text to be displayed instead of a graphic.
         /// </summary>
@@ -105,7 +95,19 @@ namespace OfficeOpenXml.Drawing.Vml
                 SetXmlNodeString("@alt", value);
             }
         }
-        #region "Style Handling methods"
+
+        public string Id
+        {
+            get
+            {
+                return GetXmlNodeString("@id");
+            }
+            set
+            {
+                SetXmlNodeString("@id",value);
+            }
+        }
+
         protected bool GetStyle(string style, string key, out string value)
         {
             string[]styles = style.Split(';');
@@ -129,6 +131,7 @@ namespace OfficeOpenXml.Drawing.Vml
             value="";
             return false;
         }
+
         protected string SetStyle(string style, string key, string value)
         {
             string[] styles = style.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
@@ -161,6 +164,5 @@ namespace OfficeOpenXml.Drawing.Vml
             }
             return newStyle;
         }
-        #endregion
     }
 }

@@ -1,10 +1,7 @@
-﻿using System.Globalization;
-using OfficeOpenXml.Packaging;
+﻿using OfficeOpenXml.Packaging;
 using OfficeOpenXml.Table.PivotTable;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Globalization;
 using System.Xml;
 
 namespace OfficeOpenXml.Drawing.Chart
@@ -14,8 +11,16 @@ namespace OfficeOpenXml.Drawing.Chart
     /// </summary>
     public sealed class ExcelBubbleChart : ExcelChart
     {
+        private string BUBBLE3D_PATH = "c:bubble3D/@val";
+
+        private string BUBBLESCALE_PATH = "c:bubbleScale/@val";
+
+        private string SHOWNEGBUBBLES_PATH = "c:showNegBubbles/@val";
+
+        private string SIZEREPRESENTS_PATH = "c:sizeRepresents/@val";
+
         internal ExcelBubbleChart(ExcelDrawings drawings, XmlNode node, eChartType type, ExcelChart topChart, ExcelPivotTable PivotTableSource) :
-            base(drawings, node, type, topChart, PivotTableSource)
+                                            base(drawings, node, type, topChart, PivotTableSource)
         {
             ShowNegativeBubbles = false;
             BubbleScale = 100;
@@ -29,18 +34,36 @@ namespace OfficeOpenXml.Drawing.Chart
             _chartSeries = new ExcelBubbleChartSeries(this, drawings.NameSpaceManager, _chartNode, isPivot);
             //SetTypeProperties();
         }
+
         internal ExcelBubbleChart(ExcelDrawings drawings, XmlNode node, Uri uriChart, ZipPackagePart part, XmlDocument chartXml, XmlNode chartNode) :
             base(drawings, node, uriChart, part, chartXml, chartNode)
         {
             _chartSeries = new ExcelBubbleChartSeries(this, _drawings.NameSpaceManager, _chartNode, false);
             //SetTypeProperties();
         }
+
         internal ExcelBubbleChart(ExcelChart topChart, XmlNode chartNode) :
             base(topChart, chartNode)
         {
             _chartSeries = new ExcelBubbleChartSeries(this, _drawings.NameSpaceManager, _chartNode, false);
         }
-        string BUBBLESCALE_PATH = "c:bubbleScale/@val";
+
+        /// <summary>
+        /// Specifies if the bubblechart is three dimensional
+        /// </summary>
+        public bool Bubble3D
+        {
+            get
+            {
+                return _chartXmlHelper.GetXmlNodeBool(BUBBLE3D_PATH);
+            }
+            set
+            {
+                _chartXmlHelper.SetXmlNodeBool(BUBBLE3D_PATH, value);
+                ChartType = value ? eChartType.Bubble3DEffect : eChartType.Bubble;
+            }
+        }
+
         /// <summary>
         /// Specifies the scale factor for the bubble chart. Can range from 0 to 300, corresponding to a percentage of the default size,
         /// </summary>
@@ -59,7 +82,15 @@ namespace OfficeOpenXml.Drawing.Chart
                 _chartXmlHelper.SetXmlNodeString(BUBBLESCALE_PATH, value.ToString());
             }
         }
-        string SHOWNEGBUBBLES_PATH = "c:showNegBubbles/@val";
+
+        public new ExcelBubbleChartSeries Series
+        {
+            get
+            {
+                return (ExcelBubbleChartSeries)_chartSeries;
+            }
+        }
+
         /// <summary>
         /// Specifies negative sized bubbles shall be shown on a bubble chart
         /// </summary>
@@ -74,23 +105,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 _chartXmlHelper.SetXmlNodeBool(BUBBLESCALE_PATH, value, true);
             }
         }
-        string BUBBLE3D_PATH = "c:bubble3D/@val";
-        /// <summary>
-        /// Specifies if the bubblechart is three dimensional
-        /// </summary>
-        public bool Bubble3D
-        {
-            get
-            {
-                return _chartXmlHelper.GetXmlNodeBool(BUBBLE3D_PATH);
-            }
-            set
-            {
-                _chartXmlHelper.SetXmlNodeBool(BUBBLE3D_PATH, value);
-                ChartType = value ? eChartType.Bubble3DEffect : eChartType.Bubble;
-            }
-        }
-        string SIZEREPRESENTS_PATH = "c:sizeRepresents/@val";
+
         /// <summary>
         /// Specifies the scale factor for the bubble chart. Can range from 0 to 300, corresponding to a percentage of the default size,
         /// </summary>
@@ -113,14 +128,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 _chartXmlHelper.SetXmlNodeString(SIZEREPRESENTS_PATH, value == eSizeRepresents.Width ? "w" : "area");
             }
         }
-        public new ExcelBubbleChartSeries Series
-        {
-            get
-            {
 
-                return (ExcelBubbleChartSeries)_chartSeries;
-            }
-        }
         internal override eChartType GetChartType(string name)
         {
             if (Bubble3D)

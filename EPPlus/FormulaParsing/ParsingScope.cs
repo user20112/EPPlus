@@ -11,16 +11,14 @@
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author Change                      Date
  *******************************************************************************
  * Mats Alm Added		                2016-12-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
 using OfficeOpenXml.FormulaParsing.ExcelUtilities;
+using System;
 
 namespace OfficeOpenXml.FormulaParsing
 {
@@ -45,16 +43,6 @@ namespace OfficeOpenXml.FormulaParsing
         }
 
         /// <summary>
-        /// Id of the scope.
-        /// </summary>
-        public Guid ScopeId { get; private set; }
-
-        /// <summary>
-        /// The calling scope.
-        /// </summary>
-        public ParsingScope Parent { get; private set; }
-
-        /// <summary>
         /// The address of the cell currently beeing parsed.
         /// </summary>
         public RangeAddress Address { get; private set; }
@@ -63,6 +51,16 @@ namespace OfficeOpenXml.FormulaParsing
         /// True if the current scope is a Subtotal function beeing executed.
         /// </summary>
         public bool IsSubtotal { get; set; }
+
+        /// <summary>
+        /// The calling scope.
+        /// </summary>
+        public ParsingScope Parent { get; private set; }
+
+        /// <summary>
+        /// Id of the scope.
+        /// </summary>
+        public Guid ScopeId { get; private set; }
 
         public void Dispose()
         {

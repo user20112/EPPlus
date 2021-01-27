@@ -24,17 +24,14 @@
 // ------------------------------------------------------------------
 //
 
-
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
-
     internal partial class ZipFile
     {
-
         /// <summary>
         ///   Delete file with retry on UnauthorizedAccessException.
         /// </summary>
@@ -67,7 +64,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 }
             }
         }
-
 
         /// <summary>
         ///   Saves the Zip archive to a file, specified by the Name property of the
@@ -157,7 +153,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 if (_entries.Count >= 0xFFFF && _zip64 == Zip64Option.Never)
                     throw new ZipException("The number of entries is 65535 or greater. Consider setting the UseZip64WhenSaving property on the ZipFile instance.");
 
-
                 // write an entry in the zip for each file
                 int n = 0;
                 // workitem 9831
@@ -178,8 +173,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                     if (e.IncludedInMostRecentSave)
                         thisSaveUsedZip64 |= e.OutputUsedZip64.Value;
                 }
-
-
 
                 if (_saveOperationCanceled)
                     return;
@@ -206,7 +199,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
                 thisSaveUsedZip64 |= directoryNeededZip64;
                 _OutputUsesZip64 = new Nullable<bool>(thisSaveUsedZip64);
-
 
                 // do the rename as necessary
                 if (_name != null &&
@@ -309,7 +301,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                         {
                             // don't care about exceptions here.
                         }
-
                     }
                     _fileAlreadyExists = true;
                 }
@@ -328,8 +319,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return;
         }
 
-
-
         private static void NotifyEntriesSaveComplete(ICollection<ZipEntry> c)
         {
             foreach (ZipEntry e in  c)
@@ -337,7 +326,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 e.NotifySaveComplete();
             }
         }
-
 
         private void RemoveTempFile()
         {
@@ -354,7 +342,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                     StatusMessageTextWriter.WriteLine("ZipFile::Save: could not delete temp file: {0}.", ex1.Message);
             }
         }
-
 
         private void CleanupAfterSaveOperation()
         {
@@ -383,7 +370,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 }
             }
         }
-
 
         /// <summary>
         /// Save the file to a new zipfile, with the given name.
@@ -466,7 +452,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             // file backing it) in the Save() method.
             if (_name == null)
                 _writestream = null;
-
             else _readName = _name; // workitem 13915
 
             _name = fileName;
@@ -476,7 +461,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _fileAlreadyExists = File.Exists(_name);
             Save();
         }
-
 
         /// <summary>
         ///   Save the zip archive to the specified stream.
@@ -583,11 +567,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _fileAlreadyExists = false;
             Save();
         }
-
-
     }
-
-
 
     internal static class ZipOutput
     {
@@ -619,7 +599,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 s.Write(a, 0, a.Length);
                 aLength = a.Length;
             }
-
 
             // We need to keep track of the start and
             // Finish of the Central Directory Structure.
@@ -672,7 +651,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                     else
                         throw new ZipException("The archive requires a ZIP64 Central Directory. Consider setting the ZipOutputStream.EnableZip64 property.");
 #endif
-
                 }
 
                 var a = GenZip64EndOfCentralDirectory(Start, Finish, countOfEntries, numSegments);
@@ -704,7 +682,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             else
                 a2 = GenCentralDirectoryFooter(Start, Finish, zip64, countOfEntries, comment, container);
 
-
             // now, the regular footer
             if (startSegment != 0)
             {
@@ -731,13 +708,13 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return needZip64CentralDirectory;
         }
 
-
         private static System.Text.Encoding GetEncoding(ZipContainer container, string t)
         {
             switch (container.AlternateEncodingUsage)
             {
                 case ZipOption.Always:
                     return container.AlternateEncoding;
+
                 case ZipOption.Never:
                     return container.DefaultEncoding;
             }
@@ -751,8 +728,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             if (t2.Equals(t)) return e;
             return container.AlternateEncoding;
         }
-
-
 
         private static byte[] GenCentralDirectoryFooter(long StartOfCentralDirectory,
                                                         long EndOfCentralDirectory,
@@ -833,7 +808,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 bytes[i++] = (byte)((StartOfCentralDirectory & 0xFF000000) >> 24);
             }
 
-
             // zip archive comment
             if ((comment == null) || (comment.Length == 0))
             {
@@ -862,8 +836,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             //   s.Write(bytes, 0, i);
             return bytes;
         }
-
-
 
         private static byte[] GenZip64EndOfCentralDirectory(long StartOfCentralDirectory,
                                                             long EndOfCentralDirectory,
@@ -945,8 +917,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return bytes;
         }
 
-
-
         private static int CountEntries(ICollection<ZipEntry> _entries)
         {
             // Cannot just emit _entries.Count, because some of the entries
@@ -956,9 +926,5 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 if (entry.IncludedInMostRecentSave) count++;
             return count;
         }
-
-
-
-
     }
 }

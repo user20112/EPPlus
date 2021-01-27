@@ -13,28 +13,28 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Added		30-AUG-2010
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
+using OfficeOpenXml.FormulaParsing.ExcelUtilities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Xml;
-using OfficeOpenXml.FormulaParsing.ExcelUtilities;
+
 namespace OfficeOpenXml.Table
 {
     /// <summary>
@@ -42,9 +42,10 @@ namespace OfficeOpenXml.Table
     /// </summary>
     public class ExcelTableCollection : IEnumerable<ExcelTable>
     {
-        List<ExcelTable> _tables = new List<ExcelTable>();
         internal Dictionary<string, int> _tableNames = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        ExcelWorksheet _ws;        
+        private List<ExcelTable> _tables = new List<ExcelTable>();
+        private ExcelWorksheet _ws;
+
         internal ExcelTableCollection(ExcelWorksheet ws)
         {
             var pck = ws._package.Package;
@@ -57,15 +58,53 @@ namespace OfficeOpenXml.Table
                 _tables.Add(tbl);
             }
         }
-        private ExcelTable Add(ExcelTable tbl)
+
+        /// <summary>
+        /// Number of items in the collection
+        /// </summary>
+        public int Count
         {
-            _tables.Add(tbl);
-            _tableNames.Add(tbl.Name, _tables.Count - 1);
-            if (tbl.Id >= _ws.Workbook._nextTableID)
+            get
             {
-                _ws.Workbook._nextTableID = tbl.Id + 1;
+                return _tables.Count;
             }
-            return tbl;
+        }
+
+        /// <summary>
+        /// The table Index. Base 0.
+        /// </summary>
+        /// <param name="Index"></param>
+        /// <returns></returns>
+        public ExcelTable this[int Index]
+        {
+            get
+            {
+                if (Index < 0 || Index >= _tables.Count)
+                {
+                    throw (new ArgumentOutOfRangeException("Table index out of range"));
+                }
+                return _tables[Index];
+            }
+        }
+
+        /// <summary>
+        /// Indexer
+        /// </summary>
+        /// <param name="Name">The name of the table</param>
+        /// <returns>The table. Null if the table name is not found in the collection</returns>
+        public ExcelTable this[string Name]
+        {
+            get
+            {
+                if (_tableNames.ContainsKey(Name))
+                {
+                    return _tables[_tableNames[Name]];
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
 
         /// <summary>
@@ -105,29 +144,6 @@ namespace OfficeOpenXml.Table
             return Add(new ExcelTable(_ws, Range, Name, _ws.Workbook._nextTableID));
         }
 
-        private void ValidateTableName(string Name)
-        {
-            if (string.IsNullOrEmpty(Name))
-            {
-                throw new ArgumentException("Tablename is null or empty");
-            }
-
-            char firstLetterOfName = Name[0];
-            if (Char.IsLetter(firstLetterOfName) == false && firstLetterOfName != '_' && firstLetterOfName != '\\')
-            {
-                throw new ArgumentException("Tablename start with invalid character");
-            }
-
-            if (Name.Contains(" "))
-            {
-                throw new ArgumentException("Tablename has spaces");
-            }
-            if (!ExcelAddressUtil.IsValidName(Name))
-            {
-                throw (new ArgumentException("Tablename is not valid"));
-            }
-        }
-
         public void Delete(int Index, bool ClearRange = false)
         {
             Delete(this[Index], ClearRange);
@@ -141,7 +157,6 @@ namespace OfficeOpenXml.Table
             }
             Delete(this[Name], ClearRange);
         }
-
 
         public void Delete(ExcelTable Table, bool ClearRange = false)
         {
@@ -167,29 +182,18 @@ namespace OfficeOpenXml.Table
                     range.Clear();
                 }
             }
-
         }
 
-        internal string GetNewTableName()
+        public IEnumerator<ExcelTable> GetEnumerator()
         {
-            string name = "Table1";
-            int i = 2;
-            while (_ws.Workbook.ExistsTableName(name))
-            {
-                name = string.Format("Table{0}", i++);
-            }
-            return name;
+            return _tables.GetEnumerator();
         }
-        /// <summary>
-        /// Number of items in the collection
-        /// </summary>
-        public int Count
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            get
-            {
-                return _tables.Count;
-            }
+            return _tables.GetEnumerator();
         }
+
         /// <summary>
         /// Get the table object from a range.
         /// </summary>
@@ -206,49 +210,50 @@ namespace OfficeOpenXml.Table
             }
             return null;
         }
-        /// <summary>
-        /// The table Index. Base 0.
-        /// </summary>
-        /// <param name="Index"></param>
-        /// <returns></returns>
-        public ExcelTable this[int Index]
+
+        internal string GetNewTableName()
         {
-            get
+            string name = "Table1";
+            int i = 2;
+            while (_ws.Workbook.ExistsTableName(name))
             {
-                if (Index < 0 || Index >= _tables.Count)
-                {
-                    throw (new ArgumentOutOfRangeException("Table index out of range"));
-                }
-                return _tables[Index];
+                name = string.Format("Table{0}", i++);
             }
-        }
-        /// <summary>
-        /// Indexer
-        /// </summary>
-        /// <param name="Name">The name of the table</param>
-        /// <returns>The table. Null if the table name is not found in the collection</returns>
-        public ExcelTable this[string Name]
-        {
-            get
-            {
-                if (_tableNames.ContainsKey(Name))
-                {
-                    return _tables[_tableNames[Name]];
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-        public IEnumerator<ExcelTable> GetEnumerator()
-        {
-            return _tables.GetEnumerator();
+            return name;
         }
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        private ExcelTable Add(ExcelTable tbl)
         {
-            return _tables.GetEnumerator();
+            _tables.Add(tbl);
+            _tableNames.Add(tbl.Name, _tables.Count - 1);
+            if (tbl.Id >= _ws.Workbook._nextTableID)
+            {
+                _ws.Workbook._nextTableID = tbl.Id + 1;
+            }
+            return tbl;
+        }
+
+        private void ValidateTableName(string Name)
+        {
+            if (string.IsNullOrEmpty(Name))
+            {
+                throw new ArgumentException("Tablename is null or empty");
+            }
+
+            char firstLetterOfName = Name[0];
+            if (Char.IsLetter(firstLetterOfName) == false && firstLetterOfName != '_' && firstLetterOfName != '\\')
+            {
+                throw new ArgumentException("Tablename start with invalid character");
+            }
+
+            if (Name.Contains(" "))
+            {
+                throw new ArgumentException("Tablename has spaces");
+            }
+            if (!ExcelAddressUtil.IsValidName(Name))
+            {
+                throw (new ArgumentException("Tablename is not valid"));
+            }
         }
     }
 }

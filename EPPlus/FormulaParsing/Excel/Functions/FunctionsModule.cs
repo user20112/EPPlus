@@ -7,47 +7,38 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Mats Alm   		                Added		                2013-12-03
  *******************************************************************************/
+
+using OfficeOpenXml.FormulaParsing.ExpressionGraph.FunctionCompilers;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.ExpressionGraph.FunctionCompilers;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions
 {
     /// <summary>
-    /// Base class 
+    /// Base class
     /// </summary>
     public abstract class FunctionsModule : IFunctionModule
     {
-        private readonly Dictionary<string, ExcelFunction> _functions = new Dictionary<string, ExcelFunction>();
         private readonly Dictionary<Type, FunctionCompiler> _customCompilers = new Dictionary<Type, FunctionCompiler>();
+        private readonly Dictionary<string, ExcelFunction> _functions = new Dictionary<string, ExcelFunction>();
 
         /// <summary>
-        /// Gets a dictionary of custom function implementations.
-        /// </summary>
-        public IDictionary<string, ExcelFunction> Functions
-        {
-            get { return _functions; }
-        }
-
-        /// <summary>
-        /// Gets a dictionary of custom function compilers. A function compiler is not 
+        /// Gets a dictionary of custom function compilers. A function compiler is not
         /// necessary for a custom function, unless the default expression evaluation is not
         /// sufficient for the implementation of the custom function. When a FunctionCompiler instance
         /// is created, it should be given a reference to the same function instance that exists
@@ -56,6 +47,14 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions
         public IDictionary<Type, FunctionCompiler> CustomCompilers
         {
             get { return _customCompilers; }
+        }
+
+        /// <summary>
+        /// Gets a dictionary of custom function implementations.
+        /// </summary>
+        public IDictionary<string, ExcelFunction> Functions
+        {
+            get { return _functions; }
         }
   }
 }

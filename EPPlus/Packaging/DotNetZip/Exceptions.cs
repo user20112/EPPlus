@@ -22,11 +22,8 @@
 // This module defines exceptions used in the class library.
 //
 
-
-
 using System;
-using System.Collections.Generic;
-using System.Text;
+
 #if !NETCF
 //using System.Runtime.Serialization;
 #endif
@@ -39,16 +36,14 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
     //[AttributeUsage(AttributeTargets.Class)]
     //public class ZipExceptionAttribute : Attribute { }
 
-
-
     /// <summary>
     /// Issued when an <c>ZipEntry.ExtractWithPassword()</c> method is invoked
     /// with an incorrect password.
     /// </summary>
-//#if !SILVERLIGHT
-//    [Serializable]
-//#endif
-//    [System.Runtime.InteropServices.GuidAttribute("ebc25cf6-9120-4283-b972-0e5520d0000B")]
+    //#if !SILVERLIGHT
+    //    [Serializable]
+    //#endif
+    //    [System.Runtime.InteropServices.GuidAttribute("ebc25cf6-9120-4283-b972-0e5520d0000B")]
     public class BadPasswordException : ZipException
     {
         /// <summary>
@@ -74,7 +69,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
         }
 
-
 #if ! (NETCF || SILVERLIGHT)
         ///// <summary>
         ///// Come on, you know how exceptions work. Why are you looking at this documentation?
@@ -85,7 +79,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         //    : base(info, context)
         //  {  }
 #endif
-
     }
 
     /// <summary>
@@ -131,10 +124,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 //            : base(info, context)
 //          {  }
 //#endif
-
     }
-
-
 
     /// <summary>
     /// Issued when an CRC check fails upon extracting an entry from a zip archive.
@@ -158,7 +148,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             : base(message)
         { }
 
-
 //#if ! (NETCF || SILVERLIGHT)
 //        /// <summary>
 //        /// Come on, you know how exceptions work. Why are you looking at this documentation?
@@ -169,9 +158,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 //            : base(info, context)
 //          {  }
 //#endif
-
     }
-
 
     /// <summary>
     /// Issued when errors occur saving a self-extracting archive.
@@ -205,9 +192,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 //            : base(info, context)
 //          {  }
 //#endif
-
     }
-
 
 //    /// <summary>
 //    /// Indicates that an operation was attempted on a ZipFile which was not possible
@@ -252,7 +237,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 //            : base(info, context)
 //          {  }
 //#endif
-
     }
 
     /// <summary>
@@ -294,7 +278,5 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 //        //    : base(info, context)
 //        //{ }
 //#endif
-
     }
-
 }

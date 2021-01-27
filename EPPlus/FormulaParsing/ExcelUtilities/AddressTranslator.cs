@@ -13,29 +13,24 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2013-03-01 (Prior file history on https://github.com/swmal/ExcelFormulaParser)
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using OfficeOpenXml.FormulaParsing;
+
 using OfficeOpenXml.FormulaParsing.Utilities;
+using System.Text.RegularExpressions;
 
 namespace OfficeOpenXml.FormulaParsing.ExcelUtilities
 {
@@ -44,12 +39,6 @@ namespace OfficeOpenXml.FormulaParsing.ExcelUtilities
     /// </summary>
     public class AddressTranslator
     {
-        public enum RangeCalculationBehaviour
-        {
-            FirstPart,
-            LastPart
-        }
-
         private readonly ExcelDataProvider _excelDataProvider;
 
         public AddressTranslator(ExcelDataProvider excelDataProvider)
@@ -58,9 +47,15 @@ namespace OfficeOpenXml.FormulaParsing.ExcelUtilities
             _excelDataProvider = excelDataProvider;
         }
 
+        public enum RangeCalculationBehaviour
+        {
+            FirstPart,
+            LastPart
+        }
+
         /// <summary>
         /// Translates an address in format "A1" to col- and rowindex.
-        /// 
+        ///
         /// If the supplied address is a range, the address of the first part will be calculated.
         /// </summary>
         /// <param name="address"></param>
@@ -97,21 +92,6 @@ namespace OfficeOpenXml.FormulaParsing.ExcelUtilities
             //col--;
             //row = GetIntPart(address) - 1 ?? GetRowIndexByBehaviour(behaviour);
             row = GetIntPart(address) ?? GetRowIndexByBehaviour(behaviour);
-
-        }
-
-        private int GetRowIndexByBehaviour(RangeCalculationBehaviour behaviour)
-        {
-            if (behaviour == RangeCalculationBehaviour.FirstPart)
-            {
-                return 1;
-            }
-            return _excelDataProvider.ExcelMaxRows;
-        }
-
-        private int GetNumericAlphaValue(char c)
-        {
-            return (int)c - 64;
         }
 
         private string GetAlphaPart(string address)
@@ -126,6 +106,20 @@ namespace OfficeOpenXml.FormulaParsing.ExcelUtilities
                 return int.Parse(Regex.Match(address, "[0-9]+").Value);
             }
             return null;
+        }
+
+        private int GetNumericAlphaValue(char c)
+        {
+            return (int)c - 64;
+        }
+
+        private int GetRowIndexByBehaviour(RangeCalculationBehaviour behaviour)
+        {
+            if (behaviour == RangeCalculationBehaviour.FirstPart)
+            {
+                return 1;
+            }
+            return _excelDataProvider.ExcelMaxRows;
         }
     }
 }

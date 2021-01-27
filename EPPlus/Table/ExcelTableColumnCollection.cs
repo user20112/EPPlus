@@ -13,26 +13,26 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Added		30-AUG-2010
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 using System.Xml;
 
 namespace OfficeOpenXml.Table
@@ -42,25 +42,19 @@ namespace OfficeOpenXml.Table
     /// </summary>
     public class ExcelTableColumnCollection : IEnumerable<ExcelTableColumn>
     {
-        List<ExcelTableColumn> _cols = new List<ExcelTableColumn>();
-        Dictionary<string, int> _colNames = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, int> _colNames = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private List<ExcelTableColumn> _cols = new List<ExcelTableColumn>();
+
         public ExcelTableColumnCollection(ExcelTable table)
         {
             Table = table;
             foreach(XmlNode node in table.TableXml.SelectNodes("//d:table/d:tableColumns/d:tableColumn",table.NameSpaceManager))
-            {                
+            {
                 _cols.Add(new ExcelTableColumn(table.NameSpaceManager, node, table, _cols.Count));
                 _colNames.Add(_cols[_cols.Count - 1].Name, _cols.Count - 1);
             }
         }
-        /// <summary>
-        /// A reference to the table object
-        /// </summary>
-        public ExcelTable Table
-        {
-            get;
-            private set;
-        }
+
         /// <summary>
         /// Number of items in the collection
         /// </summary>
@@ -71,6 +65,16 @@ namespace OfficeOpenXml.Table
                 return _cols.Count;
             }
         }
+
+        /// <summary>
+        /// A reference to the table object
+        /// </summary>
+        public ExcelTable Table
+        {
+            get;
+            private set;
+        }
+
         /// <summary>
         /// The column Index. Base 0.
         /// </summary>
@@ -87,6 +91,7 @@ namespace OfficeOpenXml.Table
                 return _cols[Index] as ExcelTableColumn;
             }
         }
+
         /// <summary>
         /// Indexer
         /// </summary>
@@ -116,8 +121,9 @@ namespace OfficeOpenXml.Table
         {
             return _cols.GetEnumerator();
         }
+
         internal string GetUniqueName(string name)
-        {            
+        {
             if (_colNames.ContainsKey(name))
             {
                 var newName = name;

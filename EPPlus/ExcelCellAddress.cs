@@ -13,42 +13,43 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  *  Starnuto Di Topo & Jan Källman  Initial Release		        2010-03-14
  * Jan Källman		License changed GPL-->LGPL 2011-12-27
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OfficeOpenXml
 {
     /// <summary>
-    /// A single cell address 
+    /// A single cell address
     /// </summary>
     public class ExcelCellAddress
     {
-        public ExcelCellAddress()
-            : this(1, 1)
-        {
+        private string _address;
 
-        }
+        private int _column;
 
         private int _row;
-        private int _column;
-        private string _address;
+
+        public ExcelCellAddress()
+                                    : this(1, 1)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the ExcelCellAddress class.
         /// </summary>
@@ -59,36 +60,32 @@ namespace OfficeOpenXml
             this.Row = row;
             this.Column = column;
         }
+
         /// <summary>
         /// Initializes a new instance of the ExcelCellAddress class.
         /// </summary>
         ///<param name="address">The address</param>
         public ExcelCellAddress(string address)
         {
-            this.Address = address; 
+            this.Address = address;
         }
+
         /// <summary>
-        /// Row
+        /// Celladdress
         /// </summary>
-        public int Row
+        public string Address
         {
             get
             {
-                return this._row;
+                return _address;
             }
-            private set
+            internal set
             {
-                if (value <= 0)
-                {
-                    throw new ArgumentOutOfRangeException("value", "Row cannot be less than 1.");
-                }
-                this._row = value;
-                if(_column>0) 
-                    _address = ExcelCellBase.GetAddress(_row, _column);
-                else
-                    _address = "#REF!";
+                _address = value;
+                ExcelCellBase.GetRowColFromAddress(_address, out _row, out _column);
             }
         }
+
         /// <summary>
         /// Column
         /// </summary>
@@ -111,21 +108,7 @@ namespace OfficeOpenXml
                     _address = "#REF!";
             }
         }
-        /// <summary>
-        /// Celladdress
-        /// </summary>
-        public string Address
-        {
-            get
-            {
-                return _address;
-            }
-            internal set
-            {
-                _address = value;
-                ExcelCellBase.GetRowColFromAddress(_address, out _row, out _column);
-            }
-        }
+
         /// <summary>
         /// If the address is an invalid reference (#REF!)
         /// </summary>
@@ -134,6 +117,29 @@ namespace OfficeOpenXml
             get
             {
                 return _row <= 0;
+            }
+        }
+
+        /// <summary>
+        /// Row
+        /// </summary>
+        public int Row
+        {
+            get
+            {
+                return this._row;
+            }
+            private set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException("value", "Row cannot be less than 1.");
+                }
+                this._row = value;
+                if(_column>0)
+                    _address = ExcelCellBase.GetAddress(_row, _column);
+                else
+                    _address = "#REF!";
             }
         }
 
@@ -152,4 +158,3 @@ namespace OfficeOpenXml
         }
     }
 }
-

@@ -7,30 +7,27 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Mats Alm   		                Added		                2013-12-03
  *******************************************************************************/
+
+using OfficeOpenXml.FormulaParsing.ExpressionGraph.FunctionCompilers;
+using OfficeOpenXml.FormulaParsing.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.Excel.Functions;
-using OfficeOpenXml.FormulaParsing.Utilities;
-using OfficeOpenXml.FormulaParsing.Exceptions;
-using OfficeOpenXml.FormulaParsing.ExpressionGraph.FunctionCompilers;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions
 {
@@ -42,7 +39,11 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions
         private Dictionary<Type, FunctionCompiler> _customCompilers = new Dictionary<Type, FunctionCompiler>();
 
         private Dictionary<string, ExcelFunction> _functions = new Dictionary<string, ExcelFunction>(StringComparer.Ordinal);
-        
+
+        private FunctionRepository()
+        {
+        }
+
         /// <summary>
         /// Gets a <see cref="Dictionary{Type, FunctionCompiler}" /> of custom <see cref="FunctionCompiler"/>s.
         /// </summary>
@@ -51,9 +52,12 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions
             get { return _customCompilers; }
         }
 
-        private FunctionRepository()
+        /// <summary>
+        /// Returns the names of all implemented functions.
+        /// </summary>
+        public IEnumerable<string> FunctionNames
         {
-
+            get { return _functions.Keys; }
         }
 
         public static FunctionRepository Create()
@@ -61,60 +65,6 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions
             var repo = new FunctionRepository();
             repo.LoadModule(new BuiltInFunctions());
             return repo;
-        }
-
-        /// <summary>
-        /// Loads a module of <see cref="ExcelFunction"/>s to the function repository.
-        /// </summary>
-        /// <param name="module">A <see cref="IFunctionModule"/> that can be used for adding functions and custom function compilers.</param>
-        public virtual void LoadModule(IFunctionModule module)
-        {
-            foreach (var key in module.Functions.Keys)
-            {
-                var lowerKey = key.ToLower(CultureInfo.InvariantCulture);
-                _functions[lowerKey] = module.Functions[key];
-            }
-            foreach (var key in module.CustomCompilers.Keys)
-            {
-              this.CustomCompilers[key] = module.CustomCompilers[key];
-            }
-        }
-
-        public virtual ExcelFunction GetFunction(string name)
-        {
-            if(!_functions.ContainsKey(name.ToLower(CultureInfo.InvariantCulture)))
-            {
-                //throw new InvalidOperationException("Non supported function: " + name);
-                //throw new ExcelErrorValueException("Non supported function: " + name, ExcelErrorValue.Create(eErrorType.Name));
-                return null;
-            }
-            return _functions[name.ToLower(CultureInfo.InvariantCulture)];
-        }
-
-        /// <summary>
-        /// Removes all functions from the repository
-        /// </summary>
-        public virtual void Clear()
-        {
-            _functions.Clear();
-        }
-
-        /// <summary>
-        /// Returns true if the the supplied <paramref name="name"/> exists in the repository.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public bool IsFunctionName(string name)
-        {
-            return _functions.ContainsKey(name.ToLower(CultureInfo.InvariantCulture));
-        }
-
-        /// <summary>
-        /// Returns the names of all implemented functions.
-        /// </summary>
-        public IEnumerable<string> FunctionNames
-        {
-            get { return _functions.Keys; }
         }
 
         /// <summary>
@@ -132,6 +82,52 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions
                 _functions.Remove(fName);
             }
             _functions[fName] = functionImpl;
+        }
+
+        /// <summary>
+        /// Removes all functions from the repository
+        /// </summary>
+        public virtual void Clear()
+        {
+            _functions.Clear();
+        }
+
+        public virtual ExcelFunction GetFunction(string name)
+        {
+            if (!_functions.ContainsKey(name.ToLower(CultureInfo.InvariantCulture)))
+            {
+                //throw new InvalidOperationException("Non supported function: " + name);
+                //throw new ExcelErrorValueException("Non supported function: " + name, ExcelErrorValue.Create(eErrorType.Name));
+                return null;
+            }
+            return _functions[name.ToLower(CultureInfo.InvariantCulture)];
+        }
+
+        /// <summary>
+        /// Returns true if the the supplied <paramref name="name"/> exists in the repository.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool IsFunctionName(string name)
+        {
+            return _functions.ContainsKey(name.ToLower(CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// Loads a module of <see cref="ExcelFunction"/>s to the function repository.
+        /// </summary>
+        /// <param name="module">A <see cref="IFunctionModule"/> that can be used for adding functions and custom function compilers.</param>
+        public virtual void LoadModule(IFunctionModule module)
+        {
+            foreach (var key in module.Functions.Keys)
+            {
+                var lowerKey = key.ToLower(CultureInfo.InvariantCulture);
+                _functions[lowerKey] = module.Functions[key];
+            }
+            foreach (var key in module.CustomCompilers.Keys)
+            {
+              this.CustomCompilers[key] = module.CustomCompilers[key];
+            }
         }
     }
 }

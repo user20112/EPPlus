@@ -13,33 +13,30 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		10-SEP-2009
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml;
-using System.Drawing;
-using System.IO;
-using OfficeOpenXml.Drawing;
-using OfficeOpenXml.Packaging;
-using OfficeOpenXml.Utils;
+
 using OfficeOpenXml.Compatibility;
+using OfficeOpenXml.Drawing;
+using OfficeOpenXml.Utils;
+using SkiaSharp;
+using System;
+using System.IO;
+using System.Xml;
 
 namespace OfficeOpenXml
 {
@@ -48,25 +45,27 @@ namespace OfficeOpenXml
     /// </summary>
     public class ExcelBackgroundImage : XmlHelper
     {
-        ExcelWorksheet _workSheet;
+        private ExcelWorksheet _workSheet;
+
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="nsm"></param>
         /// <param name="topNode">The topnode of the worksheet</param>
         /// <param name="workSheet">Worksheet reference</param>
-        internal  ExcelBackgroundImage(XmlNamespaceManager nsm, XmlNode topNode, ExcelWorksheet workSheet) :
+        internal ExcelBackgroundImage(XmlNamespaceManager nsm, XmlNode topNode, ExcelWorksheet workSheet) :
             base(nsm, topNode)
         {
             _workSheet = workSheet;
         }
-        
-        const string BACKGROUNDPIC_PATH = "d:picture/@r:id";
+
+        private const string BACKGROUNDPIC_PATH = "d:picture/@r:id";
+
         /// <summary>
-        /// The background image of the worksheet. 
+        /// The background image of the worksheet.
         /// The image will be saved internally as a jpg.
         /// </summary>
-        public Image Image
+        public SKImage Image
         {
             get
             {
@@ -75,7 +74,7 @@ namespace OfficeOpenXml
                 {
                     var rel = _workSheet.Part.GetRelationship(relID);
                     var imagePart = _workSheet.Part.Package.GetPart(UriHelper.ResolvePartUri(rel.SourceUri, rel.TargetUri));
-                    return Image.FromStream(imagePart.GetStream());
+                    return SKImage.FromEncodedData(imagePart.GetStream());
                 }
                 return null;
             }
@@ -89,7 +88,7 @@ namespace OfficeOpenXml
                 else
                 {
 #if (Core)
-                    var img=ImageCompat.GetImageAsByteArray(value);
+                    var img = ImageCompat.GetImageAsByteArray(value);
 #else
                     ImageConverter ic = new ImageConverter();
                     byte[] img = (byte[])ic.ConvertTo(value, typeof(byte[]));
@@ -100,8 +99,9 @@ namespace OfficeOpenXml
                 }
             }
         }
+
         /// <summary>
-        /// Set the picture from an image file. 
+        /// Set the picture from an image file.
         /// The image file will be saved as a blob, so make sure Excel supports the image format.
         /// </summary>
         /// <param name="PictureFile">The image file.</param>
@@ -109,12 +109,12 @@ namespace OfficeOpenXml
         {
             DeletePrevImage();
 
-            Image img;
+            SKImage img;
             byte[] fileBytes;
             try
             {
                 fileBytes = File.ReadAllBytes(PictureFile.FullName);
-                img = Image.FromFile(PictureFile.FullName);
+                img = SKImage.FromEncodedData(PictureFile.FullName);
             }
             catch (Exception ex)
             {
@@ -126,8 +126,7 @@ namespace OfficeOpenXml
 
             var ii = _workSheet.Workbook._package.AddImage(fileBytes, imageURI, contentType);
 
-
-            if (_workSheet.Part.Package.PartExists(imageURI) && ii.RefCount==1) //The file exists with another content, overwrite it.
+            if (_workSheet.Part.Package.PartExists(imageURI) && ii.RefCount == 1) //The file exists with another content, overwrite it.
             {
                 //Remove the part if it exists
                 _workSheet.Part.Package.DeletePart(imageURI);
@@ -142,13 +141,14 @@ namespace OfficeOpenXml
             var rel = _workSheet.Part.CreateRelationship(imageURI, Packaging.TargetMode.Internal, ExcelPackage.schemaRelationships + "/image");
             SetXmlNodeString(BACKGROUNDPIC_PATH, rel.Id);
         }
+
         private void DeletePrevImage()
         {
             var relID = GetXmlNodeString(BACKGROUNDPIC_PATH);
             if (relID != "")
             {
 #if (Core)
-                var img=ImageCompat.GetImageAsByteArray(Image);
+                var img = ImageCompat.GetImageAsByteArray(Image);
 #else
                 var ic = new ImageConverter();
                 byte[] img = (byte[])ic.ConvertTo(Image, typeof(byte[]));
@@ -157,7 +157,7 @@ namespace OfficeOpenXml
 
                 //Delete the relation
                 _workSheet.Part.DeleteRelationship(relID);
-                
+
                 //Delete the image if there are no other references.
                 if (ii != null && ii.RefCount == 1)
                 {
@@ -166,7 +166,6 @@ namespace OfficeOpenXml
                         _workSheet.Part.Package.DeletePart(ii.Uri);
                     }
                 }
-                
             }
         }
     }

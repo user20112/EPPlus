@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.ExcelUtilities;
+﻿using OfficeOpenXml.FormulaParsing.ExcelUtilities;
 using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 using OfficeOpenXml.FormulaParsing.Utilities;
 using OfficeOpenXml.Utils;
+using System.Collections.Generic;
+using System.Linq;
 using Require = OfficeOpenXml.FormulaParsing.Utilities.Require;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
@@ -17,27 +15,12 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
         public CountIf()
             : this(new ExpressionEvaluator())
         {
-
         }
 
         public CountIf(ExpressionEvaluator evaluator)
         {
             Require.That(evaluator).Named("evaluator").IsNotNull();
             _expressionEvaluator = evaluator;
-        }
-
-        private bool Evaluate(object obj, string expression)
-        {
-            double? candidate = default(double?);
-            if (IsNumeric(obj))
-            {
-                candidate = ConvertUtil.GetValueDouble(obj);
-            }
-            if (candidate.HasValue)
-            {
-                return _expressionEvaluator.Evaluate(candidate.Value, expression);
-            }
-            return _expressionEvaluator.Evaluate(obj, expression);
         }
 
         public override CompileResult Execute(IEnumerable<FunctionArgument> arguments, ParsingContext context)
@@ -63,9 +46,9 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
             }
             else if (range.Value is IEnumerable<FunctionArgument>)
             {
-                foreach (var arg in (IEnumerable<FunctionArgument>) range.Value)
+                foreach (var arg in (IEnumerable<FunctionArgument>)range.Value)
                 {
-                    if(Evaluate(arg.Value, criteria))
+                    if (Evaluate(arg.Value, criteria))
                     {
                         result++;
                     }
@@ -79,6 +62,20 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
                 }
             }
             return CreateResult(result, DataType.Integer);
+        }
+
+        private bool Evaluate(object obj, string expression)
+        {
+            double? candidate = default(double?);
+            if (IsNumeric(obj))
+            {
+                candidate = ConvertUtil.GetValueDouble(obj);
+            }
+            if (candidate.HasValue)
+            {
+                return _expressionEvaluator.Evaluate(candidate.Value, expression);
+            }
+            return _expressionEvaluator.Evaluate(obj, expression);
         }
     }
 }

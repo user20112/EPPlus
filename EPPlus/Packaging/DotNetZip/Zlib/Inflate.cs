@@ -61,61 +61,72 @@
 //
 // -----------------------------------------------------------------------
 
-
 using System;
+
 namespace OfficeOpenXml.Packaging.Ionic.Zlib
 {
-    sealed class InflateBlocks
+    internal static class InternalInflateConstants
     {
-        private const int MANY = 1440;
+        // And'ing with mask[n] masks the lower n bits
+        internal static readonly int[] InflateMask = new int[] {
+            0x00000000, 0x00000001, 0x00000003, 0x00000007,
+            0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f,
+            0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff,
+            0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff, 0x0000ffff };
+    }
 
+    internal sealed class InflateBlocks
+    {
         // Table for deflate from PKZIP's appnote.txt.
         internal static readonly int[] border = new int[]
         { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
 
-        private enum InflateBlockMode
-        {
-            TYPE   = 0,                     // get type bits (3, including end bit)
-            LENS   = 1,                     // get lengths for stored
-            STORED = 2,                     // processing stored block
-            TABLE  = 3,                     // get table lengths
-            BTREE  = 4,                     // get bit lengths tree for a dynamic block
-            DTREE  = 5,                     // get length, distance trees for a dynamic block
-            CODES  = 6,                     // processing fixed or dynamic block
-            DRY    = 7,                     // output remaining window bytes
-            DONE   = 8,                     // finished last block, done
-            BAD    = 9,                     // ot a data error--stuck here
-        }
+        internal ZlibCodec _codec;
+        internal int[] bb = new int[1];
+        internal int bitb;
 
-        private InflateBlockMode mode;                    // current inflate_block mode
+        // mode independent information
+        internal int bitk;
 
-        internal int left;                                // if STORED, bytes left to copy
+        internal int[] blens;
+        internal uint check;
+        internal System.Object checkfn;
+        internal InflateCodes codes = new InflateCodes();
+        internal int end;
 
-        internal int table;                               // table lengths (14 bits)
-        internal int index;                               // index into blens (or border)
-        internal int[] blens;                             // bit lengths of codes
-        internal int[] bb = new int[1];                   // bit length tree depth
-        internal int[] tb = new int[1];                   // bit length decoding tree
+        // bits in bit buffer
+        // bit buffer
+        internal int[] hufts;
 
-        internal InflateCodes codes = new InflateCodes(); // if CODES, current state
-
-        internal int last;                                // true if this block is the last block
-
-        internal ZlibCodec _codec;                        // pointer back to this zlib stream
-
-                                                          // mode independent information
-        internal int bitk;                                // bits in bit buffer
-        internal int bitb;                                // bit buffer
-        internal int[] hufts;                             // single malloc for tree space
-        internal byte[] window;                           // sliding window
-        internal int end;                                 // one byte after sliding window
-        internal int readAt;                              // window read pointer
-        internal int writeAt;                             // window write pointer
-        internal System.Object checkfn;                   // check function
-        internal uint check;                              // check on output
-
+        internal int index;
         internal InfTree inftree = new InfTree();
+        internal int last;
+        internal int left;
 
+        // one byte after sliding window
+        internal int readAt;
+
+        internal int table;
+
+        // table lengths (14 bits)
+        // index into blens (or border)
+        // bit lengths of codes
+        // bit length tree depth
+        internal int[] tb = new int[1];
+
+        // single malloc for tree space
+        internal byte[] window;
+
+        // sliding window
+        // window read pointer
+        internal int writeAt;
+
+        private const int MANY = 1440;
+        private InflateBlockMode mode;
+
+        // window write pointer
+        // check function
+        // check on output
         internal InflateBlocks(ZlibCodec codec, System.Object checkfn, int w)
         {
             _codec = codec;
@@ -127,19 +138,96 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             Reset();
         }
 
-        internal uint Reset()
+        private enum InflateBlockMode
         {
-            uint oldCheck = check;
-            mode = InflateBlockMode.TYPE;
-            bitk = 0;
-            bitb = 0;
-            readAt = writeAt = 0;
-
-            if (checkfn != null)
-                _codec._Adler32 = check = Adler.Adler32(0, null, 0, 0);
-            return oldCheck;
+            TYPE = 0,                     // get type bits (3, including end bit)
+            LENS = 1,                     // get lengths for stored
+            STORED = 2,                     // processing stored block
+            TABLE = 3,                     // get table lengths
+            BTREE = 4,                     // get bit lengths tree for a dynamic block
+            DTREE = 5,                     // get length, distance trees for a dynamic block
+            CODES = 6,                     // processing fixed or dynamic block
+            DRY = 7,                     // output remaining window bytes
+            DONE = 8,                     // finished last block, done
+            BAD = 9,                     // ot a data error--stuck here
         }
 
+        // current inflate_block mode
+
+        // if STORED, bytes left to copy
+
+        // bit length decoding tree
+
+        // if CODES, current state
+
+        // true if this block is the last block
+
+        // copy as much as possible from the sliding window to the output area
+        internal int Flush(int r)
+        {
+            int nBytes;
+
+            for (int pass = 0; pass < 2; pass++)
+            {
+                if (pass == 0)
+                {
+                    // compute number of bytes to copy as far as end of window
+                    nBytes = (int)((readAt <= writeAt ? writeAt : end) - readAt);
+                }
+                else
+                {
+                    // compute bytes to copy
+                    nBytes = writeAt - readAt;
+                }
+
+                // workitem 8870
+                if (nBytes == 0)
+                {
+                    if (r == ZlibConstants.Z_BUF_ERROR)
+                        r = ZlibConstants.Z_OK;
+                    return r;
+                }
+
+                if (nBytes > _codec.AvailableBytesOut)
+                    nBytes = _codec.AvailableBytesOut;
+
+                if (nBytes != 0 && r == ZlibConstants.Z_BUF_ERROR)
+                    r = ZlibConstants.Z_OK;
+
+                // update counters
+                _codec.AvailableBytesOut -= nBytes;
+                _codec.TotalBytesOut += nBytes;
+
+                // update check information
+                if (checkfn != null)
+                    _codec._Adler32 = check = Adler.Adler32(check, window, readAt, nBytes);
+
+                // copy as far as end of window
+                Array.Copy(window, readAt, _codec.OutputBuffer, _codec.NextOut, nBytes);
+                _codec.NextOut += nBytes;
+                readAt += nBytes;
+
+                // see if more to copy at beginning of window
+                if (readAt == end && pass == 0)
+                {
+                    // wrap pointers
+                    readAt = 0;
+                    if (writeAt == end)
+                        writeAt = 0;
+                }
+                else pass++;
+            }
+
+            // done
+            return r;
+        }
+
+        internal void Free()
+        {
+            Reset();
+            window = null;
+            hufts = null;
+        }
 
         internal int Process(int r)
         {
@@ -160,7 +248,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
             q = writeAt;
             m = (int)(q < readAt ? readAt - q - 1 : end - q);
-
 
             // process input based on current state
             while (true)
@@ -254,7 +341,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                             k += 8;
                         }
 
-                        if ( ( ((~b)>>16) & 0xffff) != (b & 0xffff))
+                        if ((((~b) >> 16) & 0xffff) != (b & 0xffff))
                         {
                             mode = InflateBlockMode.BAD;
                             _codec.Message = "invalid stored block lengths";
@@ -377,7 +464,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
                         b >>= 14;
                         k -= 14;
-
 
                         index = 0;
                         mode = InflateBlockMode.BTREE;
@@ -532,7 +618,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                                     return Flush(r);
                                 }
 
-                                c = (c == 16) ? blens[i-1] : 0;
+                                c = (c == 16) ? blens[i - 1] : 0;
                                 do
                                 {
                                     blens[i++] = c;
@@ -638,7 +724,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                         writeAt = q;
                         return Flush(r);
 
-
                     default:
                         r = ZlibConstants.Z_STREAM_ERROR;
 
@@ -652,12 +737,18 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
         }
 
-
-        internal void Free()
+        // pointer back to this zlib stream
+        internal uint Reset()
         {
-            Reset();
-            window = null;
-            hufts = null;
+            uint oldCheck = check;
+            mode = InflateBlockMode.TYPE;
+            bitk = 0;
+            bitb = 0;
+            readAt = writeAt = 0;
+
+            if (checkfn != null)
+                _codec._Adler32 = check = Adler.Adler32(0, null, 0, 0);
+            return oldCheck;
         }
 
         internal void SetDictionary(byte[] d, int start, int n)
@@ -672,495 +763,87 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         {
             return mode == InflateBlockMode.LENS ? 1 : 0;
         }
-
-        // copy as much as possible from the sliding window to the output area
-        internal int Flush(int r)
-        {
-            int nBytes;
-
-            for (int pass=0; pass < 2; pass++)
-            {
-                if (pass==0)
-                {
-                    // compute number of bytes to copy as far as end of window
-                    nBytes = (int)((readAt <= writeAt ? writeAt : end) - readAt);
-                }
-                else
-                {
-                    // compute bytes to copy
-                    nBytes = writeAt - readAt;
-                }
-
-                // workitem 8870
-                if (nBytes == 0)
-                {
-                    if (r == ZlibConstants.Z_BUF_ERROR)
-                        r = ZlibConstants.Z_OK;
-                    return r;
-                }
-
-                if (nBytes > _codec.AvailableBytesOut)
-                    nBytes = _codec.AvailableBytesOut;
-
-                if (nBytes != 0 && r == ZlibConstants.Z_BUF_ERROR)
-                    r = ZlibConstants.Z_OK;
-
-                // update counters
-                _codec.AvailableBytesOut -= nBytes;
-                _codec.TotalBytesOut += nBytes;
-
-                // update check information
-                if (checkfn != null)
-                    _codec._Adler32 = check = Adler.Adler32(check, window, readAt, nBytes);
-
-                // copy as far as end of window
-                Array.Copy(window, readAt, _codec.OutputBuffer, _codec.NextOut, nBytes);
-                _codec.NextOut += nBytes;
-                readAt += nBytes;
-
-                // see if more to copy at beginning of window
-                if (readAt == end && pass == 0)
-                {
-                    // wrap pointers
-                    readAt = 0;
-                    if (writeAt == end)
-                        writeAt = 0;
-                }
-                else pass++;
-            }
-
-            // done
-            return r;
-        }
     }
 
-
-    internal static class InternalInflateConstants
+    internal sealed class InflateCodes
     {
-        // And'ing with mask[n] masks the lower n bits
-        internal static readonly int[] InflateMask = new int[] {
-            0x00000000, 0x00000001, 0x00000003, 0x00000007,
-            0x0000000f, 0x0000001f, 0x0000003f, 0x0000007f,
-            0x000000ff, 0x000001ff, 0x000003ff, 0x000007ff,
-            0x00000fff, 0x00001fff, 0x00003fff, 0x00007fff, 0x0000ffff };
-    }
+        // if EXT or COPY, where and how much
+        internal int bitsToGet;
 
+        internal byte dbits;
 
-    sealed class InflateCodes
-    {
-        // waiting for "i:"=input,
-        //             "o:"=output,
-        //             "x:"=nothing
-        private const int START   = 0; // x: set up for LEN
-        private const int LEN     = 1; // i: get length/literal/eob next
-        private const int LENEXT  = 2; // i: getting length extra (have base)
-        private const int DIST    = 3; // i: get distance next
-        private const int DISTEXT = 4; // i: getting distance extra
-        private const int COPY    = 5; // o: copying bytes in window, waiting for space
-        private const int LIT     = 6; // o: got literal, waiting for output space
-        private const int WASH    = 7; // o: got eob, possibly still output waiting
-        private const int END     = 8; // x: got eob and all data flushed
-        private const int BADCODE = 9; // x: got error
+        // bits to get for extra
+        internal int dist;
 
-        internal int mode;        // current inflate_codes mode
+        internal int[] dtree;
+
+        // distance tree
+        internal int dtree_index;
+
+        internal byte lbits;
 
         // mode dependent information
         internal int len;
 
-        internal int[] tree;      // pointer into tree
-        internal int tree_index = 0;
-        internal int need;        // bits needed
-
         internal int lit;
 
-        // if EXT or COPY, where and how much
-        internal int bitsToGet;   // bits to get for extra
-        internal int dist;        // distance back to copy from
+        // ltree bits decoded per branch
+        // dtree bits decoder per branch
+        internal int[] ltree;
 
-        internal byte lbits;      // ltree bits decoded per branch
-        internal byte dbits;      // dtree bits decoder per branch
-        internal int[] ltree;     // literal/length/eob tree
-        internal int ltree_index; // literal/length/eob tree
-        internal int[] dtree;     // distance tree
-        internal int dtree_index; // distance tree
+        // literal/length/eob tree
+        internal int ltree_index;
+
+        internal int mode;
+
+        internal int need;
+
+        // current inflate_codes mode
+        internal int[] tree;
+
+        // pointer into tree
+        internal int tree_index = 0;
+
+        private const int BADCODE = 9;
+
+        private const int COPY = 5;
+
+        private const int DIST = 3;
+
+        // i: get distance next
+        private const int DISTEXT = 4;
+
+        private const int END = 8;
+
+        private const int LEN = 1;
+
+        // i: get length/literal/eob next
+        private const int LENEXT = 2;
+
+        // i: getting length extra (have base)
+        // i: getting distance extra
+        // o: copying bytes in window, waiting for space
+        private const int LIT = 6;
+
+        // waiting for "i:"=input,
+        //             "o:"=output,
+        //             "x:"=nothing
+        private const int START = 0; // x: set up for LEN
+
+        // o: got literal, waiting for output space
+        private const int WASH = 7; // o: got eob, possibly still output waiting
+
+        // x: got eob and all data flushed
+        // x: got error
+        // bits needed
+        // distance back to copy from
+
+        // literal/length/eob tree
+        // distance tree
 
         internal InflateCodes()
         {
         }
-
-        internal void Init(int bl, int bd, int[] tl, int tl_index, int[] td, int td_index)
-        {
-            mode = START;
-            lbits = (byte)bl;
-            dbits = (byte)bd;
-            ltree = tl;
-            ltree_index = tl_index;
-            dtree = td;
-            dtree_index = td_index;
-            tree = null;
-        }
-
-        internal int Process(InflateBlocks blocks, int r)
-        {
-            int j;      // temporary storage
-            int tindex; // temporary pointer
-            int e;      // extra bits or operation
-            int b = 0;  // bit buffer
-            int k = 0;  // bits in bit buffer
-            int p = 0;  // input data pointer
-            int n;      // bytes available there
-            int q;      // output window write pointer
-            int m;      // bytes to end of window or read pointer
-            int f;      // pointer to copy strings from
-
-            ZlibCodec z = blocks._codec;
-
-            // copy input/output information to locals (UPDATE macro restores)
-            p = z.NextIn;
-            n = z.AvailableBytesIn;
-            b = blocks.bitb;
-            k = blocks.bitk;
-            q = blocks.writeAt; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
-
-            // process input and output based on current state
-            while (true)
-            {
-                switch (mode)
-                {
-                    // waiting for "i:"=input, "o:"=output, "x:"=nothing
-                    case START:  // x: set up for LEN
-                        if (m >= 258 && n >= 10)
-                        {
-                            blocks.bitb = b; blocks.bitk = k;
-                            z.AvailableBytesIn = n;
-                            z.TotalBytesIn += p - z.NextIn;
-                            z.NextIn = p;
-                            blocks.writeAt = q;
-                            r = InflateFast(lbits, dbits, ltree, ltree_index, dtree, dtree_index, blocks, z);
-
-                            p = z.NextIn;
-                            n = z.AvailableBytesIn;
-                            b = blocks.bitb;
-                            k = blocks.bitk;
-                            q = blocks.writeAt; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
-
-                            if (r != ZlibConstants.Z_OK)
-                            {
-                                mode = (r == ZlibConstants.Z_STREAM_END) ? WASH : BADCODE;
-                                break;
-                            }
-                        }
-                        need = lbits;
-                        tree = ltree;
-                        tree_index = ltree_index;
-
-                        mode = LEN;
-                        goto case LEN;
-
-                    case LEN:  // i: get length/literal/eob next
-                        j = need;
-
-                        while (k < j)
-                        {
-                            if (n != 0)
-                                r = ZlibConstants.Z_OK;
-                            else
-                            {
-                                blocks.bitb = b; blocks.bitk = k;
-                                z.AvailableBytesIn = n;
-                                z.TotalBytesIn += p - z.NextIn;
-                                z.NextIn = p;
-                                blocks.writeAt = q;
-                                return blocks.Flush(r);
-                            }
-                            n--;
-                            b |= (z.InputBuffer[p++] & 0xff) << k;
-                            k += 8;
-                        }
-
-                        tindex = (tree_index + (b & InternalInflateConstants.InflateMask[j])) * 3;
-
-                        b >>= (tree[tindex + 1]);
-                        k -= (tree[tindex + 1]);
-
-                        e = tree[tindex];
-
-                        if (e == 0)
-                        {
-                            // literal
-                            lit = tree[tindex + 2];
-                            mode = LIT;
-                            break;
-                        }
-                        if ((e & 16) != 0)
-                        {
-                            // length
-                            bitsToGet = e & 15;
-                            len = tree[tindex + 2];
-                            mode = LENEXT;
-                            break;
-                        }
-                        if ((e & 64) == 0)
-                        {
-                            // next table
-                            need = e;
-                            tree_index = tindex / 3 + tree[tindex + 2];
-                            break;
-                        }
-                        if ((e & 32) != 0)
-                        {
-                            // end of block
-                            mode = WASH;
-                            break;
-                        }
-                        mode = BADCODE; // invalid code
-                        z.Message = "invalid literal/length code";
-                        r = ZlibConstants.Z_DATA_ERROR;
-
-                        blocks.bitb = b; blocks.bitk = k;
-                        z.AvailableBytesIn = n;
-                        z.TotalBytesIn += p - z.NextIn;
-                        z.NextIn = p;
-                        blocks.writeAt = q;
-                        return blocks.Flush(r);
-
-
-                    case LENEXT:  // i: getting length extra (have base)
-                        j = bitsToGet;
-
-                        while (k < j)
-                        {
-                            if (n != 0)
-                                r = ZlibConstants.Z_OK;
-                            else
-                            {
-                                blocks.bitb = b; blocks.bitk = k;
-                                z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
-                                blocks.writeAt = q;
-                                return blocks.Flush(r);
-                            }
-                            n--; b |= (z.InputBuffer[p++] & 0xff) << k;
-                            k += 8;
-                        }
-
-                        len += (b & InternalInflateConstants.InflateMask[j]);
-
-                        b >>= j;
-                        k -= j;
-
-                        need = dbits;
-                        tree = dtree;
-                        tree_index = dtree_index;
-                        mode = DIST;
-                        goto case DIST;
-
-                    case DIST:  // i: get distance next
-                        j = need;
-
-                        while (k < j)
-                        {
-                            if (n != 0)
-                                r = ZlibConstants.Z_OK;
-                            else
-                            {
-                                blocks.bitb = b; blocks.bitk = k;
-                                z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
-                                blocks.writeAt = q;
-                                return blocks.Flush(r);
-                            }
-                            n--; b |= (z.InputBuffer[p++] & 0xff) << k;
-                            k += 8;
-                        }
-
-                        tindex = (tree_index + (b & InternalInflateConstants.InflateMask[j])) * 3;
-
-                        b >>= tree[tindex + 1];
-                        k -= tree[tindex + 1];
-
-                        e = (tree[tindex]);
-                        if ((e & 0x10) != 0)
-                        {
-                            // distance
-                            bitsToGet = e & 15;
-                            dist = tree[tindex + 2];
-                            mode = DISTEXT;
-                            break;
-                        }
-                        if ((e & 64) == 0)
-                        {
-                            // next table
-                            need = e;
-                            tree_index = tindex / 3 + tree[tindex + 2];
-                            break;
-                        }
-                        mode = BADCODE; // invalid code
-                        z.Message = "invalid distance code";
-                        r = ZlibConstants.Z_DATA_ERROR;
-
-                        blocks.bitb = b; blocks.bitk = k;
-                        z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
-                        blocks.writeAt = q;
-                        return blocks.Flush(r);
-
-
-                    case DISTEXT:  // i: getting distance extra
-                        j = bitsToGet;
-
-                        while (k < j)
-                        {
-                            if (n != 0)
-                                r = ZlibConstants.Z_OK;
-                            else
-                            {
-                                blocks.bitb = b; blocks.bitk = k;
-                                z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
-                                blocks.writeAt = q;
-                                return blocks.Flush(r);
-                            }
-                            n--; b |= (z.InputBuffer[p++] & 0xff) << k;
-                            k += 8;
-                        }
-
-                        dist += (b & InternalInflateConstants.InflateMask[j]);
-
-                        b >>= j;
-                        k -= j;
-
-                        mode = COPY;
-                        goto case COPY;
-
-                    case COPY:  // o: copying bytes in window, waiting for space
-                        f = q - dist;
-                        while (f < 0)
-                        {
-                            // modulo window size-"while" instead
-                            f += blocks.end; // of "if" handles invalid distances
-                        }
-                        while (len != 0)
-                        {
-                            if (m == 0)
-                            {
-                                if (q == blocks.end && blocks.readAt != 0)
-                                {
-                                    q = 0; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
-                                }
-                                if (m == 0)
-                                {
-                                    blocks.writeAt = q; r = blocks.Flush(r);
-                                    q = blocks.writeAt; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
-
-                                    if (q == blocks.end && blocks.readAt != 0)
-                                    {
-                                        q = 0; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
-                                    }
-
-                                    if (m == 0)
-                                    {
-                                        blocks.bitb = b; blocks.bitk = k;
-                                        z.AvailableBytesIn = n;
-                                        z.TotalBytesIn += p - z.NextIn;
-                                        z.NextIn = p;
-                                        blocks.writeAt = q;
-                                        return blocks.Flush(r);
-                                    }
-                                }
-                            }
-
-                            blocks.window[q++] = blocks.window[f++]; m--;
-
-                            if (f == blocks.end)
-                                f = 0;
-                            len--;
-                        }
-                        mode = START;
-                        break;
-
-                    case LIT:  // o: got literal, waiting for output space
-                        if (m == 0)
-                        {
-                            if (q == blocks.end && blocks.readAt != 0)
-                            {
-                                q = 0; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
-                            }
-                            if (m == 0)
-                            {
-                                blocks.writeAt = q; r = blocks.Flush(r);
-                                q = blocks.writeAt; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
-
-                                if (q == blocks.end && blocks.readAt != 0)
-                                {
-                                    q = 0; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
-                                }
-                                if (m == 0)
-                                {
-                                    blocks.bitb = b; blocks.bitk = k;
-                                    z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
-                                    blocks.writeAt = q;
-                                    return blocks.Flush(r);
-                                }
-                            }
-                        }
-                        r = ZlibConstants.Z_OK;
-
-                        blocks.window[q++] = (byte)lit; m--;
-
-                        mode = START;
-                        break;
-
-                    case WASH:  // o: got eob, possibly more output
-                        if (k > 7)
-                        {
-                            // return unused byte, if any
-                            k -= 8;
-                            n++;
-                            p--; // can always return one
-                        }
-
-                        blocks.writeAt = q; r = blocks.Flush(r);
-                        q = blocks.writeAt; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
-
-                        if (blocks.readAt != blocks.writeAt)
-                        {
-                            blocks.bitb = b; blocks.bitk = k;
-                            z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
-                            blocks.writeAt = q;
-                            return blocks.Flush(r);
-                        }
-                        mode = END;
-                        goto case END;
-
-                    case END:
-                        r = ZlibConstants.Z_STREAM_END;
-                        blocks.bitb = b; blocks.bitk = k;
-                        z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
-                        blocks.writeAt = q;
-                        return blocks.Flush(r);
-
-                    case BADCODE:  // x: got error
-
-                        r = ZlibConstants.Z_DATA_ERROR;
-
-                        blocks.bitb = b; blocks.bitk = k;
-                        z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
-                        blocks.writeAt = q;
-                        return blocks.Flush(r);
-
-                    default:
-                        r = ZlibConstants.Z_STREAM_ERROR;
-
-                        blocks.bitb = b; blocks.bitk = k;
-                        z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
-                        blocks.writeAt = q;
-                        return blocks.Flush(r);
-                }
-            }
-        }
-
-
-        // Called with number of bytes left to write in window at least 258
-        // (the maximum string length) and number of input bytes available
-        // at least ten.  The ten bytes are six bytes for the longest length/
-        // distance pair plus four bytes for overloading the bit buffer.
 
         internal int InflateFast(int bl, int bd, int[] tl, int tl_index, int[] td, int td_index, InflateBlocks s, ZlibCodec z)
         {
@@ -1216,7 +899,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                 }
                 do
                 {
-
                     b >>= (tp[tp_index_t_3 + 1]); k -= (tp[tp_index_t_3 + 1]);
 
                     if ((e & 16) != 0)
@@ -1242,7 +924,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
                         do
                         {
-
                             b >>= (tp[tp_index_t_3 + 1]); k -= (tp[tp_index_t_3 + 1]);
 
                             if ((e & 16) != 0)
@@ -1399,15 +1080,422 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
             return ZlibConstants.Z_OK;
         }
-    }
 
+        internal void Init(int bl, int bd, int[] tl, int tl_index, int[] td, int td_index)
+        {
+            mode = START;
+            lbits = (byte)bl;
+            dbits = (byte)bd;
+            ltree = tl;
+            ltree_index = tl_index;
+            dtree = td;
+            dtree_index = td_index;
+            tree = null;
+        }
+
+        internal int Process(InflateBlocks blocks, int r)
+        {
+            int j;      // temporary storage
+            int tindex; // temporary pointer
+            int e;      // extra bits or operation
+            int b = 0;  // bit buffer
+            int k = 0;  // bits in bit buffer
+            int p = 0;  // input data pointer
+            int n;      // bytes available there
+            int q;      // output window write pointer
+            int m;      // bytes to end of window or read pointer
+            int f;      // pointer to copy strings from
+
+            ZlibCodec z = blocks._codec;
+
+            // copy input/output information to locals (UPDATE macro restores)
+            p = z.NextIn;
+            n = z.AvailableBytesIn;
+            b = blocks.bitb;
+            k = blocks.bitk;
+            q = blocks.writeAt; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
+
+            // process input and output based on current state
+            while (true)
+            {
+                switch (mode)
+                {
+                    // waiting for "i:"=input, "o:"=output, "x:"=nothing
+                    case START:  // x: set up for LEN
+                        if (m >= 258 && n >= 10)
+                        {
+                            blocks.bitb = b; blocks.bitk = k;
+                            z.AvailableBytesIn = n;
+                            z.TotalBytesIn += p - z.NextIn;
+                            z.NextIn = p;
+                            blocks.writeAt = q;
+                            r = InflateFast(lbits, dbits, ltree, ltree_index, dtree, dtree_index, blocks, z);
+
+                            p = z.NextIn;
+                            n = z.AvailableBytesIn;
+                            b = blocks.bitb;
+                            k = blocks.bitk;
+                            q = blocks.writeAt; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
+
+                            if (r != ZlibConstants.Z_OK)
+                            {
+                                mode = (r == ZlibConstants.Z_STREAM_END) ? WASH : BADCODE;
+                                break;
+                            }
+                        }
+                        need = lbits;
+                        tree = ltree;
+                        tree_index = ltree_index;
+
+                        mode = LEN;
+                        goto case LEN;
+
+                    case LEN:  // i: get length/literal/eob next
+                        j = need;
+
+                        while (k < j)
+                        {
+                            if (n != 0)
+                                r = ZlibConstants.Z_OK;
+                            else
+                            {
+                                blocks.bitb = b; blocks.bitk = k;
+                                z.AvailableBytesIn = n;
+                                z.TotalBytesIn += p - z.NextIn;
+                                z.NextIn = p;
+                                blocks.writeAt = q;
+                                return blocks.Flush(r);
+                            }
+                            n--;
+                            b |= (z.InputBuffer[p++] & 0xff) << k;
+                            k += 8;
+                        }
+
+                        tindex = (tree_index + (b & InternalInflateConstants.InflateMask[j])) * 3;
+
+                        b >>= (tree[tindex + 1]);
+                        k -= (tree[tindex + 1]);
+
+                        e = tree[tindex];
+
+                        if (e == 0)
+                        {
+                            // literal
+                            lit = tree[tindex + 2];
+                            mode = LIT;
+                            break;
+                        }
+                        if ((e & 16) != 0)
+                        {
+                            // length
+                            bitsToGet = e & 15;
+                            len = tree[tindex + 2];
+                            mode = LENEXT;
+                            break;
+                        }
+                        if ((e & 64) == 0)
+                        {
+                            // next table
+                            need = e;
+                            tree_index = tindex / 3 + tree[tindex + 2];
+                            break;
+                        }
+                        if ((e & 32) != 0)
+                        {
+                            // end of block
+                            mode = WASH;
+                            break;
+                        }
+                        mode = BADCODE; // invalid code
+                        z.Message = "invalid literal/length code";
+                        r = ZlibConstants.Z_DATA_ERROR;
+
+                        blocks.bitb = b; blocks.bitk = k;
+                        z.AvailableBytesIn = n;
+                        z.TotalBytesIn += p - z.NextIn;
+                        z.NextIn = p;
+                        blocks.writeAt = q;
+                        return blocks.Flush(r);
+
+                    case LENEXT:  // i: getting length extra (have base)
+                        j = bitsToGet;
+
+                        while (k < j)
+                        {
+                            if (n != 0)
+                                r = ZlibConstants.Z_OK;
+                            else
+                            {
+                                blocks.bitb = b; blocks.bitk = k;
+                                z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
+                                blocks.writeAt = q;
+                                return blocks.Flush(r);
+                            }
+                            n--; b |= (z.InputBuffer[p++] & 0xff) << k;
+                            k += 8;
+                        }
+
+                        len += (b & InternalInflateConstants.InflateMask[j]);
+
+                        b >>= j;
+                        k -= j;
+
+                        need = dbits;
+                        tree = dtree;
+                        tree_index = dtree_index;
+                        mode = DIST;
+                        goto case DIST;
+
+                    case DIST:  // i: get distance next
+                        j = need;
+
+                        while (k < j)
+                        {
+                            if (n != 0)
+                                r = ZlibConstants.Z_OK;
+                            else
+                            {
+                                blocks.bitb = b; blocks.bitk = k;
+                                z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
+                                blocks.writeAt = q;
+                                return blocks.Flush(r);
+                            }
+                            n--; b |= (z.InputBuffer[p++] & 0xff) << k;
+                            k += 8;
+                        }
+
+                        tindex = (tree_index + (b & InternalInflateConstants.InflateMask[j])) * 3;
+
+                        b >>= tree[tindex + 1];
+                        k -= tree[tindex + 1];
+
+                        e = (tree[tindex]);
+                        if ((e & 0x10) != 0)
+                        {
+                            // distance
+                            bitsToGet = e & 15;
+                            dist = tree[tindex + 2];
+                            mode = DISTEXT;
+                            break;
+                        }
+                        if ((e & 64) == 0)
+                        {
+                            // next table
+                            need = e;
+                            tree_index = tindex / 3 + tree[tindex + 2];
+                            break;
+                        }
+                        mode = BADCODE; // invalid code
+                        z.Message = "invalid distance code";
+                        r = ZlibConstants.Z_DATA_ERROR;
+
+                        blocks.bitb = b; blocks.bitk = k;
+                        z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
+                        blocks.writeAt = q;
+                        return blocks.Flush(r);
+
+                    case DISTEXT:  // i: getting distance extra
+                        j = bitsToGet;
+
+                        while (k < j)
+                        {
+                            if (n != 0)
+                                r = ZlibConstants.Z_OK;
+                            else
+                            {
+                                blocks.bitb = b; blocks.bitk = k;
+                                z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
+                                blocks.writeAt = q;
+                                return blocks.Flush(r);
+                            }
+                            n--; b |= (z.InputBuffer[p++] & 0xff) << k;
+                            k += 8;
+                        }
+
+                        dist += (b & InternalInflateConstants.InflateMask[j]);
+
+                        b >>= j;
+                        k -= j;
+
+                        mode = COPY;
+                        goto case COPY;
+
+                    case COPY:  // o: copying bytes in window, waiting for space
+                        f = q - dist;
+                        while (f < 0)
+                        {
+                            // modulo window size-"while" instead
+                            f += blocks.end; // of "if" handles invalid distances
+                        }
+                        while (len != 0)
+                        {
+                            if (m == 0)
+                            {
+                                if (q == blocks.end && blocks.readAt != 0)
+                                {
+                                    q = 0; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
+                                }
+                                if (m == 0)
+                                {
+                                    blocks.writeAt = q; r = blocks.Flush(r);
+                                    q = blocks.writeAt; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
+
+                                    if (q == blocks.end && blocks.readAt != 0)
+                                    {
+                                        q = 0; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
+                                    }
+
+                                    if (m == 0)
+                                    {
+                                        blocks.bitb = b; blocks.bitk = k;
+                                        z.AvailableBytesIn = n;
+                                        z.TotalBytesIn += p - z.NextIn;
+                                        z.NextIn = p;
+                                        blocks.writeAt = q;
+                                        return blocks.Flush(r);
+                                    }
+                                }
+                            }
+
+                            blocks.window[q++] = blocks.window[f++]; m--;
+
+                            if (f == blocks.end)
+                                f = 0;
+                            len--;
+                        }
+                        mode = START;
+                        break;
+
+                    case LIT:  // o: got literal, waiting for output space
+                        if (m == 0)
+                        {
+                            if (q == blocks.end && blocks.readAt != 0)
+                            {
+                                q = 0; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
+                            }
+                            if (m == 0)
+                            {
+                                blocks.writeAt = q; r = blocks.Flush(r);
+                                q = blocks.writeAt; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
+
+                                if (q == blocks.end && blocks.readAt != 0)
+                                {
+                                    q = 0; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
+                                }
+                                if (m == 0)
+                                {
+                                    blocks.bitb = b; blocks.bitk = k;
+                                    z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
+                                    blocks.writeAt = q;
+                                    return blocks.Flush(r);
+                                }
+                            }
+                        }
+                        r = ZlibConstants.Z_OK;
+
+                        blocks.window[q++] = (byte)lit; m--;
+
+                        mode = START;
+                        break;
+
+                    case WASH:  // o: got eob, possibly more output
+                        if (k > 7)
+                        {
+                            // return unused byte, if any
+                            k -= 8;
+                            n++;
+                            p--; // can always return one
+                        }
+
+                        blocks.writeAt = q; r = blocks.Flush(r);
+                        q = blocks.writeAt; m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
+
+                        if (blocks.readAt != blocks.writeAt)
+                        {
+                            blocks.bitb = b; blocks.bitk = k;
+                            z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
+                            blocks.writeAt = q;
+                            return blocks.Flush(r);
+                        }
+                        mode = END;
+                        goto case END;
+
+                    case END:
+                        r = ZlibConstants.Z_STREAM_END;
+                        blocks.bitb = b; blocks.bitk = k;
+                        z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
+                        blocks.writeAt = q;
+                        return blocks.Flush(r);
+
+                    case BADCODE:  // x: got error
+
+                        r = ZlibConstants.Z_DATA_ERROR;
+
+                        blocks.bitb = b; blocks.bitk = k;
+                        z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
+                        blocks.writeAt = q;
+                        return blocks.Flush(r);
+
+                    default:
+                        r = ZlibConstants.Z_STREAM_ERROR;
+
+                        blocks.bitb = b; blocks.bitk = k;
+                        z.AvailableBytesIn = n; z.TotalBytesIn += p - z.NextIn; z.NextIn = p;
+                        blocks.writeAt = q;
+                        return blocks.Flush(r);
+                }
+            }
+        }
+
+        // Called with number of bytes left to write in window at least 258
+        // (the maximum string length) and number of input bytes available
+        // at least ten.  The ten bytes are six bytes for the longest length/
+        // distance pair plus four bytes for overloading the bit buffer.
+    }
 
     internal sealed class InflateManager
     {
+        internal ZlibCodec _codec;
+
+        internal InflateBlocks blocks;
+
+        // if CHECK, check values to compare
+        internal uint computedCheck;
+
+        // computed check value
+        internal uint expectedCheck;
+
+        // if BAD, inflateSync's marker bytes count
+        internal int marker;
+
+        // mode dependent information
+        internal int method;
+
+        internal int wbits;
+
         // preset dictionary flag in zlib header
         private const int PRESET_DICT = 0x20;
 
         private const int Z_DEFLATED = 8;
+
+        private static readonly byte[] mark = new byte[] { 0, 0, 0xff, 0xff };
+
+        // stream check value
+        // mode independent information
+        //internal int nowrap; // flag for no wrapper
+        private bool _handleRfc1950HeaderBytes = true;
+
+        private InflateManagerMode mode;
+
+        public InflateManager()
+        {
+        }
+
+        // current inflate_blocks state
+        public InflateManager(bool expectRfc1950HeaderBytes)
+        {
+            _handleRfc1950HeaderBytes = expectRfc1950HeaderBytes;
+        }
 
         private enum InflateManagerMode
         {
@@ -1427,45 +1515,14 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             BAD    = 13, // got an error--stay here
         }
 
-        private InflateManagerMode mode; // current inflate mode
-        internal ZlibCodec _codec; // pointer back to this zlib stream
+         // current inflate mode
+         // pointer back to this zlib stream
 
-        // mode dependent information
-        internal int method; // if FLAGS, method byte
-
-        // if CHECK, check values to compare
-        internal uint computedCheck; // computed check value
-        internal uint expectedCheck; // stream check value
-
-        // if BAD, inflateSync's marker bytes count
-        internal int marker;
-
-        // mode independent information
-        //internal int nowrap; // flag for no wrapper
-        private bool _handleRfc1950HeaderBytes = true;
+ // if FLAGS, method byte
         internal bool HandleRfc1950HeaderBytes
         {
             get { return _handleRfc1950HeaderBytes; }
             set { _handleRfc1950HeaderBytes = value; }
-        }
-        internal int wbits; // log2(window size)  (8..15, defaults to 15)
-
-        internal InflateBlocks blocks; // current inflate_blocks state
-
-        public InflateManager() { }
-
-        public InflateManager(bool expectRfc1950HeaderBytes)
-        {
-            _handleRfc1950HeaderBytes = expectRfc1950HeaderBytes;
-        }
-
-        internal int Reset()
-        {
-            _codec.TotalBytesIn = _codec.TotalBytesOut = 0;
-            _codec.Message = null;
-            mode = HandleRfc1950HeaderBytes ? InflateManagerMode.METHOD : InflateManagerMode.BLOCKS;
-            blocks.Reset();
-            return ZlibConstants.Z_OK;
         }
 
         internal int End()
@@ -1476,40 +1533,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             return ZlibConstants.Z_OK;
         }
 
-        internal int Initialize(ZlibCodec codec, int w)
-        {
-            _codec = codec;
-            _codec.Message = null;
-            blocks = null;
-
-            // handle undocumented nowrap option (no zlib header or check)
-            //nowrap = 0;
-            //if (w < 0)
-            //{
-            //    w = - w;
-            //    nowrap = 1;
-            //}
-
-            // set window size
-            if (w < 8 || w > 15)
-            {
-                End();
-                throw new ZlibException("Bad window size.");
-
-                //return ZlibConstants.Z_STREAM_ERROR;
-            }
-            wbits = w;
-
-            blocks = new InflateBlocks(codec,
-                HandleRfc1950HeaderBytes ? this : null,
-                1 << w);
-
-            // reset state
-            Reset();
-            return ZlibConstants.Z_OK;
-        }
-
-
         internal int Inflate(FlushType flush)
         {
             int b;
@@ -1517,9 +1540,9 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             if (_codec.InputBuffer == null)
                 throw new ZlibException("InputBuffer is null. ");
 
-//             int f = (flush == FlushType.Finish)
-//                 ? ZlibConstants.Z_BUF_ERROR
-//                 : ZlibConstants.Z_OK;
+            //             int f = (flush == FlushType.Finish)
+            //                 ? ZlibConstants.Z_BUF_ERROR
+            //                 : ZlibConstants.Z_OK;
 
             // workitem 8870
             int f = ZlibConstants.Z_OK;
@@ -1550,7 +1573,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                         }
                         mode = InflateManagerMode.FLAG;
                         break;
-
 
                     case InflateManagerMode.FLAG:
                         if (_codec.AvailableBytesIn == 0) return r;
@@ -1600,7 +1622,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                         mode = InflateManagerMode.DICT1;
                         break;
 
-
                     case InflateManagerMode.DICT1:
                         if (_codec.AvailableBytesIn == 0) return r;
                         r = f;
@@ -1610,13 +1631,11 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                         mode = InflateManagerMode.DICT0;
                         return ZlibConstants.Z_NEED_DICT;
 
-
                     case InflateManagerMode.DICT0:
                         mode = InflateManagerMode.BAD;
                         _codec.Message = "need dictionary";
                         marker = 0; // can try inflateSync
                         return ZlibConstants.Z_STREAM_ERROR;
-
 
                     case InflateManagerMode.BLOCKS:
                         r = blocks.Process(r);
@@ -1691,12 +1710,52 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
                     default:
                         throw new ZlibException("Stream error.");
-
                 }
             }
         }
 
+        internal int Initialize(ZlibCodec codec, int w)
+        {
+            _codec = codec;
+            _codec.Message = null;
+            blocks = null;
 
+            // handle undocumented nowrap option (no zlib header or check)
+            //nowrap = 0;
+            //if (w < 0)
+            //{
+            //    w = - w;
+            //    nowrap = 1;
+            //}
+
+            // set window size
+            if (w < 8 || w > 15)
+            {
+                End();
+                throw new ZlibException("Bad window size.");
+
+                //return ZlibConstants.Z_STREAM_ERROR;
+            }
+            wbits = w;
+
+            blocks = new InflateBlocks(codec,
+                HandleRfc1950HeaderBytes ? this : null,
+                1 << w);
+
+            // reset state
+            Reset();
+            return ZlibConstants.Z_OK;
+        }
+
+        // log2(window size)  (8..15, defaults to 15)
+        internal int Reset()
+        {
+            _codec.TotalBytesIn = _codec.TotalBytesOut = 0;
+            _codec.Message = null;
+            mode = HandleRfc1950HeaderBytes ? InflateManagerMode.METHOD : InflateManagerMode.BLOCKS;
+            blocks.Reset();
+            return ZlibConstants.Z_OK;
+        }
 
         internal int SetDictionary(byte[] dictionary)
         {
@@ -1721,9 +1780,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             mode = InflateManagerMode.BLOCKS;
             return ZlibConstants.Z_OK;
         }
-
-
-        private static readonly byte[] mark = new byte[] { 0, 0, 0xff, 0xff };
 
         internal int Sync()
         {
@@ -1780,7 +1836,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             mode = InflateManagerMode.BLOCKS;
             return ZlibConstants.Z_OK;
         }
-
 
         // Returns true if inflate is currently at the end of a block generated
         // by Z_SYNC_FLUSH or Z_FULL_FLUSH. This function is used by one PPP

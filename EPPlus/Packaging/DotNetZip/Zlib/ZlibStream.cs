@@ -30,7 +30,6 @@ using System.IO;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zlib
 {
-
     /// <summary>
     /// Represents a Zlib stream for compression or decompression.
     /// </summary>
@@ -71,7 +70,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
     public class ZlibStream : System.IO.Stream
     {
         internal ZlibBaseStream _baseStream;
-        bool _disposed;
+        private bool _disposed;
 
         /// <summary>
         /// Create a <c>ZlibStream</c> using the specified <c>CompressionMode</c>.
@@ -320,22 +319,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.ZLIB, leaveOpen);
         }
 
-        #region Zlib properties
-
-        /// <summary>
-        /// This property sets the flush behavior on the stream.
-        /// Sorry, though, not sure exactly how to describe all the various settings.
-        /// </summary>
-        virtual public FlushType FlushMode
-        {
-            get { return (this._baseStream._flushMode); }
-            set
-            {
-                if (_disposed) throw new ObjectDisposedException("ZlibStream");
-                this._baseStream._flushMode = value;
-            }
-        }
-
         /// <summary>
         ///   The size of the working buffer for the compression codec.
         /// </summary>
@@ -369,63 +352,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                 this._baseStream._bufferSize = value;
             }
         }
-
-        /// <summary> Returns the total number of bytes input so far.</summary>
-        virtual public long TotalIn
-        {
-            get { return this._baseStream._z.TotalBytesIn; }
-        }
-
-        /// <summary> Returns the total number of bytes output so far.</summary>
-        virtual public long TotalOut
-        {
-            get { return this._baseStream._z.TotalBytesOut; }
-        }
-
-        #endregion
-
-        #region System.IO.Stream methods
-
-        /// <summary>
-        ///   Dispose the stream.
-        /// </summary>
-        /// <remarks>
-        ///   <para>
-        ///     This may or may not result in a <c>Close()</c> call on the captive
-        ///     stream.  See the constructors that have a <c>leaveOpen</c> parameter
-        ///     for more information.
-        ///   </para>
-        ///   <para>
-        ///     This method may be invoked in two distinct scenarios.  If disposing
-        ///     == true, the method has been called directly or indirectly by a
-        ///     user's code, for example via the public Dispose() method. In this
-        ///     case, both managed and unmanaged resources can be referenced and
-        ///     disposed.  If disposing == false, the method has been called by the
-        ///     runtime from inside the object finalizer and this method should not
-        ///     reference other objects; in that case only unmanaged resources must
-        ///     be referenced or disposed.
-        ///   </para>
-        /// </remarks>
-        /// <param name="disposing">
-        ///   indicates whether the Dispose method was invoked by user code.
-        /// </param>
-        protected override void Dispose(bool disposing)
-        {
-            try
-            {
-                if (!_disposed)
-                {
-                    if (disposing && (this._baseStream != null))
-                        this._baseStream.Close();
-                    _disposed = true;
-                }
-            }
-            finally
-            {
-                base.Dispose(disposing);
-            }
-        }
-
 
         /// <summary>
         /// Indicates whether the stream can be read.
@@ -469,12 +395,17 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         }
 
         /// <summary>
-        /// Flush the stream.
+        /// This property sets the flush behavior on the stream.
+        /// Sorry, though, not sure exactly how to describe all the various settings.
         /// </summary>
-        public override void Flush()
+        virtual public FlushType FlushMode
         {
-            if (_disposed) throw new ObjectDisposedException("ZlibStream");
-            _baseStream.Flush();
+            get { return (this._baseStream._flushMode); }
+            set
+            {
+                if (_disposed) throw new ObjectDisposedException("ZlibStream");
+                this._baseStream._flushMode = value;
+            }
         }
 
         /// <summary>
@@ -508,6 +439,130 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
 
             set { throw new NotSupportedException(); }
+        }
+
+        /// <summary> Returns the total number of bytes input so far.</summary>
+        virtual public long TotalIn
+        {
+            get { return this._baseStream._z.TotalBytesIn; }
+        }
+
+        /// <summary> Returns the total number of bytes output so far.</summary>
+        virtual public long TotalOut
+        {
+            get { return this._baseStream._z.TotalBytesOut; }
+        }
+
+        /// <summary>
+        ///   Compress a byte array into a new byte array using ZLIB.
+        /// </summary>
+        ///
+        /// <remarks>
+        ///   Uncompress it with <see cref="ZlibStream.UncompressBuffer(byte[])"/>.
+        /// </remarks>
+        ///
+        /// <seealso cref="ZlibStream.CompressString(string)"/>
+        /// <seealso cref="ZlibStream.UncompressBuffer(byte[])"/>
+        ///
+        /// <param name="b">
+        /// A buffer to compress.
+        /// </param>
+        ///
+        /// <returns>The data in compressed form</returns>
+        public static byte[] CompressBuffer(byte[] b)
+        {
+            using (var ms = new MemoryStream())
+            {
+                Stream compressor =
+                    new ZlibStream(ms, CompressionMode.Compress, CompressionLevel.BestCompression);
+
+                ZlibBaseStream.CompressBuffer(b, compressor);
+                return ms.ToArray();
+            }
+        }
+
+        /// <summary>
+        ///   Compress a string into a byte array using ZLIB.
+        /// </summary>
+        ///
+        /// <remarks>
+        ///   Uncompress it with <see cref="ZlibStream.UncompressString(byte[])"/>.
+        /// </remarks>
+        ///
+        /// <seealso cref="ZlibStream.UncompressString(byte[])"/>
+        /// <seealso cref="ZlibStream.CompressBuffer(byte[])"/>
+        /// <seealso cref="GZipStream.CompressString(string)"/>
+        ///
+        /// <param name="s">
+        ///   A string to compress.  The string will first be encoded
+        ///   using UTF8, then compressed.
+        /// </param>
+        ///
+        /// <returns>The string in compressed form</returns>
+        public static byte[] CompressString(String s)
+        {
+            using (var ms = new MemoryStream())
+            {
+                Stream compressor =
+                    new ZlibStream(ms, CompressionMode.Compress, CompressionLevel.BestCompression);
+                ZlibBaseStream.CompressString(s, compressor);
+                return ms.ToArray();
+            }
+        }
+
+        /// <summary>
+        ///   Uncompress a ZLIB-compressed byte array into a byte array.
+        /// </summary>
+        ///
+        /// <seealso cref="ZlibStream.CompressBuffer(byte[])"/>
+        /// <seealso cref="ZlibStream.UncompressString(byte[])"/>
+        ///
+        /// <param name="compressed">
+        ///   A buffer containing ZLIB-compressed data.
+        /// </param>
+        ///
+        /// <returns>The data in uncompressed form</returns>
+        public static byte[] UncompressBuffer(byte[] compressed)
+        {
+            using (var input = new MemoryStream(compressed))
+            {
+                Stream decompressor =
+                    new ZlibStream(input, CompressionMode.Decompress);
+
+                return ZlibBaseStream.UncompressBuffer(compressed, decompressor);
+            }
+        }
+
+        /// <summary>
+        ///   Uncompress a ZLIB-compressed byte array into a single string.
+        /// </summary>
+        ///
+        /// <seealso cref="ZlibStream.CompressString(String)"/>
+        /// <seealso cref="ZlibStream.UncompressBuffer(byte[])"/>
+        ///
+        /// <param name="compressed">
+        ///   A buffer containing ZLIB-compressed data.
+        /// </param>
+        ///
+        /// <returns>The uncompressed string</returns>
+        public static String UncompressString(byte[] compressed)
+        {
+            using (var input = new MemoryStream(compressed))
+            {
+                Stream decompressor =
+                    new ZlibStream(input, CompressionMode.Decompress);
+
+                return ZlibBaseStream.UncompressString(compressed, decompressor);
+            }
+        }
+
+        /// <summary>
+        /// Flush the stream.
+        /// </summary>
+        public override void Flush()
+        {
+            if (_disposed) throw new ObjectDisposedException("ZlibStream");
+            _baseStream.Flush();
         }
 
         /// <summary>
@@ -545,7 +600,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         /// <returns>the number of bytes read</returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-                if (_disposed) throw new ObjectDisposedException("ZlibStream");
+            if (_disposed) throw new ObjectDisposedException("ZlibStream");
             return _baseStream.Read(buffer, offset, count);
         }
 
@@ -607,119 +662,48 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         /// <param name="count">the number of bytes to write.</param>
         public override void Write(byte[] buffer, int offset, int count)
         {
-                if (_disposed) throw new ObjectDisposedException("ZlibStream");
+            if (_disposed) throw new ObjectDisposedException("ZlibStream");
             _baseStream.Write(buffer, offset, count);
         }
-        #endregion
-
 
         /// <summary>
-        ///   Compress a string into a byte array using ZLIB.
+        ///   Dispose the stream.
         /// </summary>
-        ///
         /// <remarks>
-        ///   Uncompress it with <see cref="ZlibStream.UncompressString(byte[])"/>.
+        ///   <para>
+        ///     This may or may not result in a <c>Close()</c> call on the captive
+        ///     stream.  See the constructors that have a <c>leaveOpen</c> parameter
+        ///     for more information.
+        ///   </para>
+        ///   <para>
+        ///     This method may be invoked in two distinct scenarios.  If disposing
+        ///     == true, the method has been called directly or indirectly by a
+        ///     user's code, for example via the public Dispose() method. In this
+        ///     case, both managed and unmanaged resources can be referenced and
+        ///     disposed.  If disposing == false, the method has been called by the
+        ///     runtime from inside the object finalizer and this method should not
+        ///     reference other objects; in that case only unmanaged resources must
+        ///     be referenced or disposed.
+        ///   </para>
         /// </remarks>
-        ///
-        /// <seealso cref="ZlibStream.UncompressString(byte[])"/>
-        /// <seealso cref="ZlibStream.CompressBuffer(byte[])"/>
-        /// <seealso cref="GZipStream.CompressString(string)"/>
-        ///
-        /// <param name="s">
-        ///   A string to compress.  The string will first be encoded
-        ///   using UTF8, then compressed.
+        /// <param name="disposing">
+        ///   indicates whether the Dispose method was invoked by user code.
         /// </param>
-        ///
-        /// <returns>The string in compressed form</returns>
-        public static byte[] CompressString(String s)
+        protected override void Dispose(bool disposing)
         {
-            using (var ms = new MemoryStream())
+            try
             {
-                Stream compressor =
-                    new ZlibStream(ms, CompressionMode.Compress, CompressionLevel.BestCompression);
-                ZlibBaseStream.CompressString(s, compressor);
-                return ms.ToArray();
+                if (!_disposed)
+                {
+                    if (disposing && (this._baseStream != null))
+                        this._baseStream.Close();
+                    _disposed = true;
+                }
+            }
+            finally
+            {
+                base.Dispose(disposing);
             }
         }
-
-
-        /// <summary>
-        ///   Compress a byte array into a new byte array using ZLIB.
-        /// </summary>
-        ///
-        /// <remarks>
-        ///   Uncompress it with <see cref="ZlibStream.UncompressBuffer(byte[])"/>.
-        /// </remarks>
-        ///
-        /// <seealso cref="ZlibStream.CompressString(string)"/>
-        /// <seealso cref="ZlibStream.UncompressBuffer(byte[])"/>
-        ///
-        /// <param name="b">
-        /// A buffer to compress.
-        /// </param>
-        ///
-        /// <returns>The data in compressed form</returns>
-        public static byte[] CompressBuffer(byte[] b)
-        {
-            using (var ms = new MemoryStream())
-            {
-                Stream compressor =
-                    new ZlibStream( ms, CompressionMode.Compress, CompressionLevel.BestCompression );
-
-                ZlibBaseStream.CompressBuffer(b, compressor);
-                return ms.ToArray();
-            }
-        }
-
-
-        /// <summary>
-        ///   Uncompress a ZLIB-compressed byte array into a single string.
-        /// </summary>
-        ///
-        /// <seealso cref="ZlibStream.CompressString(String)"/>
-        /// <seealso cref="ZlibStream.UncompressBuffer(byte[])"/>
-        ///
-        /// <param name="compressed">
-        ///   A buffer containing ZLIB-compressed data.
-        /// </param>
-        ///
-        /// <returns>The uncompressed string</returns>
-        public static String UncompressString(byte[] compressed)
-        {
-            using (var input = new MemoryStream(compressed))
-            {
-                Stream decompressor =
-                    new ZlibStream(input, CompressionMode.Decompress);
-
-                return ZlibBaseStream.UncompressString(compressed, decompressor);
-            }
-        }
-
-
-        /// <summary>
-        ///   Uncompress a ZLIB-compressed byte array into a byte array.
-        /// </summary>
-        ///
-        /// <seealso cref="ZlibStream.CompressBuffer(byte[])"/>
-        /// <seealso cref="ZlibStream.UncompressString(byte[])"/>
-        ///
-        /// <param name="compressed">
-        ///   A buffer containing ZLIB-compressed data.
-        /// </param>
-        ///
-        /// <returns>The data in uncompressed form</returns>
-        public static byte[] UncompressBuffer(byte[] compressed)
-        {
-            using (var input = new MemoryStream(compressed))
-            {
-                Stream decompressor =
-                    new ZlibStream( input, CompressionMode.Decompress );
-
-                return ZlibBaseStream.UncompressBuffer(compressed, decompressor);
-            }
-        }
-
     }
-
-
 }

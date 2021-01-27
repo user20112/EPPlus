@@ -13,25 +13,21 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
-     * All code and executables are provided "as is" with no warranty either express or implied. 
+     * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		    Added       		        2017-11-02
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
-using OfficeOpenXml;
 
 namespace OfficeOpenXml.Compatibility
 {
@@ -42,11 +38,11 @@ namespace OfficeOpenXml.Compatibility
     {
         private ExcelPackage excelPackage;
 
-
         internal CompatibilitySettings(ExcelPackage excelPackage)
         {
             this.excelPackage = excelPackage;
         }
+
 #if Core
         /// <summary>
         /// If the worksheets collection of the ExcelWorkbook class is 1 based.
@@ -69,7 +65,7 @@ namespace OfficeOpenXml.Compatibility
         /// This property can be set from app.config file.
         /// <code>
         ///   <appSettings>
-        ///    <!--Set worksheets collection to start from zero.Default is 1, for backward compatibility reasons -->  
+        ///    <!--Set worksheets collection to start from zero.Default is 1, for backward compatibility reasons -->
         ///    <add key = "EPPlus:ExcelPackage.Compatibility.IsWorksheets1Based" value="false" />
         ///   </appSettings>
         /// </code>
@@ -88,7 +84,6 @@ namespace OfficeOpenXml.Compatibility
                 if(excelPackage._workbook!=null && excelPackage._workbook._worksheets!=null)
                 {
                     excelPackage.Workbook.Worksheets.ReindexWorksheetDictionary();
-
                 }
             }
         }

@@ -13,28 +13,29 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		26-MAR-2012
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace OfficeOpenXml.VBA
 {
+    internal delegate void ModuleNameChange(string value);
+
     /// <summary>
     /// Type of VBA module
     /// </summary>
@@ -44,42 +45,83 @@ namespace OfficeOpenXml.VBA
         /// A Workbook or Worksheet objects
         /// </summary>
         Document=0,
+
         /// <summary>
         /// A Module
         /// </summary>
         Module=1,
+
         /// <summary>
         /// A Class
         /// </summary>
         Class=2,
+
         /// <summary>
         /// Designer, typically a user form
         /// </summary>
         Designer=3
     }
-    internal delegate void ModuleNameChange(string value);
 
     /// <summary>
-    /// A VBA code module. 
+    /// A VBA code module.
     /// </summary>
     public class ExcelVBAModule
     {
-        string _name = "";
-        ModuleNameChange _nameChangeCallback = null;
+        private string _code = "";
+        private string _name = "";
+        private ModuleNameChange _nameChangeCallback = null;
+
         internal ExcelVBAModule()
         {
             Attributes = new ExcelVbaModuleAttributesCollection();
         }
+
         internal ExcelVBAModule(ModuleNameChange nameChangeCallback) :
             this()
         {
             _nameChangeCallback = nameChangeCallback;
         }
+
+        /// <summary>
+        /// Module level attributes.
+        /// </summary>
+        public ExcelVbaModuleAttributesCollection Attributes { get; internal set; }
+
+        /// <summary>
+        /// The code without any module level attributes.
+        /// <remarks>Can contain function level attributes.</remarks>
+        /// </summary>
+        public string Code
+        {
+            get
+            {
+                return _code;
+            }
+            set
+            {
+                if (value.StartsWith("Attribute", StringComparison.OrdinalIgnoreCase) || value.StartsWith("VERSION", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw (new InvalidOperationException("Code can't start with an Attribute or VERSION keyword. Attributes can be accessed through the Attributes collection."));
+                }
+                _code = value;
+            }
+        }
+
+        /// <summary>
+        /// A description of the module
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// A reference to the helpfile
+        /// </summary>
+        public int HelpContext { get; set; }
+
         /// <summary>
         /// The name of the module
         /// </summary>
-        public string Name 
-        {   
+        public string Name
+        {
             get
             {
                 return _name;
@@ -101,53 +143,27 @@ namespace OfficeOpenXml.VBA
                 }
             }
         }
-        /// <summary>
-        /// A description of the module
-        /// </summary>
-        public string Description { get; set; }
-        private string _code="";
-        /// <summary>
-        /// The code without any module level attributes.
-        /// <remarks>Can contain function level attributes.</remarks> 
-        /// </summary>
-        public string Code {
-            get
-            {
-                return _code;
-            }
-            set
-            {
-                if(value.StartsWith("Attribute",StringComparison.OrdinalIgnoreCase) || value.StartsWith("VERSION",StringComparison.OrdinalIgnoreCase))
-                {
-                    throw(new InvalidOperationException("Code can't start with an Attribute or VERSION keyword. Attributes can be accessed through the Attributes collection."));
-                }
-                _code = value;
-            }
-        }
-        /// <summary>
-        /// A reference to the helpfile
-        /// </summary>
-        public int HelpContext { get; set; }
-        /// <summary>
-        /// Module level attributes.
-        /// </summary>
-        public ExcelVbaModuleAttributesCollection Attributes { get; internal set; }
-        /// <summary>
-        /// Type of module
-        /// </summary>
-        public eModuleType Type { get; internal set; }
-        /// <summary>
-        /// If the module is readonly
-        /// </summary>
-        public bool ReadOnly { get; set; }
+
         /// <summary>
         /// If the module is private
         /// </summary>
         public bool Private { get; set; }
-        internal string streamName { get; set; }
+
+        /// <summary>
+        /// If the module is readonly
+        /// </summary>
+        public bool ReadOnly { get; set; }
+
+        /// <summary>
+        /// Type of module
+        /// </summary>
+        public eModuleType Type { get; internal set; }
+
+        internal string ClassID { get; set; }
         internal ushort Cookie { get; set; }
         internal uint ModuleOffset { get; set; }
-        internal string ClassID { get; set; }
+        internal string streamName { get; set; }
+
         public override string ToString()
         {
             return Name;

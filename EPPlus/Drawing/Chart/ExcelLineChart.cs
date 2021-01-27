@@ -13,27 +13,26 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
+
 using OfficeOpenXml.Table.PivotTable;
+using System;
+using System.Xml;
 
 namespace OfficeOpenXml.Drawing.Chart
 {
@@ -42,9 +41,15 @@ namespace OfficeOpenXml.Drawing.Chart
     /// </summary>
     public class ExcelLineChart : ExcelChart
     {
-        #region "Constructors"
+        //string _chartTopPath = "c:chartSpace/c:chart/c:plotArea/{0}";
+        private ExcelChartDataLabel _DataLabel = null;
+
+        private string MARKER_PATH = "c:marker/@val";
+
+        private string SMOOTH_PATH = "c:smooth/@val";
+
         internal ExcelLineChart(ExcelDrawings drawings, XmlNode node, Uri uriChart, Packaging.ZipPackagePart part, XmlDocument chartXml, XmlNode chartNode) :
-            base(drawings, node, uriChart, part, chartXml, chartNode)
+                                    base(drawings, node, uriChart, part, chartXml, chartNode)
         {
         }
 
@@ -52,13 +57,28 @@ namespace OfficeOpenXml.Drawing.Chart
             base(topChart, chartNode)
         {
         }
+
         internal ExcelLineChart(ExcelDrawings drawings, XmlNode node, eChartType type, ExcelChart topChart, ExcelPivotTable PivotTableSource) :
             base(drawings, node, type, topChart, PivotTableSource)
         {
             Smooth = false;
         }
-        #endregion
-        string MARKER_PATH="c:marker/@val";
+
+        /// <summary>
+        /// Access to datalabel properties
+        /// </summary>
+        public ExcelChartDataLabel DataLabel
+        {
+            get
+            {
+                if (_DataLabel == null)
+                {
+                    _DataLabel = new ExcelChartDataLabel(NameSpaceManager, ChartNode);
+                }
+                return _DataLabel;
+            }
+        }
+
         /// <summary>
         /// If the series has markers
         /// </summary>
@@ -74,7 +94,6 @@ namespace OfficeOpenXml.Drawing.Chart
             }
         }
 
-        string SMOOTH_PATH = "c:smooth/@val";
         /// <summary>
         /// If the series has smooth lines
         /// </summary>
@@ -89,22 +108,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 _chartXmlHelper.SetXmlNodeBool(SMOOTH_PATH, value);
             }
         }
-        //string _chartTopPath = "c:chartSpace/c:chart/c:plotArea/{0}";
-        ExcelChartDataLabel _DataLabel = null;
-        /// <summary>
-        /// Access to datalabel properties
-        /// </summary>
-        public ExcelChartDataLabel DataLabel
-        {
-            get
-            {
-                if (_DataLabel == null)
-                {
-                    _DataLabel = new ExcelChartDataLabel(NameSpaceManager, ChartNode);
-                }
-                return _DataLabel;
-            }
-        }
+
         internal override eChartType GetChartType(string name)
         {
                if(name=="lineChart")
@@ -142,7 +146,7 @@ namespace OfficeOpenXml.Drawing.Chart
                }
                else if (name=="line3DChart")
                {
-                   return eChartType.Line3D;               
+                   return eChartType.Line3D;
                }
                return base.GetChartType(name);
         }

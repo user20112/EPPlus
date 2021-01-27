@@ -13,26 +13,25 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 using System.Xml;
+
 namespace OfficeOpenXml.Style.XmlAccess
 {
     /// <summary>
@@ -40,11 +39,39 @@ namespace OfficeOpenXml.Style.XmlAccess
     /// </summary>
     public sealed class ExcelBorderXml : StyleXmlHelper
     {
-        internal ExcelBorderXml(XmlNamespaceManager nameSpaceManager)
-            : base(nameSpaceManager)
-        {
+        private const string bottomPath = "d:bottom";
 
+        private const string diagonalDownPath = "@diagonalDown";
+
+        private const string diagonalPath = "d:diagonal";
+
+        private const string diagonalUpPath = "@diagonalUp";
+
+        private const string leftPath = "d:left";
+
+        private const string rightPath = "d:right";
+
+        private const string topPath = "d:top";
+
+        private ExcelBorderItemXml _bottom = null;
+
+        private ExcelBorderItemXml _diagonal = null;
+
+        private bool _diagonalDown = false;
+
+        private bool _diagonalUp = false;
+
+        private ExcelBorderItemXml _left = null;
+
+        private ExcelBorderItemXml _right = null;
+
+        private ExcelBorderItemXml _top = null;
+
+        internal ExcelBorderXml(XmlNamespaceManager nameSpaceManager)
+                                                                                                                            : base(nameSpaceManager)
+        {
         }
+
         internal ExcelBorderXml(XmlNamespaceManager nsm, XmlNode topNode) :
             base(nsm, topNode)
         {
@@ -56,63 +83,7 @@ namespace OfficeOpenXml.Style.XmlAccess
             _diagonalUp = GetBoolValue(topNode, diagonalUpPath);
             _diagonalDown = GetBoolValue(topNode, diagonalDownPath);
         }
-        internal override string Id
-        {
-            get
-            {
-                return Left.Id + Right.Id + Top.Id + Bottom.Id + Diagonal.Id + DiagonalUp.ToString() + DiagonalDown.ToString();
-            }
-        }
-        const string leftPath = "d:left";
-        ExcelBorderItemXml _left = null;
-        /// <summary>
-        /// Left border style properties
-        /// </summary>
-        public ExcelBorderItemXml Left
-        {
-            get
-            {
-                return _left;
-            }
-            internal set
-            {
-                _left = value;
-            }
-        }
-        const string rightPath = "d:right";
-        ExcelBorderItemXml _right = null;
-        /// <summary>
-        /// Right border style properties
-        /// </summary>
-        public ExcelBorderItemXml Right
-        {
-            get
-            {
-                return _right;
-            }
-            internal set
-            {
-                _right = value;
-            }
-        }
-        const string topPath = "d:top";
-        ExcelBorderItemXml _top = null;
-        /// <summary>
-        /// Top border style properties
-        /// </summary>
-        public ExcelBorderItemXml Top
-        {
-            get
-            {
-                return _top;
-            }
-            internal set
-            {
-                _top = value;
-            }
-        }
-        const string bottomPath = "d:bottom";
-        ExcelBorderItemXml _bottom = null;
+
         /// <summary>
         /// Bottom border style properties
         /// </summary>
@@ -127,8 +98,7 @@ namespace OfficeOpenXml.Style.XmlAccess
                 _bottom = value;
             }
         }
-        const string diagonalPath = "d:diagonal";
-        ExcelBorderItemXml _diagonal = null;
+
         /// <summary>
         /// Diagonal border style properties
         /// </summary>
@@ -143,24 +113,7 @@ namespace OfficeOpenXml.Style.XmlAccess
                 _diagonal = value;
             }
         }
-        const string diagonalUpPath = "@diagonalUp";
-        bool _diagonalUp = false;
-        /// <summary>
-        /// Diagonal up border
-        /// </summary>
-        public bool DiagonalUp
-        {
-            get
-            {
-                return _diagonalUp;
-            }
-            internal set
-            {
-                _diagonalUp = value;
-            }
-        }
-        const string diagonalDownPath = "@diagonalDown";
-        bool _diagonalDown = false;
+
         /// <summary>
         /// Diagonal down border
         /// </summary>
@@ -176,6 +129,74 @@ namespace OfficeOpenXml.Style.XmlAccess
             }
         }
 
+        /// <summary>
+        /// Diagonal up border
+        /// </summary>
+        public bool DiagonalUp
+        {
+            get
+            {
+                return _diagonalUp;
+            }
+            internal set
+            {
+                _diagonalUp = value;
+            }
+        }
+
+        /// <summary>
+        /// Left border style properties
+        /// </summary>
+        public ExcelBorderItemXml Left
+        {
+            get
+            {
+                return _left;
+            }
+            internal set
+            {
+                _left = value;
+            }
+        }
+
+        /// <summary>
+        /// Right border style properties
+        /// </summary>
+        public ExcelBorderItemXml Right
+        {
+            get
+            {
+                return _right;
+            }
+            internal set
+            {
+                _right = value;
+            }
+        }
+
+        /// <summary>
+        /// Top border style properties
+        /// </summary>
+        public ExcelBorderItemXml Top
+        {
+            get
+            {
+                return _top;
+            }
+            internal set
+            {
+                _top = value;
+            }
+        }
+
+        internal override string Id
+        {
+            get
+            {
+                return Left.Id + Right.Id + Top.Id + Bottom.Id + Diagonal.Id + DiagonalUp.ToString() + DiagonalDown.ToString();
+            }
+        }
+
         internal ExcelBorderXml Copy()
         {
             ExcelBorderXml newBorder = new ExcelBorderXml(NameSpaceManager);
@@ -188,7 +209,6 @@ namespace OfficeOpenXml.Style.XmlAccess
             newBorder.DiagonalDown = _diagonalDown;
 
             return newBorder;
-
         }
 
         internal override XmlNode CreateXmlNode(XmlNode topNode)

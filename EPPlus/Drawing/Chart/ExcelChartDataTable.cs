@@ -13,37 +13,51 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Mark Kromis		Added		2017-01-07
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
+
 using OfficeOpenXml.Style;
+using System.Xml;
 
 namespace OfficeOpenXml.Drawing.Chart
 {
     /// <summary>
-    /// Datatable on chart level. 
+    /// Datatable on chart level.
     /// </summary>
     public class ExcelChartDataTable : XmlHelper
     {
-       internal ExcelChartDataTable(XmlNamespaceManager ns, XmlNode node)
-           : base(ns,node)
+        private const string showHorzBorderPath = "c:showHorzBorder/@val";
+
+        private const string showKeysPath = "c:showKeys/@val";
+
+        private const string showOutlinePath = "c:showOutline/@val";
+
+        private const string showVertBorderPath = "c:showVertBorder/@val";
+
+        private ExcelDrawingBorder _border = null;
+
+        private ExcelDrawingFill _fill = null;
+
+        private ExcelTextFont _font = null;
+
+        private string[] _paragraphSchemaOrder = new string[] { "spPr", "txPr", "dLblPos", "showVal", "showCatName", "showSerName", "showPercent", "separator", "showLeaderLines", "pPr", "defRPr", "solidFill", "uFill", "latin", "cs", "r", "rPr", "t" };
+
+        internal ExcelChartDataTable(XmlNamespaceManager ns, XmlNode node)
+                                                                           : base(ns,node)
        {
            XmlNode topNode = node.SelectSingleNode("c:dTable", NameSpaceManager);
            if (topNode == null)
@@ -56,83 +70,7 @@ namespace OfficeOpenXml.Drawing.Chart
            }
            TopNode = topNode;
        }
-       #region "Public properties"
-       const string showHorzBorderPath = "c:showHorzBorder/@val";
-        /// <summary>
-        /// The horizontal borders shall be shown in the data table
-        /// </summary>
-        public bool ShowHorizontalBorder
-        {
-           get
-           {
-               return GetXmlNodeBool(showHorzBorderPath);
-           }
-           set
-           {
-               SetXmlNodeString(showHorzBorderPath, value ? "1" : "0");
-           }
-       }
-        const string showVertBorderPath = "c:showVertBorder/@val";
-        /// <summary>
-        /// The vertical borders shall be shown in the data table
-        /// </summary>
-        public bool ShowVerticalBorder
-        {
-            get
-            {
-                return GetXmlNodeBool(showVertBorderPath);
-            }
-            set
-            {
-                SetXmlNodeString(showVertBorderPath, value ? "1" : "0");
-            }
-        }
-        const string showOutlinePath = "c:showOutline/@val";
-        /// <summary>
-        /// The outline shall be shown on the data table
-        /// </summary>
-        public bool ShowOutline
-        {
-            get
-            {
-                return GetXmlNodeBool(showOutlinePath);
-            }
-            set
-            {
-                SetXmlNodeString(showOutlinePath, value ? "1" : "0");
-            }
-        }
-        const string showKeysPath = "c:showKeys/@val";
-        /// <summary>
-        /// The legend keys shall be shown in the data table
-        /// </summary>
-        public bool ShowKeys
-        {
-            get
-            {
-                return GetXmlNodeBool(showKeysPath);
-            }
-            set
-            {
-                SetXmlNodeString(showKeysPath, value ? "1" : "0");
-            }
-        }
-        ExcelDrawingFill _fill = null;
-        /// <summary>
-        /// Access fill properties
-        /// </summary>
-        public ExcelDrawingFill Fill
-        {
-            get
-            {
-                if (_fill == null)
-                {
-                    _fill = new ExcelDrawingFill(NameSpaceManager, TopNode, "c:spPr");
-                }
-                return _fill;
-            }
-        }
-        ExcelDrawingBorder _border = null;
+
         /// <summary>
         /// Access border properties
         /// </summary>
@@ -147,8 +85,22 @@ namespace OfficeOpenXml.Drawing.Chart
                 return _border;
             }
         }
-        string[] _paragraphSchemaOrder = new string[] { "spPr", "txPr", "dLblPos", "showVal", "showCatName", "showSerName", "showPercent", "separator", "showLeaderLines", "pPr", "defRPr", "solidFill", "uFill", "latin", "cs", "r", "rPr", "t" };
-        ExcelTextFont _font = null;
+
+        /// <summary>
+        /// Access fill properties
+        /// </summary>
+        public ExcelDrawingFill Fill
+        {
+            get
+            {
+                if (_fill == null)
+                {
+                    _fill = new ExcelDrawingFill(NameSpaceManager, TopNode, "c:spPr");
+                }
+                return _fill;
+            }
+        }
+
         /// <summary>
         /// Access font properties
         /// </summary>
@@ -168,30 +120,64 @@ namespace OfficeOpenXml.Drawing.Chart
                 return _font;
             }
         }
-        #endregion
-        #region "Position Enum Translation"
-        protected string GetPosText(eLabelPosition pos)
+
+        /// <summary>
+        /// The horizontal borders shall be shown in the data table
+        /// </summary>
+        public bool ShowHorizontalBorder
         {
-            switch (pos)
+           get
+           {
+               return GetXmlNodeBool(showHorzBorderPath);
+           }
+           set
+           {
+               SetXmlNodeString(showHorzBorderPath, value ? "1" : "0");
+           }
+       }
+
+        /// <summary>
+        /// The legend keys shall be shown in the data table
+        /// </summary>
+        public bool ShowKeys
+        {
+            get
             {
-                case eLabelPosition.Bottom:
-                    return "b";
-                case eLabelPosition.Center:
-                    return "ctr";
-                case eLabelPosition.InBase:
-                    return "inBase";
-                case eLabelPosition.InEnd:
-                    return "inEnd";
-                case eLabelPosition.Left:
-                    return "l";
-                case eLabelPosition.Right:
-                    return "r";
-                case eLabelPosition.Top:
-                    return "t";
-                case eLabelPosition.OutEnd:
-                    return "outEnd";
-                default:
-                    return "bestFit";
+                return GetXmlNodeBool(showKeysPath);
+            }
+            set
+            {
+                SetXmlNodeString(showKeysPath, value ? "1" : "0");
+            }
+        }
+
+        /// <summary>
+        /// The outline shall be shown on the data table
+        /// </summary>
+        public bool ShowOutline
+        {
+            get
+            {
+                return GetXmlNodeBool(showOutlinePath);
+            }
+            set
+            {
+                SetXmlNodeString(showOutlinePath, value ? "1" : "0");
+            }
+        }
+
+        /// <summary>
+        /// The vertical borders shall be shown in the data table
+        /// </summary>
+        public bool ShowVerticalBorder
+        {
+            get
+            {
+                return GetXmlNodeBool(showVertBorderPath);
+            }
+            set
+            {
+                SetXmlNodeString(showVertBorderPath, value ? "1" : "0");
             }
         }
 
@@ -201,24 +187,64 @@ namespace OfficeOpenXml.Drawing.Chart
             {
                 case "b":
                     return eLabelPosition.Bottom;
+
                 case "ctr":
                     return eLabelPosition.Center;
+
                 case "inBase":
                     return eLabelPosition.InBase;
+
                 case "inEnd":
                     return eLabelPosition.InEnd;
+
                 case "l":
                     return eLabelPosition.Left;
+
                 case "r":
                     return eLabelPosition.Right;
+
                 case "t":
                     return eLabelPosition.Top;
+
                 case "outEnd":
                     return eLabelPosition.OutEnd;
+
                 default:
                     return eLabelPosition.BestFit;
             }
         }
-        #endregion
+
+        protected string GetPosText(eLabelPosition pos)
+        {
+            switch (pos)
+            {
+                case eLabelPosition.Bottom:
+                    return "b";
+
+                case eLabelPosition.Center:
+                    return "ctr";
+
+                case eLabelPosition.InBase:
+                    return "inBase";
+
+                case eLabelPosition.InEnd:
+                    return "inEnd";
+
+                case eLabelPosition.Left:
+                    return "l";
+
+                case eLabelPosition.Right:
+                    return "r";
+
+                case eLabelPosition.Top:
+                    return "t";
+
+                case eLabelPosition.OutEnd:
+                    return "outEnd";
+
+                default:
+                    return "bestFit";
+            }
+        }
     }
 }

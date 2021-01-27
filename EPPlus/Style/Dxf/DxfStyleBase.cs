@@ -1,31 +1,66 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Xml;
 
 namespace OfficeOpenXml.Style.Dxf
 {
     public abstract class DxfStyleBase<T>
     {
         protected ExcelStyles _styles;
+
         internal DxfStyleBase(ExcelStyles styles)
         {
             _styles = styles;
             AllowChange = false; //Don't touch this value in the styles.xml (by default). When Dxfs is fully implemented this can be removed.
         }
+
+        /// <summary>
+        /// Is this value allowed to be changed?
+        /// </summary>
+        protected internal bool AllowChange { get; set; }
+
+        protected internal abstract bool HasValue { get; }
         protected internal abstract string Id { get; }
-        protected internal abstract bool HasValue{get;}
-        protected internal abstract void CreateNodes(XmlHelper helper, string path);
+
         protected internal abstract T Clone();
-        protected void SetValueColor(XmlHelper helper,string path, ExcelDxfColor color)
+
+        protected internal abstract void CreateNodes(XmlHelper helper, string path);
+
+        protected internal string GetAsString(object v)
+        {
+            return (v ?? "").ToString();
+        }
+
+        protected void SetValue(XmlHelper helper, string path, object v)
+        {
+            if (v == null)
+            {
+                helper.DeleteNode(path);
+            }
+            else
+            {
+                helper.SetXmlNodeString(path, v.ToString());
+            }
+        }
+
+        protected void SetValueBool(XmlHelper helper, string path, bool? v)
+        {
+            if (v == null)
+            {
+                helper.DeleteNode(path);
+            }
+            else
+            {
+                helper.SetXmlNodeBool(path, (bool)v);
+            }
+        }
+
+        protected void SetValueColor(XmlHelper helper, string path, ExcelDxfColor color)
         {
             if (color != null && color.HasValue)
             {
                 if (color.Color != null)
                 {
-                    SetValue(helper, path + "/@rgb", color.Color.Value.ToArgb().ToString("x"));
+                    SetValue(helper, path + "/@rgb", ((uint)color.Color.Value).ToString("x"));
                 }
                 else if (color.Auto != null)
                 {
@@ -45,6 +80,7 @@ namespace OfficeOpenXml.Style.Dxf
                 }
             }
         }
+
         /// <summary>
         /// Same as SetValue but will set first char to lower case.
         /// </summary>
@@ -64,35 +100,5 @@ namespace OfficeOpenXml.Style.Dxf
                 helper.SetXmlNodeString(path, s);
             }
         }
-        protected void SetValue(XmlHelper helper, string path, object v)
-        {
-            if (v == null)
-            {
-                helper.DeleteNode(path);
-            }
-            else
-            {
-                helper.SetXmlNodeString(path, v.ToString());
-            }
-        }
-        protected void SetValueBool(XmlHelper helper, string path, bool? v)
-        {
-            if (v == null)
-            {
-                helper.DeleteNode(path);
-            }
-            else
-            {
-                helper.SetXmlNodeBool(path, (bool)v);
-            }
-        }
-        protected internal string GetAsString(object v)
-        {
-            return (v ?? "").ToString();
-        }
-        /// <summary>
-        /// Is this value allowed to be changed?
-        /// </summary>
-        protected internal bool AllowChange { get; set; }
     }
 }

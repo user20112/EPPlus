@@ -13,30 +13,29 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		26-MAR-2012
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Security.Cryptography.X509Certificates;
+
 using OfficeOpenXml.Utils;
-using System.IO;
 using OfficeOpenXml.Utils.CompundDocument;
+using System;
+using System.IO;
+using System.Linq;
 using System.Security.Cryptography.Pkcs;
+using System.Security.Cryptography.X509Certificates;
 
 namespace OfficeOpenXml.VBA
 {
@@ -45,13 +44,15 @@ namespace OfficeOpenXml.VBA
     /// </summary>
     public class ExcelVbaSignature
     {
-        const string schemaRelVbaSignature = "http://schemas.microsoft.com/office/2006/relationships/vbaProjectSignature";
-        Packaging.ZipPackagePart _vbaPart = null;
+        private const string schemaRelVbaSignature = "http://schemas.microsoft.com/office/2006/relationships/vbaProjectSignature";
+        private Packaging.ZipPackagePart _vbaPart = null;
+
         internal ExcelVbaSignature(Packaging.ZipPackagePart vbaPart)
         {
             _vbaPart = vbaPart;
             GetSignature();
         }
+
         private void GetSignature()
         {
             if (_vbaPart == null) return;
@@ -63,15 +64,15 @@ namespace OfficeOpenXml.VBA
 
                 var stream = Part.GetStream();
                 BinaryReader br = new BinaryReader(stream);
-                uint cbSignature = br.ReadUInt32();        
+                uint cbSignature = br.ReadUInt32();
                 uint signatureOffset = br.ReadUInt32();     //44 ??
-                uint cbSigningCertStore = br.ReadUInt32();  
-                uint certStoreOffset = br.ReadUInt32();     
-                uint cbProjectName = br.ReadUInt32();       
-                uint projectNameOffset = br.ReadUInt32();   
+                uint cbSigningCertStore = br.ReadUInt32();
+                uint certStoreOffset = br.ReadUInt32();
+                uint cbProjectName = br.ReadUInt32();
+                uint projectNameOffset = br.ReadUInt32();
                 uint fTimestamp = br.ReadUInt32();
                 uint cbTimestampUrl = br.ReadUInt32();
-                uint timestampUrlOffset = br.ReadUInt32();  
+                uint timestampUrlOffset = br.ReadUInt32();
                 byte[] signature = br.ReadBytes((int)cbSignature);
                 uint version = br.ReadUInt32();
                 uint fileType = br.ReadUInt32();
@@ -90,6 +91,7 @@ namespace OfficeOpenXml.VBA
                             case 0x20:
                                 Certificate = new X509Certificate2(value);
                                 break;
+
                             default:
                                 break;
                         }
@@ -113,6 +115,7 @@ namespace OfficeOpenXml.VBA
                 Verifier = null;
             }
         }
+
         //Create Oid from a bytearray
         //private string ReadHash(byte[] content)
         //{
@@ -141,7 +144,6 @@ namespace OfficeOpenXml.VBA
         //        }
         //    }
 
-
         //    string oId = builder.ToString();
 
         //    return oId;
@@ -152,7 +154,7 @@ namespace OfficeOpenXml.VBA
             {
                 return;
             }
-            
+
             if (Certificate.HasPrivateKey==false)    //No signature. Remove any Signature part
             {
                 var storeCert = GetCertFromStore(StoreLocation.CurrentUser);
@@ -199,7 +201,6 @@ namespace OfficeOpenXml.VBA
             var rel = proj.Part.GetRelationshipsByType(schemaRelVbaSignature).FirstOrDefault();
             if (Part == null)
             {
-
                 if (rel != null)
                 {
                     Uri = rel.TargetUri;
@@ -213,10 +214,10 @@ namespace OfficeOpenXml.VBA
             }
             if (rel == null)
             {
-                proj.Part.CreateRelationship(UriHelper.ResolvePartUri(proj.Uri, Uri), Packaging.TargetMode.Internal, schemaRelVbaSignature);                
+                proj.Part.CreateRelationship(UriHelper.ResolvePartUri(proj.Uri, Uri), Packaging.TargetMode.Internal, schemaRelVbaSignature);
             }
             var b = ms.ToArray();
-            Part.GetStream(FileMode.Create).Write(b, 0, b.Length);            
+            Part.GetStream(FileMode.Create).Write(b, 0, b.Length);
         }
 
         private X509Certificate2 GetCertFromStore(StoreLocation loc)
@@ -278,6 +279,7 @@ namespace OfficeOpenXml.VBA
             bw.Write((uint)data.Length);
             bw.Write(data);
         }
+
         internal byte[] SignProject(ExcelVbaProject proj)
         {
             if (!Certificate.HasPrivateKey)
@@ -289,11 +291,11 @@ namespace OfficeOpenXml.VBA
             var hash = GetContentHash(proj);
 
             BinaryWriter bw = new BinaryWriter(new MemoryStream());
-            bw.Write((byte)0x30); //Constructed Type 
+            bw.Write((byte)0x30); //Constructed Type
             bw.Write((byte)0x32); //Total length
-            bw.Write((byte)0x30); //Constructed Type 
+            bw.Write((byte)0x30); //Constructed Type
             bw.Write((byte)0x0E); //Length SpcIndirectDataContent
-            bw.Write((byte)0x06); //Oid Tag Indentifier 
+            bw.Write((byte)0x06); //Oid Tag Indentifier
             bw.Write((byte)0x0A); //Lenght OId
             bw.Write(new byte[] { 0x2B, 0x06, 0x01, 0x04, 0x01, 0x82, 0x37, 0x02, 0x01, 0x1D }); //Encoded Oid 1.3.6.1.4.1.311.2.1.29
             bw.Write((byte)0x04);   //Octet String Tag Identifier
@@ -303,7 +305,7 @@ namespace OfficeOpenXml.VBA
             bw.Write((byte)0x20); //Length DigestInfo
             bw.Write((byte)0x30); //Constructed Type (Algorithm)
             bw.Write((byte)0x0C); //length AlgorithmIdentifier
-            bw.Write((byte)0x06); //Oid Tag Indentifier 
+            bw.Write((byte)0x06); //Oid Tag Indentifier
             bw.Write((byte)0x08); //Lenght OId
             bw.Write(new byte[] { 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x02, 0x05 }); //Encoded Oid for 1.2.840.113549.2.5 (AlgorithmIdentifier MD5)
             bw.Write((byte)0x05);   //Null type identifier
@@ -316,7 +318,7 @@ namespace OfficeOpenXml.VBA
             contentInfo.ContentType.Value = "1.3.6.1.4.1.311.2.1.4";
 #if (Core)
             Verifier = new EnvelopedCms(contentInfo);
-            var r = new CmsRecipient(Certificate);            
+            var r = new CmsRecipient(Certificate);
             Verifier.Encrypt(r);
             return Verifier.Encode();
 #else
@@ -345,7 +347,7 @@ namespace OfficeOpenXml.VBA
                     //var r = (ExcelVbaReferenceProject)reference;
                     //BinaryWriter bwTemp = new BinaryWriter(new MemoryStream());
                     //bwTemp.Write((uint)r.Libid.Length);
-                    //bwTemp.Write(enc.GetBytes(r.Libid));              
+                    //bwTemp.Write(enc.GetBytes(r.Libid));
                     //bwTemp.Write((uint)r.LibIdRelative.Length);
                     //bwTemp.Write(enc.GetBytes(r.LibIdRelative));
                     //bwTemp.Write(r.MajorVersion);
@@ -378,6 +380,7 @@ namespace OfficeOpenXml.VBA
             var hp = System.Security.Cryptography.MD5.Create();
             return hp.ComputeHash(buffer);
         }
+
         /// <summary>
         /// The certificate to sign the VBA project.
         /// <remarks>
@@ -386,6 +389,7 @@ namespace OfficeOpenXml.VBA
         /// </remarks>
         /// </summary>
         public X509Certificate2 Certificate { get; set; }
+
         /// <summary>
         /// The verifier
         /// </summary>

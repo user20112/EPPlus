@@ -13,34 +13,35 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
+using OfficeOpenXml.Packaging;
+using OfficeOpenXml.Table.PivotTable;
+using OfficeOpenXml.Utils;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Xml;
-using System.IO;
-using OfficeOpenXml.Table.PivotTable;
-using OfficeOpenXml.Utils;
-using OfficeOpenXml.Packaging;
+
 namespace OfficeOpenXml.Drawing.Chart
 {
-    #region "Chart Enums"
     /// <summary>
     /// Chart type
     /// </summary>
@@ -120,6 +121,7 @@ namespace OfficeOpenXml.Drawing.Chart
         XYScatterSmooth=72,
         XYScatterSmoothNoMarkers=73
 }
+
     /// <summary>
     /// Bar or column
     /// </summary>
@@ -128,6 +130,7 @@ namespace OfficeOpenXml.Drawing.Chart
         Column,
         Bar
     }
+
     /// <summary>
     /// How the series are grouped
     /// </summary>
@@ -138,6 +141,7 @@ namespace OfficeOpenXml.Drawing.Chart
         Stacked,
         PercentStacked
     }
+
     /// <summary>
     /// Shape for bar charts
     /// </summary>
@@ -150,6 +154,7 @@ namespace OfficeOpenXml.Drawing.Chart
         Pyramid,
         PyramidToMax
     }
+
     /// <summary>
     /// Smooth or lines markers
     /// </summary>
@@ -158,21 +163,25 @@ namespace OfficeOpenXml.Drawing.Chart
         LineMarker,
         SmoothMarker,
      }
+
     public enum eRadarStyle
     {
         /// <summary>
         /// Specifies that the radar chart shall be filled and have lines but no markers.
         /// </summary>
         Filled,
+
         /// <summary>
         /// Specifies that the radar chart shall have lines and markers but no fill.
         /// </summary>
         Marker,
+
         /// <summary>
         /// Specifies that the radar chart shall have lines but no markers and no fill.
         /// </summary>
-        Standard 
+        Standard
     }
+
     /// <summary>
     /// Bar or pie
     /// </summary>
@@ -181,6 +190,7 @@ namespace OfficeOpenXml.Drawing.Chart
         Bar,
         Pie
     }
+
     /// <summary>
     /// Position of the labels
     /// </summary>
@@ -196,6 +206,7 @@ namespace OfficeOpenXml.Drawing.Chart
         InEnd,
         OutEnd
     }
+
     /// <summary>
     /// Axis label position
     /// </summary>
@@ -206,11 +217,12 @@ namespace OfficeOpenXml.Drawing.Chart
         NextTo,
         None
     }
+
     /// <summary>
     /// Markerstyle
     /// </summary>
     public enum eMarkerStyle
-    {        
+    {
         Circle,
         Dash,
         Diamond,
@@ -223,15 +235,17 @@ namespace OfficeOpenXml.Drawing.Chart
         Triangle,
         X,
     }
+
     /// <summary>
     /// The time unit of major and minor datetime axis values
     /// </summary>
     public enum eTimeUnit
-    {        
+    {
         Years,
         Months,
         Days,
     }
+
     /// <summary>
     /// The build in style of the chart.
     /// </summary>
@@ -287,6 +301,7 @@ namespace OfficeOpenXml.Drawing.Chart
         Style47,
         Style48
     }
+
     /// <summary>
     /// Type of Trendline for a chart
     /// </summary>
@@ -296,27 +311,33 @@ namespace OfficeOpenXml.Drawing.Chart
         /// Specifies the trendline shall be an exponential curve in the form
         /// </summary>
         Exponential,
+
         /// <summary>
         /// Specifies the trendline shall be a logarithmic curve in the form , where log is the natural
         /// </summary>
         Linear,
+
         /// <summary>
         /// Specifies the trendline shall be a logarithmic curve in the form , where log is the natural
         /// </summary>
         Logarithmic,
+
         /// <summary>
         /// Specifies the trendline shall be a moving average of period Period
         /// </summary>
         MovingAvgerage,
+
         /// <summary>
-        /// Specifies the trendline shall be a polynomial curve of order Order in the form 
+        /// Specifies the trendline shall be a polynomial curve of order Order in the form
         /// </summary>
         Polynomial,
+
         /// <summary>
         /// Specifies the trendline shall be a power curve in the form
         /// </summary>
         Power
     }
+
     /// <summary>
     /// Specifies the possible ways to display blanks
     /// </summary>
@@ -326,38 +347,44 @@ namespace OfficeOpenXml.Drawing.Chart
         /// Blank values shall be left as a gap
         /// </summary>
         Gap,
+
         /// <summary>
         /// Blank values shall be spanned with a line (Line charts)
         /// </summary>
         Span,
+
         /// <summary>
         /// Blank values shall be treated as zero
         /// </summary>
         Zero
     }
+
     public enum eSizeRepresents
     {
         /// <summary>
         /// Specifies the area of the bubbles shall be proportional to the bubble size value.
         /// </summary>
         Area,
+
         /// <summary>
         /// Specifies the radius of the bubbles shall be proportional to the bubble size value.
         /// </summary>
         Width
     }
-    #endregion
+
     /// <summary>
    /// Base class for Chart object.
    /// </summary>
     public class ExcelChart : ExcelDrawing
     {
-       const string rootPath = "c:chartSpace/c:chart/c:plotArea";
-       //string _chartPath;
-       protected internal ExcelChartSeries _chartSeries;
+        private const string rootPath = "c:chartSpace/c:chart/c:plotArea";
+
+        //string _chartPath;
+        protected internal ExcelChartSeries _chartSeries;
+
        internal ExcelChartAxis[] _axis;
        protected XmlHelper _chartXmlHelper;
-       #region "Constructors"
+
        internal ExcelChart(ExcelDrawings drawings, XmlNode node, eChartType type, bool isPivot) :
            base(drawings, node, "xdr:graphicFrame/xdr:nvGraphicFramePr/xdr:cNvPr/@name")
        {
@@ -371,6 +398,7 @@ namespace OfficeOpenXml.Drawing.Chart
            SetTypeProperties();
            LoadAxis();
        }
+
        internal ExcelChart(ExcelDrawings drawings, XmlNode node, eChartType type, ExcelChart topChart, ExcelPivotTable PivotTableSource) :
            base(drawings, node, "xdr:graphicFrame/xdr:nvGraphicFramePr/xdr:cNvPr/@name")
        {
@@ -395,6 +423,7 @@ namespace OfficeOpenXml.Drawing.Chart
                }
            }
        }
+
        internal ExcelChart(ExcelDrawings drawings, XmlNode node, Uri uriChart, ZipPackagePart part, XmlDocument chartXml, XmlNode chartNode) :
            base(drawings, node, "xdr:graphicFrame/xdr:nvGraphicFramePr/xdr:cNvPr/@name")
        {
@@ -405,6 +434,7 @@ namespace OfficeOpenXml.Drawing.Chart
            InitChartLoad(drawings, chartNode);
            ChartType = GetChartType(chartNode.LocalName);
        }
+
        internal ExcelChart(ExcelChart topChart, XmlNode chartNode) :
            base(topChart._drawings, topChart.TopNode, "xdr:graphicFrame/xdr:nvGraphicFramePr/xdr:cNvPr/@name")
        {
@@ -416,6 +446,7 @@ namespace OfficeOpenXml.Drawing.Chart
 
            InitChartLoad(topChart._drawings, chartNode);
        }
+
        private void InitChartLoad(ExcelDrawings drawings, XmlNode chartNode)
        {
            //SetChartType();
@@ -432,8 +463,7 @@ namespace OfficeOpenXml.Drawing.Chart
            _chartXmlHelper.SchemaNodeOrder = new string[] { "ofPieType", "title", "pivotFmt", "autoTitleDeleted", "view3D", "floor", "sideWall", "backWall", "plotArea", "wireframe", "barDir", "grouping", "scatterStyle", "radarStyle", "varyColors", "ser", "dLbls", "bubbleScale", "showNegBubbles", "dropLines", "upDownBars", "marker", "smooth", "shape", "legend", "plotVisOnly", "dispBlanksAs", "gapWidth", "showDLblsOverMax", "overlap", "bandFmts", "axId", "spPr", "printSettings" };
            WorkSheet = drawings.Worksheet;
        }
-       #endregion
-       #region "Private functions"
+
        private void SetTypeProperties()
        {
            /******* Grouping *******/
@@ -453,7 +483,7 @@ namespace OfficeOpenXml.Drawing.Chart
            }
 
            /***** 3D Perspective *****/
-           if (IsType3D())             
+           if (IsType3D())
            {
                View3D.RotY = 20;
                View3D.Perspective = 30;    //Default to 30
@@ -467,13 +497,14 @@ namespace OfficeOpenXml.Drawing.Chart
                }
            }
        }
+
        private void CreateNewChart(ExcelDrawings drawings, eChartType type, ExcelChart topChart)
        {
            if (topChart == null)
            {
                XmlElement graphFrame = TopNode.OwnerDocument.CreateElement("graphicFrame", ExcelPackage.schemaSheetDrawings);
                graphFrame.SetAttribute("macro", "");
-               TopNode.AppendChild(graphFrame); 
+               TopNode.AppendChild(graphFrame);
                graphFrame.InnerXml = string.Format("<xdr:nvGraphicFramePr><xdr:cNvPr id=\"{0}\" name=\"Chart 1\" /><xdr:cNvGraphicFramePr /></xdr:nvGraphicFramePr><xdr:xfrm><a:off x=\"0\" y=\"0\" /> <a:ext cx=\"0\" cy=\"0\" /></xdr:xfrm><a:graphic><a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/chart\"><c:chart xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" r:id=\"rId1\" />   </a:graphicData>  </a:graphic>",_id);
                TopNode.AppendChild(TopNode.OwnerDocument.CreateElement("clientData", ExcelPackage.schemaSheetDrawings));
 
@@ -519,6 +550,7 @@ namespace OfficeOpenXml.Drawing.Chart
            }
             GetPositionSize();
        }
+
        private void LoadAxis()
        {
            XmlNodeList nl = _chartNode.SelectNodes("c:axId", NameSpaceManager);
@@ -545,6 +577,7 @@ namespace OfficeOpenXml.Drawing.Chart
            if(_axis.Length > 0) XAxis = _axis[0];
            if (_axis.Length > 1) YAxis = _axis[1];
        }
+
        //private void SetChartType()
        //{
        //    ChartType = 0;
@@ -576,7 +609,6 @@ namespace OfficeOpenXml.Drawing.Chart
        //}
        internal virtual eChartType GetChartType(string name)
        {
-           
            switch (name)
            {
                case "area3DChart":
@@ -607,24 +639,31 @@ namespace OfficeOpenXml.Drawing.Chart
                    }
                case "doughnutChart":
                    return eChartType.Doughnut;
+
                case "pie3DChart":
                    return eChartType.Pie3D;
+
                case "pieChart":
                    return eChartType.Pie;
+
                case "radarChart":
                    return eChartType.Radar;
+
                case "scatterChart":
                    return eChartType.XYScatter;
+
                case "surface3DChart":
                case "surfaceChart":
                    return eChartType.Surface;
+
                case "stockChart":
                    return eChartType.StockHLC;
+
                default:
                    return 0;
-           }           
+           }
        }
-#region "Xml init Functions"
+
        private string ChartStartXml(eChartType type)
        {
            StringBuilder xml=new StringBuilder();
@@ -633,7 +672,7 @@ namespace OfficeOpenXml.Drawing.Chart
            int serAxID = IsTypeSurface() ? 3 : -1;
 
            xml.Append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
-           xml.AppendFormat("<c:chartSpace xmlns:c=\"{0}\" xmlns:a=\"{1}\" xmlns:r=\"{2}\">", ExcelPackage.schemaChart, ExcelPackage.schemaDrawings, ExcelPackage.schemaRelationships);       
+           xml.AppendFormat("<c:chartSpace xmlns:c=\"{0}\" xmlns:a=\"{1}\" xmlns:r=\"{2}\">", ExcelPackage.schemaChart, ExcelPackage.schemaDrawings, ExcelPackage.schemaRelationships);
            xml.Append("<c:chart>");
            xml.AppendFormat("{0}{1}<c:plotArea><c:layout/>",AddPerspectiveXml(type), AddSurfaceXml(type));
 
@@ -662,7 +701,7 @@ namespace OfficeOpenXml.Drawing.Chart
 
            xml.AppendFormat("</c:plotArea><c:legend><c:legendPos val=\"r\"/><c:layout/><c:overlay val=\"0\" /></c:legend><c:plotVisOnly val=\"1\"/></c:chart>", axID, xAxID);
 
-           xml.Append("<c:printSettings><c:headerFooter/><c:pageMargins b=\"0.75\" l=\"0.7\" r=\"0.7\" t=\"0.75\" header=\"0.3\" footer=\"0.3\"/><c:pageSetup/></c:printSettings></c:chartSpace>");          
+           xml.Append("<c:printSettings><c:headerFooter/><c:pageMargins b=\"0.75\" l=\"0.7\" r=\"0.7\" t=\"0.75\" header=\"0.3\" footer=\"0.3\"/><c:pageSetup/></c:printSettings></c:chartSpace>");
            return xml.ToString();
        }
 
@@ -679,7 +718,7 @@ namespace OfficeOpenXml.Drawing.Chart
            xml.Append(AddShape(type));
            xml.Append(AddFirstSliceAng(type));
            xml.Append(AddHoleSize(type));
-           if (ChartType == eChartType.BarStacked100 || 
+           if (ChartType == eChartType.BarStacked100 ||
                ChartType == eChartType.BarStacked ||
                ChartType == eChartType.ColumnStacked ||
                ChartType == eChartType.ColumnStacked100)
@@ -694,12 +733,13 @@ namespace OfficeOpenXml.Drawing.Chart
 
            return xml.ToString();
        }
+
        private string AddAxisId(int axID,int xAxID, int serAxID)
        {
            if (!IsTypePieDoughnut())
            {
                if (IsTypeSurface())
-               {                                      
+               {
                    return string.Format("<c:axId val=\"{0}\"/><c:axId val=\"{1}\"/><c:axId val=\"{2}\"/>", axID, xAxID, serAxID);
                }
                else
@@ -712,6 +752,7 @@ namespace OfficeOpenXml.Drawing.Chart
                return "";
            }
        }
+
        private string AddAxType()
        {
            switch(ChartType)
@@ -724,10 +765,12 @@ namespace OfficeOpenXml.Drawing.Chart
                case eChartType.Bubble:
                case eChartType.Bubble3DEffect:
                    return "valAx";
+
                default:
                    return "catAx";
            }
        }
+
        private string AddScatterType(eChartType type)
        {
            if (type == eChartType.XYScatter ||
@@ -743,6 +786,7 @@ namespace OfficeOpenXml.Drawing.Chart
                return "";
            }
        }
+
        private string AddRadarType(eChartType type)
        {
            if (type == eChartType.Radar ||
@@ -756,9 +800,10 @@ namespace OfficeOpenXml.Drawing.Chart
                return "";
            }
        }
+
        private string AddGrouping()
        {
-           //IsTypeClustered() || IsTypePercentStacked() || IsTypeStacked() || 
+           //IsTypeClustered() || IsTypePercentStacked() || IsTypeStacked() ||
            if(IsTypeShape() || IsTypeLine())
            {
                return "<c:grouping val=\"standard\"/>";
@@ -768,6 +813,7 @@ namespace OfficeOpenXml.Drawing.Chart
                return "";
            }
        }
+
        private string AddHoleSize(eChartType type)
        {
            if (type == eChartType.Doughnut ||
@@ -780,6 +826,7 @@ namespace OfficeOpenXml.Drawing.Chart
                return "";
            }
        }
+
        private string AddFirstSliceAng(eChartType type)
        {
            if (type == eChartType.Doughnut ||
@@ -792,6 +839,7 @@ namespace OfficeOpenXml.Drawing.Chart
                return "";
            }
        }
+
        private string AddVaryColors()
        {
            if (IsTypePieDoughnut())
@@ -803,6 +851,7 @@ namespace OfficeOpenXml.Drawing.Chart
                return "<c:varyColors val=\"0\" />";
            }
        }
+
        private string AddHasMarker(eChartType type)
        {
            if (type == eChartType.LineMarkers ||
@@ -818,6 +867,7 @@ namespace OfficeOpenXml.Drawing.Chart
                return "";
            }
        }
+
        private string AddShape(eChartType type)
        {
            if (IsTypeShape())
@@ -829,6 +879,7 @@ namespace OfficeOpenXml.Drawing.Chart
                return "";
            }
        }
+
        private string AddBarDir(eChartType type)
        {
            if (IsTypeShape())
@@ -840,6 +891,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 return "";
             }
        }
+
        private string AddPerspectiveXml(eChartType type)
         {
  	        //Add for 3D sharts
@@ -852,6 +904,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 return "";
             }
         }
+
        private string AddSurfaceXml(eChartType type)
        {
            if (IsTypeSurface())
@@ -868,9 +921,7 @@ namespace OfficeOpenXml.Drawing.Chart
        {
            return string.Format("<c:{0}><c:thickness val=\"0\"/><c:spPr><a:noFill/><a:ln><a:noFill/></a:ln><a:effectLst/><a:sp3d/></c:spPr></c:{0}>", name);
        }
-#endregion
-#endregion
-#region "Chart type functions
+
        internal static bool IsType3D(eChartType chartType)
         {
             return chartType == eChartType.Area3D ||
@@ -912,10 +963,12 @@ namespace OfficeOpenXml.Drawing.Chart
                             chartType == eChartType.SurfaceTopViewWireframe ||
                             chartType == eChartType.SurfaceWireframe;
         }
-       internal protected bool IsType3D()
-       {
+
+        protected internal bool IsType3D()
+        {
             return IsType3D(ChartType);
-       }
+        }
+
         protected bool IsTypeLine()
        {
            return ChartType == eChartType.Line ||
@@ -925,6 +978,7 @@ namespace OfficeOpenXml.Drawing.Chart
                    ChartType == eChartType.LineStacked100 ||
                    ChartType == eChartType.Line3D;
        }
+
        protected bool IsTypeScatterBubble()
        {
            return ChartType == eChartType.XYScatter ||
@@ -935,6 +989,7 @@ namespace OfficeOpenXml.Drawing.Chart
                    ChartType == eChartType.Bubble ||
                    ChartType == eChartType.Bubble3DEffect;
        }
+
         protected bool IsTypeSurface()
         {
             return ChartType == eChartType.Surface ||
@@ -942,6 +997,7 @@ namespace OfficeOpenXml.Drawing.Chart
                    ChartType == eChartType.SurfaceTopViewWireframe ||
                    ChartType == eChartType.SurfaceWireframe;
         }
+
        protected bool IsTypeShape()
        {
             return ChartType == eChartType.BarClustered3D ||
@@ -981,6 +1037,7 @@ namespace OfficeOpenXml.Drawing.Chart
                     //ChartType == eChartType.Doughnut ||
                     //ChartType == eChartType.DoughnutExploded;
         }
+
         protected internal bool IsTypePercentStacked()
         {
             return ChartType == eChartType.AreaStacked100 ||
@@ -997,6 +1054,7 @@ namespace OfficeOpenXml.Drawing.Chart
                            ChartType == eChartType.PyramidBarStacked100 ||
                            ChartType == eChartType.PyramidColStacked100;
         }
+
         protected internal bool IsTypeStacked()
         {
             return ChartType == eChartType.AreaStacked ||
@@ -1014,6 +1072,7 @@ namespace OfficeOpenXml.Drawing.Chart
                            ChartType == eChartType.PyramidBarStacked ||
                            ChartType == eChartType.PyramidColStacked;
         }
+
         protected bool IsTypeClustered()
         {
             return ChartType == eChartType.BarClustered ||
@@ -1027,6 +1086,7 @@ namespace OfficeOpenXml.Drawing.Chart
                            ChartType == eChartType.PyramidBarClustered ||
                            ChartType == eChartType.PyramidColClustered;
         }
+
         protected internal bool IsTypePieDoughnut()
         {
             return ChartType == eChartType.Pie ||
@@ -1038,7 +1098,7 @@ namespace OfficeOpenXml.Drawing.Chart
                            ChartType == eChartType.Doughnut ||
                            ChartType == eChartType.DoughnutExploded;
         }
-#endregion
+
        /// <summary>
        /// Get the name of the chart node
        /// </summary>
@@ -1051,10 +1111,12 @@ namespace OfficeOpenXml.Drawing.Chart
                 case eChartType.AreaStacked3D:
                 case eChartType.AreaStacked1003D:
                     return "c:area3DChart";
+
                 case eChartType.Area:
                 case eChartType.AreaStacked:
                 case eChartType.AreaStacked100:
                     return "c:areaChart";
+
                 case eChartType.BarClustered:
                 case eChartType.BarStacked:
                 case eChartType.BarStacked100:
@@ -1062,6 +1124,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 case eChartType.ColumnStacked:
                 case eChartType.ColumnStacked100:
                     return "c:barChart";
+
                 case eChartType.BarClustered3D:
                 case eChartType.BarStacked3D:
                 case eChartType.BarStacked1003D:
@@ -1090,12 +1153,15 @@ namespace OfficeOpenXml.Drawing.Chart
                 case eChartType.PyramidColStacked:
                 case eChartType.PyramidColStacked100:
                     return "c:bar3DChart";
+
                 case eChartType.Bubble:
                 case eChartType.Bubble3DEffect:
                     return "c:bubbleChart";
+
                 case eChartType.Doughnut:
                 case eChartType.DoughnutExploded:
                     return "c:doughnutChart";
+
                 case eChartType.Line:
                 case eChartType.LineMarkers:
                 case eChartType.LineMarkersStacked:
@@ -1103,39 +1169,50 @@ namespace OfficeOpenXml.Drawing.Chart
                 case eChartType.LineStacked:
                 case eChartType.LineStacked100:
                     return "c:lineChart";
+
                 case eChartType.Line3D:
                     return "c:line3DChart";
+
                 case eChartType.Pie:
                 case eChartType.PieExploded:
                     return "c:pieChart";
+
                 case eChartType.BarOfPie:
                 case eChartType.PieOfPie:
                     return "c:ofPieChart";
+
                 case eChartType.Pie3D:
                 case eChartType.PieExploded3D:
                     return "c:pie3DChart";
+
                 case eChartType.Radar:
                 case eChartType.RadarFilled:
                 case eChartType.RadarMarkers:
                     return "c:radarChart";
+
                 case eChartType.XYScatter:
                 case eChartType.XYScatterLines:
                 case eChartType.XYScatterLinesNoMarkers:
                 case eChartType.XYScatterSmooth:
                 case eChartType.XYScatterSmoothNoMarkers:
                     return "c:scatterChart";
+
                 case eChartType.Surface:
                 case eChartType.SurfaceWireframe:
                     return "c:surface3DChart";
+
                 case eChartType.SurfaceTopView:
                 case eChartType.SurfaceTopViewWireframe:
                     return "c:surfaceChart";
+
                 case eChartType.StockHLC:
                     return "c:stockChart";
+
                 default:
                     throw(new NotImplementedException("Chart type not implemented"));
             }
         }
+
         /// <summary>
         /// Add a secondary axis
         /// </summary>
@@ -1153,7 +1230,6 @@ namespace OfficeOpenXml.Drawing.Chart
                 _axis[0].TopNode.ParentNode.InsertAfter(catAx, _axis[_axis.Length-1].TopNode);
                 axID = int.Parse(_axis[0].Id) < int.Parse(_axis[1].Id) ? int.Parse(_axis[1].Id) + 1 : int.Parse(_axis[0].Id) + 1;
             }
-
 
             XmlElement valAx = ChartXml.CreateElement("c:valAx", ExcelPackage.schemaChart);
             catAx.ParentNode.InsertAfter(valAx, catAx);
@@ -1187,24 +1263,29 @@ namespace OfficeOpenXml.Drawing.Chart
                 chart._axis = _axis;
             }
         }
+
         internal void RemoveSecondaryAxis()
         {
             throw (new NotImplementedException("Not yet implemented"));
         }
-#region "Properties"
+
         /// <summary>
         /// Reference to the worksheet
         /// </summary>
         public ExcelWorksheet WorkSheet { get; internal set; }
+
         /// <summary>
         /// The chart xml document
         /// </summary>
         public XmlDocument ChartXml { get; internal set; }
+
         /// <summary>
         /// Type of chart
         /// </summary>
         public eChartType ChartType { get; internal set; }
-        internal protected XmlNode _chartNode = null;
+
+        protected internal XmlNode _chartNode = null;
+
         internal XmlNode ChartNode
         {
             get
@@ -1212,6 +1293,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 return _chartNode;
             }
         }
+
         /// <summary>
         /// Titel of the chart
         /// </summary>
@@ -1226,6 +1308,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 return _title;
             }
         }
+
         /// <summary>
         /// Chart series
         /// </summary>
@@ -1236,6 +1319,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 return _chartSeries;
             }
         }
+
         /// <summary>
         /// An array containg all axis of all Charttypes
         /// </summary>
@@ -1246,6 +1330,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 return _axis;
             }
         }
+
         /// <summary>
         /// The XAxis
         /// </summary>
@@ -1254,6 +1339,7 @@ namespace OfficeOpenXml.Drawing.Chart
             get;
             private set;
         }
+
         /// <summary>
         /// The YAxis
         /// </summary>
@@ -1262,7 +1348,9 @@ namespace OfficeOpenXml.Drawing.Chart
             get;
             private set;
         }
-        bool _secondaryAxis=false;
+
+        private bool _secondaryAxis = false;
+
         /// <summary>
         /// If true the charttype will use the secondary axis.
         /// The chart must contain a least one other charttype that uses the primary axis.
@@ -1309,8 +1397,9 @@ namespace OfficeOpenXml.Drawing.Chart
                 }
             }
         }
+
         /// <summary>
-        /// The build-in chart styles. 
+        /// The build-in chart styles.
         /// </summary>
         public eChartStyle Style
         {
@@ -1333,7 +1422,6 @@ namespace OfficeOpenXml.Drawing.Chart
                         return eChartStyle.None;
                     }
                 }
-
             }
             set
             {
@@ -1354,7 +1442,9 @@ namespace OfficeOpenXml.Drawing.Chart
                 }
             }
         }
-        const string _roundedCornersPath = "../../../c:roundedCorners/@val";
+
+        private const string _roundedCornersPath = "../../../c:roundedCorners/@val";
+
         /// <summary>
         /// Border rounded corners
         /// </summary>
@@ -1369,7 +1459,9 @@ namespace OfficeOpenXml.Drawing.Chart
                 _chartXmlHelper.SetXmlNodeBool(_roundedCornersPath, value);
             }
         }
-        const string _plotVisibleOnlyPath="../../c:plotVisOnly/@val";
+
+        private const string _plotVisibleOnlyPath = "../../c:plotVisOnly/@val";
+
         /// <summary>
         /// Show data in hidden rows and columns
         /// </summary>
@@ -1386,7 +1478,9 @@ namespace OfficeOpenXml.Drawing.Chart
                 _chartXmlHelper.SetXmlNodeBool(_plotVisibleOnlyPath, !value);
             }
         }
-        const string _displayBlanksAsPath = "../../c:dispBlanksAs/@val";
+
+        private const string _displayBlanksAsPath = "../../c:dispBlanksAs/@val";
+
         /// <summary>
         /// Specifies the possible ways to display blanks
         /// </summary>
@@ -1409,7 +1503,9 @@ namespace OfficeOpenXml.Drawing.Chart
                 _chartSeries.SetXmlNodeString(_displayBlanksAsPath, value.ToString().ToLower(CultureInfo.InvariantCulture));
             }
         }
-        const string _showDLblsOverMax = "../../c:showDLblsOverMax/@val";
+
+        private const string _showDLblsOverMax = "../../c:showDLblsOverMax/@val";
+
         /// <summary>
         /// Specifies data labels over the maximum of the chart shall be shown
         /// </summary>
@@ -1424,6 +1520,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 _chartXmlHelper.SetXmlNodeBool(_showDLblsOverMax,value, true);
             }
         }
+
         private bool HasPrimaryAxis()
         {
             if (_plotArea.ChartTypes.Count == 1)
@@ -1442,6 +1539,7 @@ namespace OfficeOpenXml.Drawing.Chart
             }
             return false;
         }
+
         ///// <summary>
         ///// Sets position of the axis of a chart-serie
         ///// </summary>
@@ -1542,7 +1640,9 @@ namespace OfficeOpenXml.Drawing.Chart
             }
             return false;
         }
-        ExcelChartPlotArea _plotArea = null;
+
+        private ExcelChartPlotArea _plotArea = null;
+
         /// <summary>
         /// Plotarea
         /// </summary>
@@ -1552,12 +1652,14 @@ namespace OfficeOpenXml.Drawing.Chart
             {
                 if (_plotArea == null)
                 {
-                    _plotArea = new ExcelChartPlotArea(NameSpaceManager, ChartXml.SelectSingleNode("c:chartSpace/c:chart/c:plotArea", NameSpaceManager), this); 
+                    _plotArea = new ExcelChartPlotArea(NameSpaceManager, ChartXml.SelectSingleNode("c:chartSpace/c:chart/c:plotArea", NameSpaceManager), this);
                 }
                 return _plotArea;
             }
         }
-        ExcelChartLegend _legend = null;
+
+        private ExcelChartLegend _legend = null;
+
         /// <summary>
         /// Legend
         /// </summary>
@@ -1571,9 +1673,10 @@ namespace OfficeOpenXml.Drawing.Chart
                 }
                 return _legend;
             }
-
         }
-        ExcelDrawingBorder _border = null;
+
+        private ExcelDrawingBorder _border = null;
+
         /// <summary>
         /// Border
         /// </summary>
@@ -1583,12 +1686,14 @@ namespace OfficeOpenXml.Drawing.Chart
             {
                 if (_border == null)
                 {
-                    _border = new ExcelDrawingBorder(NameSpaceManager, ChartXml.SelectSingleNode("c:chartSpace",NameSpaceManager), "c:spPr/a:ln"); 
+                    _border = new ExcelDrawingBorder(NameSpaceManager, ChartXml.SelectSingleNode("c:chartSpace",NameSpaceManager), "c:spPr/a:ln");
                 }
                 return _border;
             }
         }
-        ExcelDrawingFill _fill = null;
+
+        private ExcelDrawingFill _fill = null;
+
         /// <summary>
         /// Fill
         /// </summary>
@@ -1603,6 +1708,7 @@ namespace OfficeOpenXml.Drawing.Chart
                 return _fill;
             }
         }
+
         /// <summary>
         /// 3D-settings
         /// </summary>
@@ -1618,11 +1724,12 @@ namespace OfficeOpenXml.Drawing.Chart
                 {
                     throw (new Exception("Charttype does not support 3D"));
                 }
-
             }
         }
+
         //string _groupingPath = "c:chartSpace/c:chart/c:plotArea/{0}/c:grouping/@val";
-        string _groupingPath = "c:grouping/@val";
+        private string _groupingPath = "c:grouping/@val";
+
         public eGrouping Grouping
         {
             get
@@ -1634,8 +1741,10 @@ namespace OfficeOpenXml.Drawing.Chart
                 _chartXmlHelper.SetXmlNodeString(_groupingPath, GetGroupingText(value));
             }
         }
+
         //string _varyColorsPath = "c:chartSpace/c:chart/c:plotArea/{0}/c:varyColors/@val";
-        string _varyColorsPath = "c:varyColors/@val";
+        private string _varyColorsPath = "c:varyColors/@val";
+
         /// <summary>
         /// If the chart has only one serie this varies the colors for each point.
         /// </summary>
@@ -1657,46 +1766,54 @@ namespace OfficeOpenXml.Drawing.Chart
                 }
             }
         }
+
         internal Packaging.ZipPackagePart Part { get; set; }
+
         /// <summary>
         /// Package internal URI
         /// </summary>
         internal Uri UriChart { get; set; }
+
         internal new string Id
         {
             get { return ""; }
         }
-        ExcelChartTitle _title = null;
-#endregion
-#region "Grouping Enum Translation"
+
+        private ExcelChartTitle _title = null;
+
         private string GetGroupingText(eGrouping grouping)
        {
            switch (grouping)
            {
                case eGrouping.Clustered:
                    return "clustered";
+
                case eGrouping.Stacked:
                    return "stacked";
+
                case eGrouping.PercentStacked:
                    return "percentStacked";
+
                default:
                    return "standard";
-
            }
        }
+
        private eGrouping GetGroupingEnum(string grouping)
        {
            switch (grouping)
            {
                case "stacked":
                    return eGrouping.Stacked;
+
                case "percentStacked":
                    return eGrouping.PercentStacked;
-               default: //"clustered":               
+
+               default: //"clustered":
                    return eGrouping.Clustered;
-           }         
+           }
        }
-#endregion
+
        internal static ExcelChart GetChart(ExcelDrawings drawings, XmlNode node/*, XmlNode chartTypeNode*/)
        {
            XmlNode chartNode = node.SelectSingleNode("xdr:graphicFrame/a:graphic/a:graphicData/c:chart", drawings.NameSpaceManager);
@@ -1707,7 +1824,7 @@ namespace OfficeOpenXml.Drawing.Chart
 
                var part = drawings.Part.Package.GetPart(uriChart);
                var chartXml = new XmlDocument();
-               LoadXmlSafe(chartXml, part.GetStream()); 
+               LoadXmlSafe(chartXml, part.GetStream());
 
                ExcelChart topChart = null;
                foreach (XmlElement n in chartXml.SelectSingleNode(rootPath, drawings.NameSpaceManager).ChildNodes)
@@ -1728,14 +1845,15 @@ namespace OfficeOpenXml.Drawing.Chart
                             topChart.PlotArea.ChartTypes.Add(subChart);
                         }
                     }
-                }               
+                }
                 return topChart;
            }
            else
            {
                return null;
-           }           
+           }
        }
+
        internal static ExcelChart GetChart(XmlElement chartNode, ExcelDrawings drawings, XmlNode node,  Uri uriChart, Packaging.ZipPackagePart part, XmlDocument chartXml, ExcelChart topChart)
        {
            switch (chartNode.LocalName)
@@ -1838,8 +1956,9 @@ namespace OfficeOpenXml.Drawing.Chart
                    }
                default:
                    return null;
-           }       
+           }
        }
+
        internal static ExcelChart GetNewChart(ExcelDrawings drawings, XmlNode drawNode, eChartType chartType, ExcelChart topChart, ExcelPivotTable PivotTableSource)
        {
             switch(chartType)
@@ -1849,12 +1968,15 @@ namespace OfficeOpenXml.Drawing.Chart
                 case eChartType.Pie3D:
                 case eChartType.PieExploded3D:
                     return new ExcelPieChart(drawings, drawNode, chartType, topChart, PivotTableSource);
+
                 case eChartType.BarOfPie:
                 case eChartType.PieOfPie:
                     return new ExcelOfPieChart(drawings, drawNode, chartType, topChart, PivotTableSource);
+
                 case eChartType.Doughnut:
                 case eChartType.DoughnutExploded:
                     return new ExcelDoughnutChart(drawings, drawNode, chartType, topChart, PivotTableSource);
+
                 case eChartType.BarClustered:
                 case eChartType.BarStacked:
                 case eChartType.BarStacked100:
@@ -1890,12 +2012,14 @@ namespace OfficeOpenXml.Drawing.Chart
                 case eChartType.PyramidColStacked:
                 case eChartType.PyramidColStacked100:
                     return new ExcelBarChart(drawings, drawNode, chartType, topChart, PivotTableSource);
+
                 case eChartType.XYScatter:
                 case eChartType.XYScatterLines:
                 case eChartType.XYScatterLinesNoMarkers:
                 case eChartType.XYScatterSmooth:
                 case eChartType.XYScatterSmoothNoMarkers:
                     return new ExcelScatterChart(drawings, drawNode, chartType, topChart, PivotTableSource);
+
                 case eChartType.Line:
                 case eChartType.Line3D:
                 case eChartType.LineMarkers:
@@ -1904,27 +2028,33 @@ namespace OfficeOpenXml.Drawing.Chart
                 case eChartType.LineStacked:
                 case eChartType.LineStacked100:
                     return new ExcelLineChart(drawings, drawNode, chartType, topChart, PivotTableSource);
+
                 case eChartType.Bubble:
                 case eChartType.Bubble3DEffect:
                     return new ExcelBubbleChart(drawings, drawNode, chartType, topChart, PivotTableSource);
+
                 case eChartType.Radar:
                 case eChartType.RadarFilled:
                 case eChartType.RadarMarkers:
                     return new ExcelRadarChart(drawings, drawNode, chartType, topChart, PivotTableSource);
+
                 case eChartType.Surface:
                 case eChartType.SurfaceTopView:
                 case eChartType.SurfaceTopViewWireframe:
                 case eChartType.SurfaceWireframe:
                     return new ExcelSurfaceChart(drawings, drawNode, chartType, topChart, PivotTableSource);
+
                 default:
                     return new ExcelChart(drawings, drawNode, chartType, topChart, PivotTableSource);
             }
         }
+
         public ExcelPivotTable PivotTableSource
         {
             get;
             private set;
         }
+
        internal void SetPivotSource(ExcelPivotTable pivotTableSource)
        {
            PivotTableSource = pivotTableSource;
@@ -1940,6 +2070,7 @@ namespace OfficeOpenXml.Drawing.Chart
 
            Series.AddPivotSerie(pivotTableSource);
        }
+
        internal override void DeleteMe()
        {
            try

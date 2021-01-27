@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
-using System.Xml;
+﻿using SkiaSharp;
+using System;
 
 namespace OfficeOpenXml.Style.Dxf
 {
@@ -12,21 +8,14 @@ namespace OfficeOpenXml.Style.Dxf
     {
         public ExcelDxfColor(ExcelStyles styles) : base(styles)
         {
+        }
 
-        }
-        public int? Theme { get; set; }
-        public int? Index { get; set; }
         public bool? Auto { get; set; }
+        public SKColor? Color { get; set; }
+        public int? Index { get; set; }
+        public int? Theme { get; set; }
         public double? Tint { get; set; }
-        public Color? Color { get; set; }
-        protected internal override string Id
-        {
-            get { return GetAsString(Theme) + "|" + GetAsString(Index) + "|" + GetAsString(Auto) + "|" + GetAsString(Tint) + "|" + GetAsString(Color==null ? "" : ((Color)Color.Value).ToArgb().ToString("x")); }
-        }
-        protected internal override ExcelDxfColor Clone()
-        {
-            return new ExcelDxfColor(_styles) { Theme = Theme, Index = Index, Color = Color, Auto = Auto, Tint = Tint };
-        }
+
         protected internal override bool HasValue
         {
             get
@@ -38,6 +27,17 @@ namespace OfficeOpenXml.Style.Dxf
                        Color != null;
             }
         }
+
+        protected internal override string Id
+        {
+            get { return GetAsString(Theme) + "|" + GetAsString(Index) + "|" + GetAsString(Auto) + "|" + GetAsString(Tint) + "|" + GetAsString(Color==null ? "" : ((uint)((SKColor)Color.Value)).ToString("x")); }
+        }
+
+        protected internal override ExcelDxfColor Clone()
+        {
+            return new ExcelDxfColor(_styles) { Theme = Theme, Index = Index, Color = Color, Auto = Auto, Tint = Tint };
+        }
+
         protected internal override void CreateNodes(XmlHelper helper, string path)
         {
             throw new NotImplementedException();

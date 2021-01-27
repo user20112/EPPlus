@@ -13,45 +13,42 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2013-03-01 (Prior file history on https://github.com/swmal/ExcelFormulaParser)
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
 using OfficeOpenXml.FormulaParsing.Excel.Operators;
 using OfficeOpenXml.FormulaParsing.Exceptions;
 using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
-using OfficeOpenXml.FormulaParsing.Excel;
-using OfficeOpenXml.FormulaParsing;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
 {
     public class ExpressionGraphBuilder :IExpressionGraphBuilder
     {
-        private readonly ExpressionGraph _graph = new ExpressionGraph();
         private readonly IExpressionFactory _expressionFactory;
+        private readonly ExpressionGraph _graph = new ExpressionGraph();
         private readonly ParsingContext _parsingContext;
-        private int _tokenIndex = 0;
         private bool _negateNextExpression;
+        private int _tokenIndex = 0;
 
         public ExpressionGraphBuilder(ExcelDataProvider excelDataProvider, ParsingContext parsingContext)
             : this(new ExpressionFactory(excelDataProvider, parsingContext), parsingContext)
         {
-
         }
 
         public ExpressionGraphBuilder(IExpressionFactory expressionFactory, ParsingContext parsingContext)
@@ -67,6 +64,59 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
             var tokensArr = tokens != null ? tokens.ToArray() : new Token[0];
             BuildUp(tokensArr, null);
             return _graph;
+        }
+
+        private void BuildEnumerableExpression(Token[] tokens, Expression parent)
+        {
+            if (parent == null)
+            {
+                _graph.Add(new EnumerableExpression());
+                BuildUp(tokens, _graph.Current);
+            }
+            else
+            {
+                var enumerableExpression = new EnumerableExpression();
+                parent.AddChild(enumerableExpression);
+                BuildUp(tokens, enumerableExpression);
+            }
+        }
+
+        private void BuildFunctionExpression(Token[] tokens, Expression parent, string funcName)
+        {
+            if (parent == null)
+            {
+                _graph.Add(new FunctionExpression(funcName, _parsingContext, _negateNextExpression));
+                _negateNextExpression = false;
+                HandleFunctionArguments(tokens, _graph.Current);
+            }
+            else
+            {
+                var func = new FunctionExpression(funcName, _parsingContext, _negateNextExpression);
+                _negateNextExpression = false;
+                parent.AddChild(func);
+                HandleFunctionArguments(tokens, func);
+            }
+        }
+
+        private void BuildGroupExpression(Token[] tokens, Expression parent)
+        {
+            if (parent == null)
+            {
+                _graph.Add(new GroupExpression(_negateNextExpression));
+                _negateNextExpression = false;
+                BuildUp(tokens, _graph.Current);
+            }
+            else
+            {
+                if (parent.IsGroupedExpression || parent is FunctionArgumentExpression)
+                {
+                    var newGroupExpression = new GroupExpression(_negateNextExpression);
+                    _negateNextExpression = false;
+                    parent.AddChild(newGroupExpression);
+                    BuildUp(tokens, newGroupExpression);
+                }
+                BuildUp(tokens, parent);
+            }
         }
 
         private void BuildUp(Token[] tokens, Expression parent)
@@ -135,25 +185,10 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
             }
         }
 
-        private void BuildEnumerableExpression(Token[] tokens, Expression parent)
-        {
-            if (parent == null)
-            {
-                _graph.Add(new EnumerableExpression());
-                BuildUp(tokens, _graph.Current);
-            }
-            else
-            {
-                var enumerableExpression = new EnumerableExpression();
-                parent.AddChild(enumerableExpression);
-                BuildUp(tokens, enumerableExpression);
-            }
-        }
-
         private void CreateAndAppendExpression(ref Expression parent, Token token)
         {
             if (IsWaste(token)) return;
-            if (parent != null && 
+            if (parent != null &&
                 (token.TokenType == TokenType.Comma || token.TokenType == TokenType.SemiColon))
             {
                 parent = parent.PrepareForNextChild();
@@ -175,32 +210,6 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
             }
         }
 
-        private bool IsWaste(Token token)
-        {
-            if (token.TokenType == TokenType.String)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        private void BuildFunctionExpression(Token[] tokens, Expression parent, string funcName)
-        {
-            if (parent == null)
-            {
-                _graph.Add(new FunctionExpression(funcName, _parsingContext, _negateNextExpression));
-                _negateNextExpression = false;
-                HandleFunctionArguments(tokens, _graph.Current);
-            }
-            else
-            {
-                var func = new FunctionExpression(funcName, _parsingContext, _negateNextExpression);
-                _negateNextExpression = false;
-                parent.AddChild(func);
-                HandleFunctionArguments(tokens, func);
-            }
-        }
-
         private void HandleFunctionArguments(Token[] tokens, Expression function)
         {
             _tokenIndex++;
@@ -213,25 +222,13 @@ namespace OfficeOpenXml.FormulaParsing.ExpressionGraph
             BuildUp(tokens, function.Children.First());
         }
 
-        private void BuildGroupExpression(Token[] tokens, Expression parent)
+        private bool IsWaste(Token token)
         {
-            if (parent == null)
+            if (token.TokenType == TokenType.String)
             {
-                _graph.Add(new GroupExpression(_negateNextExpression));
-                _negateNextExpression = false;
-                BuildUp(tokens, _graph.Current);
+                return true;
             }
-            else
-            {
-                if (parent.IsGroupedExpression || parent is FunctionArgumentExpression)
-                {
-                    var newGroupExpression = new GroupExpression(_negateNextExpression);
-                    _negateNextExpression = false;
-                    parent.AddChild(newGroupExpression);
-                    BuildUp(tokens, newGroupExpression);
-                }
-                 BuildUp(tokens, parent);
-            }
+            return false;
         }
 
         private void SetOperatorOnExpression(Expression parent, IOperator op)

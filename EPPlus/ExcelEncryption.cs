@@ -13,33 +13,30 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  ***************************************************************************************
  * This class is created with the help of the MS-OFFCRYPTO PDF documentation... http://msdn.microsoft.com/en-us/library/cc313071(office.12).aspx
- * Decrypytion library for Office Open XML files(Lyquidity) and Sminks very nice example 
+ * Decrypytion library for Office Open XML files(Lyquidity) and Sminks very nice example
  * on "Reading compound documents in c#" on Stackoverflow. Many thanks!
  ***************************************************************************************
- *  
+ *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		10-AUG-2010
  * Jan Källman		License changed GPL-->LGPL 2011-12-27
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace OfficeOpenXml
 {
@@ -52,17 +49,20 @@ namespace OfficeOpenXml
         /// 128-bit AES. Default
         /// </summary>
         AES128,
+
         /// <summary>
         /// 192-bit AES.
         /// </summary>
         AES192,
+
         /// <summary>
-        /// 256-bit AES. 
+        /// 256-bit AES.
         /// </summary>
         AES256
     }
+
     /// <summary>
-    /// The major version of the Encryption 
+    /// The major version of the Encryption
     /// </summary>
     public enum EncryptionVersion
     {
@@ -72,6 +72,7 @@ namespace OfficeOpenXml
         /// <remarks>Default AES 128 with SHA-1 as the hash algorithm. Spincount is hardcoded to 50000</remarks>
         /// </summary>
         Standard,
+
         /// <summary>
         /// Agile Encryption.
         /// Used in Excel 2010-
@@ -79,13 +80,20 @@ namespace OfficeOpenXml
         /// </summary>
         Agile
     }
+
     /// <summary>
     /// How and if the workbook is encrypted
-    ///<seealso cref="ExcelProtection"/> 
-    ///<seealso cref="ExcelSheetProtection"/> 
+    ///<seealso cref="ExcelProtection"/>
+    ///<seealso cref="ExcelSheetProtection"/>
     /// </summary>
     public class ExcelEncryption
     {
+        private bool _isEncrypted = false;
+
+        private string _password = null;
+
+        private EncryptionVersion _version = EncryptionVersion.Agile;
+
         /// <summary>
         /// Constructor
         /// <remarks>Default AES 256 with SHA-512 as the hash algorithm. Spincount is set to 100000</remarks>
@@ -94,6 +102,7 @@ namespace OfficeOpenXml
         {
             Algorithm = EncryptionAlgorithm.AES256;
         }
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -101,12 +110,17 @@ namespace OfficeOpenXml
         internal ExcelEncryption(EncryptionAlgorithm encryptionAlgorithm)
         {
             Algorithm = encryptionAlgorithm;
-        }        
-        bool _isEncrypted = false;
+        }
+
+        /// <summary>
+        /// Algorithm used for encrypting the package. Default is AES 128-bit for standard and AES 256 for agile
+        /// </summary>
+        public EncryptionAlgorithm Algorithm { get; set; }
+
         /// <summary>
         /// Is the package encrypted
         /// </summary>
-        public bool IsEncrypted 
+        public bool IsEncrypted
         {
             get
             {
@@ -125,11 +139,11 @@ namespace OfficeOpenXml
                 }
             }
         }
-        string _password=null;
+
         /// <summary>
         /// The password used to encrypt the workbook.
         /// </summary>
-        public string Password 
+        public string Password
         {
             get
             {
@@ -141,13 +155,9 @@ namespace OfficeOpenXml
                 _isEncrypted = (value != null);
             }
         }
+
         /// <summary>
-        /// Algorithm used for encrypting the package. Default is AES 128-bit for standard and AES 256 for agile
-        /// </summary>
-        public EncryptionAlgorithm Algorithm { get; set; }
-        private EncryptionVersion _version = EncryptionVersion.Agile;
-        /// <summary>
-        /// The version of the encryption.        
+        /// The version of the encryption.
         /// </summary>
         public EncryptionVersion Version
         {

@@ -1,38 +1,3 @@
-//#define Trace
-
-// WinZipAes.cs
-// ------------------------------------------------------------------
-//
-// Copyright (c) 2009-2011 Dino Chiesa.
-// All rights reserved.
-//
-// This code module is part of DotNetZip, a zipfile class library.
-//
-// ------------------------------------------------------------------
-//
-// This code is licensed under the Microsoft Public License.
-// See the file License.txt for the license details.
-// More info on: http://dotnetzip.codeplex.com
-//
-// ------------------------------------------------------------------
-//
-// last saved (in emacs):
-// Time-stamp: <2011-July-12 13:42:06>
-//
-// ------------------------------------------------------------------
-//
-// This module defines the classes for dealing with WinZip's AES encryption,
-// according to the specifications for the format available on WinZip's website.
-//
-// Created: January 2009
-//
-// ------------------------------------------------------------------
-
-using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Security.Cryptography;
-
 #if AESCRYPTO
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
@@ -78,8 +43,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             rnd.NextBytes(c._Salt);
             return c;
         }
-
-
 
         public static WinZipAesCrypto ReadFromStream(string password, int KeyStrengthInBits, Stream s)
         {
@@ -128,7 +91,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         public byte[] Salt
         {
             get
@@ -137,13 +99,11 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         private int _KeyStrengthInBytes
         {
             get
             {
                 return _KeyStrengthInBits / 8;
-
             }
         }
 
@@ -174,7 +134,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         private void _GenerateCryptoBytes()
         {
             //Console.WriteLine(" provided password: '{0}'", _Password);
@@ -189,7 +148,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _cryptoGenerated = true;
         }
 
-
         public byte[] KeyBytes
         {
             get
@@ -198,7 +156,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _keyBytes;
             }
         }
-
 
         public byte[] MacIv
         {
@@ -210,7 +167,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         }
 
         public byte[] CalculatedMac;
-
 
         public void ReadAndVerifyMac(System.IO.Stream s)
         {
@@ -236,11 +192,8 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             if (invalid)
                 throw new Ionic.Zip.BadStateException("The MAC does not match.");
         }
-
     }
 
-
-    #region DONT_COMPILE_BUT_KEEP_FOR_POTENTIAL_FUTURE_USE
 #if NO
     internal class Util
     {
@@ -249,7 +202,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                                     int offset,
                                     int length)
         {
-
             System.Text.StringBuilder sb2 = new System.Text.StringBuilder();
             sb1.Append("0000    ");
             int i;
@@ -277,8 +229,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
-
         internal static string FormatByteArray(byte[] b, int limit)
         {
             System.Text.StringBuilder sb1 = new System.Text.StringBuilder();
@@ -302,7 +252,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return sb1.ToString();
         }
 
-
         internal static string FormatByteArray(byte[] b)
         {
             return FormatByteArray(b, 0);
@@ -310,10 +259,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
     }
 
 #endif
-    #endregion
-
-
-
 
     /// <summary>
     ///   A stream that encrypts as it writes, or decrypts as it reads.  The
@@ -403,14 +348,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             //Console.WriteLine("max length of AES stream: {0}", _length);
         }
 
-
 #if WANT_TRACE
             Stream untransformed;
         String traceFileUntransformed;
         Stream transformed;
         String traceFileTransformed;
 #endif
-
 
         internal WinZipAesCipherStream(System.IO.Stream s, WinZipAesCrypto cryptoParams, CryptoMode mode)
             : base()
@@ -451,7 +394,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _PendingWriteBlock = new byte[BLOCK_SIZE_IN_BYTES];
             }
 
-
 #if WANT_TRACE
                 traceFileUntransformed = "unpack\\WinZipAesCipherStream.trace.untransformed.out";
             traceFileTransformed = "unpack\\WinZipAesCipherStream.trace.transformed.out";
@@ -481,7 +423,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _mac.TransformBlock(buffer, offset, BLOCK_SIZE_IN_BYTES, null, 0);
         }
 
-
         private void WriteTransformBlocks(byte[] buffer, int offset, int count)
         {
             int posn = offset;
@@ -493,7 +434,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 posn += BLOCK_SIZE_IN_BYTES;
             }
         }
-
 
         private void WriteTransformFinalBlock()
         {
@@ -511,10 +451,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _mac.TransformFinalBlock(_PendingWriteBlock, 0, _pendingCount);
             _finalBlock = true;
         }
-
-
-
-
 
         private int ReadTransformOneBlock(byte[] buffer, int offset, int last)
         {
@@ -554,8 +490,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return bytesToRead;
         }
 
-
-
         private void ReadTransformBlocks(byte[] buffer, int offset, int count)
         {
             int posn = offset;
@@ -567,8 +501,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 posn += n;
             }
         }
-
-
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -605,7 +537,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             int n = _s.Read(buffer, offset, bytesToRead);
 
-
 #if WANT_TRACE
                 untransformed.Write(buffer, offset, bytesToRead);
 #endif
@@ -618,8 +549,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _totalBytesXferred += n;
             return n;
         }
-
-
 
         /// <summary>
         /// Returns the final HMAC-SHA1-80 for the data that was encrypted.
@@ -646,7 +575,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return macBytes10;
             }
         }
-
 
         public override void Write(byte[] buffer, int offset, int count)
         {
@@ -819,8 +747,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
-
         /// <summary>
         ///   Close the stream.
         /// </summary>
@@ -849,7 +775,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             TraceOutput("-------------------------------------------------------");
         }
 
-
         /// <summary>
         /// Returns true if the stream can be read.
         /// </summary>
@@ -861,7 +786,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return true;
             }
         }
-
 
         /// <summary>
         /// Always returns false.
@@ -919,8 +843,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             throw new NotImplementedException();
         }
-
-
 
         [System.Diagnostics.ConditionalAttribute("Trace")]
         private void TraceOutput(string format, params object[] varParams)

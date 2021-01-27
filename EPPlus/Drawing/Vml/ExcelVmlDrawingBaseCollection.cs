@@ -13,37 +13,35 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Initial Release		        2010-06-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Xml;
-using System.Collections;
 
 namespace OfficeOpenXml.Drawing.Vml
 {
     public class ExcelVmlDrawingBaseCollection
-    {        
+    {
         internal ExcelVmlDrawingBaseCollection(ExcelPackage pck, ExcelWorksheet ws, Uri uri)
         {
             VmlDrawingXml = new XmlDocument();
             VmlDrawingXml.PreserveWhitespace = false;
-            
+
             NameTable nt=new NameTable();
             NameSpaceManager = new XmlNamespaceManager(nt);
             NameSpaceManager.AddNamespace("v", ExcelPackage.schemaMicrosoftVml);
@@ -57,13 +55,14 @@ namespace OfficeOpenXml.Drawing.Vml
             else
             {
                 Part=pck.Package.GetPart(uri);
-                XmlHelper.LoadXmlSafe(VmlDrawingXml, Part.GetStream()); 
+                XmlHelper.LoadXmlSafe(VmlDrawingXml, Part.GetStream());
             }
         }
-        internal XmlDocument VmlDrawingXml { get; set; }
-        internal Uri Uri { get; set; }
-        internal string RelId { get; set; }
-        internal Packaging.ZipPackagePart Part { get; set; }
+
         internal XmlNamespaceManager NameSpaceManager { get; set; }
+        internal Packaging.ZipPackagePart Part { get; set; }
+        internal string RelId { get; set; }
+        internal Uri Uri { get; set; }
+        internal XmlDocument VmlDrawingXml { get; set; }
     }
 }

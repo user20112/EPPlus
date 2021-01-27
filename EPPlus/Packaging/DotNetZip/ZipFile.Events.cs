@@ -25,21 +25,302 @@
 //
 
 using System;
-using System.IO;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
     internal partial class ZipFile
     {
-        private string ArchiveNameForEvent
-        {
-            get
-            {
-                return (_name != null) ? _name : "(stream)";
-            }
-        }
+        private Int64 _lengthOfReadStream = -99;
 
-        #region Save
+        /// <summary>
+        /// An event handler invoked before, during, and after Adding entries to a zip archive.
+        /// </summary>
+        ///
+        /// <remarks>
+        ///     Adding a large number of entries to a zip file can take a long
+        ///     time.  For example, when calling <see cref="AddDirectory(string)"/> on a
+        ///     directory that contains 50,000 files, it could take 3 minutes or so.
+        ///     This event handler allws an application to track the progress of the Add
+        ///     operation, and to optionally cancel a lengthy Add operation.
+        /// </remarks>
+        ///
+        /// <example>
+        /// <code lang="C#">
+        ///
+        /// int _numEntriesToAdd= 0;
+        /// int _numEntriesAdded= 0;
+        /// void AddProgressHandler(object sender, AddProgressEventArgs e)
+        /// {
+        ///     switch (e.EventType)
+        ///     {
+        ///         case ZipProgressEventType.Adding_Started:
+        ///             Console.WriteLine("Adding files to the zip...");
+        ///             break;
+        ///         case ZipProgressEventType.Adding_AfterAddEntry:
+        ///             _numEntriesAdded++;
+        ///             Console.WriteLine(String.Format("Adding file {0}/{1} :: {2}",
+        ///                                      _numEntriesAdded, _numEntriesToAdd, e.CurrentEntry.FileName));
+        ///             break;
+        ///         case ZipProgressEventType.Adding_Completed:
+        ///             Console.WriteLine("Added all files");
+        ///             break;
+        ///     }
+        /// }
+        ///
+        /// void CreateTheZip()
+        /// {
+        ///     using (ZipFile zip = new ZipFile())
+        ///     {
+        ///         zip.AddProgress += AddProgressHandler;
+        ///         zip.AddDirectory(System.IO.Path.GetFileName(DirToZip));
+        ///         zip.Save(ZipFileToCreate);
+        ///     }
+        /// }
+        ///
+        /// </code>
+        ///
+        /// <code lang="VB">
+        ///
+        /// Private Sub AddProgressHandler(ByVal sender As Object, ByVal e As AddProgressEventArgs)
+        ///     Select Case e.EventType
+        ///         Case ZipProgressEventType.Adding_Started
+        ///             Console.WriteLine("Adding files to the zip...")
+        ///             Exit Select
+        ///         Case ZipProgressEventType.Adding_AfterAddEntry
+        ///             Console.WriteLine(String.Format("Adding file {0}", e.CurrentEntry.FileName))
+        ///             Exit Select
+        ///         Case ZipProgressEventType.Adding_Completed
+        ///             Console.WriteLine("Added all files")
+        ///             Exit Select
+        ///     End Select
+        /// End Sub
+        ///
+        /// Sub CreateTheZip()
+        ///     Using zip as ZipFile = New ZipFile
+        ///         AddHandler zip.AddProgress, AddressOf AddProgressHandler
+        ///         zip.AddDirectory(System.IO.Path.GetFileName(DirToZip))
+        ///         zip.Save(ZipFileToCreate);
+        ///     End Using
+        /// End Sub
+        ///
+        /// </code>
+        ///
+        /// </example>
+        ///
+        /// <seealso cref="Ionic.Zip.ZipFile.SaveProgress"/>
+        /// <seealso cref="Ionic.Zip.ZipFile.ReadProgress"/>
+        /// <seealso cref="Ionic.Zip.ZipFile.ExtractProgress"/>
+        internal event EventHandler<AddProgressEventArgs> AddProgress;
+
+        /// <summary>
+        ///   An event handler invoked before, during, and after extraction of
+        ///   entries in the zip archive.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// <para>
+        ///   Depending on the particular event, different properties on the <see
+        ///   cref="ExtractProgressEventArgs"/> parameter are set.  The following
+        ///   table summarizes the available EventTypes and the conditions under
+        ///   which this event handler is invoked with a
+        ///   <c>ExtractProgressEventArgs</c> with the given EventType.
+        /// </para>
+        ///
+        /// <list type="table">
+        /// <listheader>
+        /// <term>value of EntryType</term>
+        /// <description>Meaning and conditions</description>
+        /// </listheader>
+        ///
+        /// <item>
+        /// <term>ZipProgressEventType.Extracting_BeforeExtractAll</term>
+        /// <description>
+        ///   Set when ExtractAll() begins. The ArchiveName, Overwrite, and
+        ///   ExtractLocation properties are meaningful.</description>
+        /// </item>
+        ///
+        /// <item>
+        /// <term>ZipProgressEventType.Extracting_AfterExtractAll</term>
+        /// <description>
+        ///   Set when ExtractAll() has completed.  The ArchiveName, Overwrite,
+        ///   and ExtractLocation properties are meaningful.
+        /// </description>
+        /// </item>
+        ///
+        /// <item>
+        /// <term>ZipProgressEventType.Extracting_BeforeExtractEntry</term>
+        /// <description>
+        ///   Set when an Extract() on an entry in the ZipFile has begun.
+        ///   Properties that are meaningful: ArchiveName, EntriesTotal,
+        ///   CurrentEntry, Overwrite, ExtractLocation, EntriesExtracted.
+        /// </description>
+        /// </item>
+        ///
+        /// <item>
+        /// <term>ZipProgressEventType.Extracting_AfterExtractEntry</term>
+        /// <description>
+        ///   Set when an Extract() on an entry in the ZipFile has completed.
+        ///   Properties that are meaningful: ArchiveName, EntriesTotal,
+        ///   CurrentEntry, Overwrite, ExtractLocation, EntriesExtracted.
+        /// </description>
+        /// </item>
+        ///
+        /// <item>
+        /// <term>ZipProgressEventType.Extracting_EntryBytesWritten</term>
+        /// <description>
+        ///   Set within a call to Extract() on an entry in the ZipFile, as data
+        ///   is extracted for the entry.  Properties that are meaningful:
+        ///   ArchiveName, CurrentEntry, BytesTransferred, TotalBytesToTransfer.
+        /// </description>
+        /// </item>
+        ///
+        /// <item>
+        /// <term>ZipProgressEventType.Extracting_ExtractEntryWouldOverwrite</term>
+        /// <description>
+        ///   Set within a call to Extract() on an entry in the ZipFile, when the
+        ///   extraction would overwrite an existing file. This event type is used
+        ///   only when <c>ExtractExistingFileAction</c> on the <c>ZipFile</c> or
+        ///   <c>ZipEntry</c> is set to <c>InvokeExtractProgressEvent</c>.
+        /// </description>
+        /// </item>
+        ///
+        /// </list>
+        ///
+        /// </remarks>
+        ///
+        /// <example>
+        /// <code>
+        /// private static bool justHadByteUpdate = false;
+        /// public static void ExtractProgress(object sender, ExtractProgressEventArgs e)
+        /// {
+        ///   if(e.EventType == ZipProgressEventType.Extracting_EntryBytesWritten)
+        ///   {
+        ///     if (justHadByteUpdate)
+        ///       Console.SetCursorPosition(0, Console.CursorTop);
+        ///
+        ///     Console.Write("   {0}/{1} ({2:N0}%)", e.BytesTransferred, e.TotalBytesToTransfer,
+        ///                   e.BytesTransferred / (0.01 * e.TotalBytesToTransfer ));
+        ///     justHadByteUpdate = true;
+        ///   }
+        ///   else if(e.EventType == ZipProgressEventType.Extracting_BeforeExtractEntry)
+        ///   {
+        ///     if (justHadByteUpdate)
+        ///       Console.WriteLine();
+        ///     Console.WriteLine("Extracting: {0}", e.CurrentEntry.FileName);
+        ///     justHadByteUpdate= false;
+        ///   }
+        /// }
+        ///
+        /// public static ExtractZip(string zipToExtract, string directory)
+        /// {
+        ///   string TargetDirectory= "extract";
+        ///   using (var zip = ZipFile.Read(zipToExtract)) {
+        ///     zip.ExtractProgress += ExtractProgress;
+        ///     foreach (var e in zip1)
+        ///     {
+        ///       e.Extract(TargetDirectory, true);
+        ///     }
+        ///   }
+        /// }
+        ///
+        /// </code>
+        /// <code lang="VB">
+        /// Public Shared Sub Main(ByVal args As String())
+        ///     Dim ZipToUnpack As String = "C1P3SML.zip"
+        ///     Dim TargetDir As String = "ExtractTest_Extract"
+        ///     Console.WriteLine("Extracting file {0} to {1}", ZipToUnpack, TargetDir)
+        ///     Using zip1 As ZipFile = ZipFile.Read(ZipToUnpack)
+        ///         AddHandler zip1.ExtractProgress, AddressOf MyExtractProgress
+        ///         Dim e As ZipEntry
+        ///         For Each e In zip1
+        ///             e.Extract(TargetDir, True)
+        ///         Next
+        ///     End Using
+        /// End Sub
+        ///
+        /// Private Shared justHadByteUpdate As Boolean = False
+        ///
+        /// Public Shared Sub MyExtractProgress(ByVal sender As Object, ByVal e As ExtractProgressEventArgs)
+        ///     If (e.EventType = ZipProgressEventType.Extracting_EntryBytesWritten) Then
+        ///         If ExtractTest.justHadByteUpdate Then
+        ///             Console.SetCursorPosition(0, Console.CursorTop)
+        ///         End If
+        ///         Console.Write("   {0}/{1} ({2:N0}%)", e.BytesTransferred, e.TotalBytesToTransfer, (CDbl(e.BytesTransferred) / (0.01 * e.TotalBytesToTransfer)))
+        ///         ExtractTest.justHadByteUpdate = True
+        ///     ElseIf (e.EventType = ZipProgressEventType.Extracting_BeforeExtractEntry) Then
+        ///         If ExtractTest.justHadByteUpdate Then
+        ///             Console.WriteLine
+        ///         End If
+        ///         Console.WriteLine("Extracting: {0}", e.CurrentEntry.FileName)
+        ///         ExtractTest.justHadByteUpdate = False
+        ///     End If
+        /// End Sub
+        /// </code>
+        /// </example>
+        ///
+        /// <seealso cref="Ionic.Zip.ZipFile.SaveProgress"/>
+        /// <seealso cref="Ionic.Zip.ZipFile.ReadProgress"/>
+        /// <seealso cref="Ionic.Zip.ZipFile.AddProgress"/>
+        internal event EventHandler<ExtractProgressEventArgs> ExtractProgress;
+
+        /// <summary>
+        /// An event handler invoked before, during, and after the reading of a zip archive.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// <para>
+        /// Depending on the particular event being signaled, different properties on the
+        /// <see cref="ReadProgressEventArgs"/> parameter are set.  The following table
+        /// summarizes the available EventTypes and the conditions under which this
+        /// event handler is invoked with a <c>ReadProgressEventArgs</c> with the given EventType.
+        /// </para>
+        ///
+        /// <list type="table">
+        /// <listheader>
+        /// <term>value of EntryType</term>
+        /// <description>Meaning and conditions</description>
+        /// </listheader>
+        ///
+        /// <item>
+        /// <term>ZipProgressEventType.Reading_Started</term>
+        /// <description>Fired just as ZipFile.Read() begins. Meaningful properties: ArchiveName.
+        /// </description>
+        /// </item>
+        ///
+        /// <item>
+        /// <term>ZipProgressEventType.Reading_Completed</term>
+        /// <description>Fired when ZipFile.Read() has completed. Meaningful properties: ArchiveName.
+        /// </description>
+        /// </item>
+        ///
+        /// <item>
+        /// <term>ZipProgressEventType.Reading_ArchiveBytesRead</term>
+        /// <description>Fired while reading, updates the number of bytes read for the entire archive.
+        /// Meaningful properties: ArchiveName, CurrentEntry, BytesTransferred, TotalBytesToTransfer.
+        /// </description>
+        /// </item>
+        ///
+        /// <item>
+        /// <term>ZipProgressEventType.Reading_BeforeReadEntry</term>
+        /// <description>Indicates an entry is about to be read from the archive.
+        /// Meaningful properties: ArchiveName, EntriesTotal.
+        /// </description>
+        /// </item>
+        ///
+        /// <item>
+        /// <term>ZipProgressEventType.Reading_AfterReadEntry</term>
+        /// <description>Indicates an entry has just been read from the archive.
+        /// Meaningful properties: ArchiveName, EntriesTotal, CurrentEntry.
+        /// </description>
+        /// </item>
+        ///
+        /// </list>
+        /// </remarks>
+        ///
+        /// <seealso cref="Ionic.Zip.ZipFile.SaveProgress"/>
+        /// <seealso cref="Ionic.Zip.ZipFile.AddProgress"/>
+        /// <seealso cref="Ionic.Zip.ZipFile.ExtractProgress"/>
+        internal event EventHandler<ReadProgressEventArgs> ReadProgress;
 
         /// <summary>
         ///   An event handler invoked when a Save() starts, before and after each
@@ -517,551 +798,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         /// <seealso cref="Ionic.Zip.ZipFile.ExtractProgress"/>
         internal event EventHandler<SaveProgressEventArgs> SaveProgress;
 
-
-        internal bool OnSaveBlock(ZipEntry entry, Int64 bytesXferred, Int64 totalBytesToXfer)
-        {
-            EventHandler<SaveProgressEventArgs> sp = SaveProgress;
-            if (sp != null)
-            {
-                var e = SaveProgressEventArgs.ByteUpdate(ArchiveNameForEvent, entry,
-                                                         bytesXferred, totalBytesToXfer);
-                sp(this, e);
-                if (e.Cancel)
-                    _saveOperationCanceled = true;
-            }
-            return _saveOperationCanceled;
-        }
-
-        private void OnSaveEntry(int current, ZipEntry entry, bool before)
-        {
-            EventHandler<SaveProgressEventArgs> sp = SaveProgress;
-            if (sp != null)
-            {
-                var e = new SaveProgressEventArgs(ArchiveNameForEvent, before, _entries.Count, current, entry);
-                sp(this, e);
-                if (e.Cancel)
-                    _saveOperationCanceled = true;
-            }
-        }
-
-        private void OnSaveEvent(ZipProgressEventType eventFlavor)
-        {
-            EventHandler<SaveProgressEventArgs> sp = SaveProgress;
-            if (sp != null)
-            {
-                var e = new SaveProgressEventArgs(ArchiveNameForEvent, eventFlavor);
-                sp(this, e);
-                if (e.Cancel)
-                    _saveOperationCanceled = true;
-            }
-        }
-
-        private void OnSaveStarted()
-        {
-            EventHandler<SaveProgressEventArgs> sp = SaveProgress;
-            if (sp != null)
-            {
-                var e = SaveProgressEventArgs.Started(ArchiveNameForEvent);
-                sp(this, e);
-                if (e.Cancel)
-                    _saveOperationCanceled = true;
-            }
-        }
-        private void OnSaveCompleted()
-        {
-            EventHandler<SaveProgressEventArgs> sp = SaveProgress;
-            if (sp != null)
-            {
-                var e = SaveProgressEventArgs.Completed(ArchiveNameForEvent);
-                sp(this, e);
-            }
-        }
-        #endregion
-
-
-        #region Read
-        /// <summary>
-        /// An event handler invoked before, during, and after the reading of a zip archive.
-        /// </summary>
-        ///
-        /// <remarks>
-        /// <para>
-        /// Depending on the particular event being signaled, different properties on the
-        /// <see cref="ReadProgressEventArgs"/> parameter are set.  The following table
-        /// summarizes the available EventTypes and the conditions under which this
-        /// event handler is invoked with a <c>ReadProgressEventArgs</c> with the given EventType.
-        /// </para>
-        ///
-        /// <list type="table">
-        /// <listheader>
-        /// <term>value of EntryType</term>
-        /// <description>Meaning and conditions</description>
-        /// </listheader>
-        ///
-        /// <item>
-        /// <term>ZipProgressEventType.Reading_Started</term>
-        /// <description>Fired just as ZipFile.Read() begins. Meaningful properties: ArchiveName.
-        /// </description>
-        /// </item>
-        ///
-        /// <item>
-        /// <term>ZipProgressEventType.Reading_Completed</term>
-        /// <description>Fired when ZipFile.Read() has completed. Meaningful properties: ArchiveName.
-        /// </description>
-        /// </item>
-        ///
-        /// <item>
-        /// <term>ZipProgressEventType.Reading_ArchiveBytesRead</term>
-        /// <description>Fired while reading, updates the number of bytes read for the entire archive.
-        /// Meaningful properties: ArchiveName, CurrentEntry, BytesTransferred, TotalBytesToTransfer.
-        /// </description>
-        /// </item>
-        ///
-        /// <item>
-        /// <term>ZipProgressEventType.Reading_BeforeReadEntry</term>
-        /// <description>Indicates an entry is about to be read from the archive.
-        /// Meaningful properties: ArchiveName, EntriesTotal.
-        /// </description>
-        /// </item>
-        ///
-        /// <item>
-        /// <term>ZipProgressEventType.Reading_AfterReadEntry</term>
-        /// <description>Indicates an entry has just been read from the archive.
-        /// Meaningful properties: ArchiveName, EntriesTotal, CurrentEntry.
-        /// </description>
-        /// </item>
-        ///
-        /// </list>
-        /// </remarks>
-        ///
-        /// <seealso cref="Ionic.Zip.ZipFile.SaveProgress"/>
-        /// <seealso cref="Ionic.Zip.ZipFile.AddProgress"/>
-        /// <seealso cref="Ionic.Zip.ZipFile.ExtractProgress"/>
-        internal event EventHandler<ReadProgressEventArgs> ReadProgress;
-
-        private void OnReadStarted()
-        {
-            EventHandler<ReadProgressEventArgs> rp = ReadProgress;
-            if (rp != null)
-            {
-                    var e = ReadProgressEventArgs.Started(ArchiveNameForEvent);
-                    rp(this, e);
-            }
-        }
-
-        private void OnReadCompleted()
-        {
-            EventHandler<ReadProgressEventArgs> rp = ReadProgress;
-            if (rp != null)
-            {
-                    var e = ReadProgressEventArgs.Completed(ArchiveNameForEvent);
-                    rp(this, e);
-            }
-        }
-
-        internal void OnReadBytes(ZipEntry entry)
-        {
-            EventHandler<ReadProgressEventArgs> rp = ReadProgress;
-            if (rp != null)
-            {
-                    var e = ReadProgressEventArgs.ByteUpdate(ArchiveNameForEvent,
-                                        entry,
-                                        ReadStream.Position,
-                                        LengthOfReadStream);
-                    rp(this, e);
-            }
-        }
-
-        internal void OnReadEntry(bool before, ZipEntry entry)
-        {
-            EventHandler<ReadProgressEventArgs> rp = ReadProgress;
-            if (rp != null)
-            {
-                ReadProgressEventArgs e = (before)
-                    ? ReadProgressEventArgs.Before(ArchiveNameForEvent, _entries.Count)
-                    : ReadProgressEventArgs.After(ArchiveNameForEvent, entry, _entries.Count);
-                rp(this, e);
-            }
-        }
-
-        private Int64 _lengthOfReadStream = -99;
-        private Int64 LengthOfReadStream
-        {
-            get
-            {
-                if (_lengthOfReadStream == -99)
-                {
-                    _lengthOfReadStream = (_ReadStreamIsOurs)
-                        ? SharedUtilities.GetFileLength(_name)
-                        : -1L;
-                }
-                return _lengthOfReadStream;
-            }
-        }
-        #endregion
-
-
-        #region Extract
-        /// <summary>
-        ///   An event handler invoked before, during, and after extraction of
-        ///   entries in the zip archive.
-        /// </summary>
-        ///
-        /// <remarks>
-        /// <para>
-        ///   Depending on the particular event, different properties on the <see
-        ///   cref="ExtractProgressEventArgs"/> parameter are set.  The following
-        ///   table summarizes the available EventTypes and the conditions under
-        ///   which this event handler is invoked with a
-        ///   <c>ExtractProgressEventArgs</c> with the given EventType.
-        /// </para>
-        ///
-        /// <list type="table">
-        /// <listheader>
-        /// <term>value of EntryType</term>
-        /// <description>Meaning and conditions</description>
-        /// </listheader>
-        ///
-        /// <item>
-        /// <term>ZipProgressEventType.Extracting_BeforeExtractAll</term>
-        /// <description>
-        ///   Set when ExtractAll() begins. The ArchiveName, Overwrite, and
-        ///   ExtractLocation properties are meaningful.</description>
-        /// </item>
-        ///
-        /// <item>
-        /// <term>ZipProgressEventType.Extracting_AfterExtractAll</term>
-        /// <description>
-        ///   Set when ExtractAll() has completed.  The ArchiveName, Overwrite,
-        ///   and ExtractLocation properties are meaningful.
-        /// </description>
-        /// </item>
-        ///
-        /// <item>
-        /// <term>ZipProgressEventType.Extracting_BeforeExtractEntry</term>
-        /// <description>
-        ///   Set when an Extract() on an entry in the ZipFile has begun.
-        ///   Properties that are meaningful: ArchiveName, EntriesTotal,
-        ///   CurrentEntry, Overwrite, ExtractLocation, EntriesExtracted.
-        /// </description>
-        /// </item>
-        ///
-        /// <item>
-        /// <term>ZipProgressEventType.Extracting_AfterExtractEntry</term>
-        /// <description>
-        ///   Set when an Extract() on an entry in the ZipFile has completed.
-        ///   Properties that are meaningful: ArchiveName, EntriesTotal,
-        ///   CurrentEntry, Overwrite, ExtractLocation, EntriesExtracted.
-        /// </description>
-        /// </item>
-        ///
-        /// <item>
-        /// <term>ZipProgressEventType.Extracting_EntryBytesWritten</term>
-        /// <description>
-        ///   Set within a call to Extract() on an entry in the ZipFile, as data
-        ///   is extracted for the entry.  Properties that are meaningful:
-        ///   ArchiveName, CurrentEntry, BytesTransferred, TotalBytesToTransfer.
-        /// </description>
-        /// </item>
-        ///
-        /// <item>
-        /// <term>ZipProgressEventType.Extracting_ExtractEntryWouldOverwrite</term>
-        /// <description>
-        ///   Set within a call to Extract() on an entry in the ZipFile, when the
-        ///   extraction would overwrite an existing file. This event type is used
-        ///   only when <c>ExtractExistingFileAction</c> on the <c>ZipFile</c> or
-        ///   <c>ZipEntry</c> is set to <c>InvokeExtractProgressEvent</c>.
-        /// </description>
-        /// </item>
-        ///
-        /// </list>
-        ///
-        /// </remarks>
-        ///
-        /// <example>
-        /// <code>
-        /// private static bool justHadByteUpdate = false;
-        /// public static void ExtractProgress(object sender, ExtractProgressEventArgs e)
-        /// {
-        ///   if(e.EventType == ZipProgressEventType.Extracting_EntryBytesWritten)
-        ///   {
-        ///     if (justHadByteUpdate)
-        ///       Console.SetCursorPosition(0, Console.CursorTop);
-        ///
-        ///     Console.Write("   {0}/{1} ({2:N0}%)", e.BytesTransferred, e.TotalBytesToTransfer,
-        ///                   e.BytesTransferred / (0.01 * e.TotalBytesToTransfer ));
-        ///     justHadByteUpdate = true;
-        ///   }
-        ///   else if(e.EventType == ZipProgressEventType.Extracting_BeforeExtractEntry)
-        ///   {
-        ///     if (justHadByteUpdate)
-        ///       Console.WriteLine();
-        ///     Console.WriteLine("Extracting: {0}", e.CurrentEntry.FileName);
-        ///     justHadByteUpdate= false;
-        ///   }
-        /// }
-        ///
-        /// public static ExtractZip(string zipToExtract, string directory)
-        /// {
-        ///   string TargetDirectory= "extract";
-        ///   using (var zip = ZipFile.Read(zipToExtract)) {
-        ///     zip.ExtractProgress += ExtractProgress;
-        ///     foreach (var e in zip1)
-        ///     {
-        ///       e.Extract(TargetDirectory, true);
-        ///     }
-        ///   }
-        /// }
-        ///
-        /// </code>
-        /// <code lang="VB">
-        /// Public Shared Sub Main(ByVal args As String())
-        ///     Dim ZipToUnpack As String = "C1P3SML.zip"
-        ///     Dim TargetDir As String = "ExtractTest_Extract"
-        ///     Console.WriteLine("Extracting file {0} to {1}", ZipToUnpack, TargetDir)
-        ///     Using zip1 As ZipFile = ZipFile.Read(ZipToUnpack)
-        ///         AddHandler zip1.ExtractProgress, AddressOf MyExtractProgress
-        ///         Dim e As ZipEntry
-        ///         For Each e In zip1
-        ///             e.Extract(TargetDir, True)
-        ///         Next
-        ///     End Using
-        /// End Sub
-        ///
-        /// Private Shared justHadByteUpdate As Boolean = False
-        ///
-        /// Public Shared Sub MyExtractProgress(ByVal sender As Object, ByVal e As ExtractProgressEventArgs)
-        ///     If (e.EventType = ZipProgressEventType.Extracting_EntryBytesWritten) Then
-        ///         If ExtractTest.justHadByteUpdate Then
-        ///             Console.SetCursorPosition(0, Console.CursorTop)
-        ///         End If
-        ///         Console.Write("   {0}/{1} ({2:N0}%)", e.BytesTransferred, e.TotalBytesToTransfer, (CDbl(e.BytesTransferred) / (0.01 * e.TotalBytesToTransfer)))
-        ///         ExtractTest.justHadByteUpdate = True
-        ///     ElseIf (e.EventType = ZipProgressEventType.Extracting_BeforeExtractEntry) Then
-        ///         If ExtractTest.justHadByteUpdate Then
-        ///             Console.WriteLine
-        ///         End If
-        ///         Console.WriteLine("Extracting: {0}", e.CurrentEntry.FileName)
-        ///         ExtractTest.justHadByteUpdate = False
-        ///     End If
-        /// End Sub
-        /// </code>
-        /// </example>
-        ///
-        /// <seealso cref="Ionic.Zip.ZipFile.SaveProgress"/>
-        /// <seealso cref="Ionic.Zip.ZipFile.ReadProgress"/>
-        /// <seealso cref="Ionic.Zip.ZipFile.AddProgress"/>
-        internal event EventHandler<ExtractProgressEventArgs> ExtractProgress;
-
-
-
-        private void OnExtractEntry(int current, bool before, ZipEntry currentEntry, string path)
-        {
-            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
-            if (ep != null)
-            {
-                var e = new ExtractProgressEventArgs(ArchiveNameForEvent, before, _entries.Count, current, currentEntry, path);
-                ep(this, e);
-                if (e.Cancel)
-                    _extractOperationCanceled = true;
-            }
-        }
-
-
-        // Can be called from within ZipEntry._ExtractOne.
-        internal bool OnExtractBlock(ZipEntry entry, Int64 bytesWritten, Int64 totalBytesToWrite)
-        {
-            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
-            if (ep != null)
-            {
-                var e = ExtractProgressEventArgs.ByteUpdate(ArchiveNameForEvent, entry,
-                                                            bytesWritten, totalBytesToWrite);
-                ep(this, e);
-                if (e.Cancel)
-                    _extractOperationCanceled = true;
-            }
-            return _extractOperationCanceled;
-        }
-
-
-        // Can be called from within ZipEntry.InternalExtract.
-        internal bool OnSingleEntryExtract(ZipEntry entry, string path, bool before)
-        {
-            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
-            if (ep != null)
-            {
-                var e = (before)
-                    ? ExtractProgressEventArgs.BeforeExtractEntry(ArchiveNameForEvent, entry, path)
-                    : ExtractProgressEventArgs.AfterExtractEntry(ArchiveNameForEvent, entry, path);
-                ep(this, e);
-                if (e.Cancel)
-                    _extractOperationCanceled = true;
-            }
-            return _extractOperationCanceled;
-        }
-
-        internal bool OnExtractExisting(ZipEntry entry, string path)
-        {
-            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
-            if (ep != null)
-            {
-                var e = ExtractProgressEventArgs.ExtractExisting(ArchiveNameForEvent, entry, path);
-                ep(this, e);
-                if (e.Cancel)
-                    _extractOperationCanceled = true;
-            }
-            return _extractOperationCanceled;
-        }
-
-
-        private void OnExtractAllCompleted(string path)
-        {
-            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
-            if (ep != null)
-            {
-                var e = ExtractProgressEventArgs.ExtractAllCompleted(ArchiveNameForEvent,
-                                                                     path );
-                ep(this, e);
-            }
-        }
-
-
-        private void OnExtractAllStarted(string path)
-        {
-            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
-            if (ep != null)
-            {
-                var e = ExtractProgressEventArgs.ExtractAllStarted(ArchiveNameForEvent,
-                                                                   path );
-                ep(this, e);
-            }
-        }
-
-
-        #endregion
-
-
-
-        #region Add
-        /// <summary>
-        /// An event handler invoked before, during, and after Adding entries to a zip archive.
-        /// </summary>
-        ///
-        /// <remarks>
-        ///     Adding a large number of entries to a zip file can take a long
-        ///     time.  For example, when calling <see cref="AddDirectory(string)"/> on a
-        ///     directory that contains 50,000 files, it could take 3 minutes or so.
-        ///     This event handler allws an application to track the progress of the Add
-        ///     operation, and to optionally cancel a lengthy Add operation.
-        /// </remarks>
-        ///
-        /// <example>
-        /// <code lang="C#">
-        ///
-        /// int _numEntriesToAdd= 0;
-        /// int _numEntriesAdded= 0;
-        /// void AddProgressHandler(object sender, AddProgressEventArgs e)
-        /// {
-        ///     switch (e.EventType)
-        ///     {
-        ///         case ZipProgressEventType.Adding_Started:
-        ///             Console.WriteLine("Adding files to the zip...");
-        ///             break;
-        ///         case ZipProgressEventType.Adding_AfterAddEntry:
-        ///             _numEntriesAdded++;
-        ///             Console.WriteLine(String.Format("Adding file {0}/{1} :: {2}",
-        ///                                      _numEntriesAdded, _numEntriesToAdd, e.CurrentEntry.FileName));
-        ///             break;
-        ///         case ZipProgressEventType.Adding_Completed:
-        ///             Console.WriteLine("Added all files");
-        ///             break;
-        ///     }
-        /// }
-        ///
-        /// void CreateTheZip()
-        /// {
-        ///     using (ZipFile zip = new ZipFile())
-        ///     {
-        ///         zip.AddProgress += AddProgressHandler;
-        ///         zip.AddDirectory(System.IO.Path.GetFileName(DirToZip));
-        ///         zip.Save(ZipFileToCreate);
-        ///     }
-        /// }
-        ///
-        /// </code>
-        ///
-        /// <code lang="VB">
-        ///
-        /// Private Sub AddProgressHandler(ByVal sender As Object, ByVal e As AddProgressEventArgs)
-        ///     Select Case e.EventType
-        ///         Case ZipProgressEventType.Adding_Started
-        ///             Console.WriteLine("Adding files to the zip...")
-        ///             Exit Select
-        ///         Case ZipProgressEventType.Adding_AfterAddEntry
-        ///             Console.WriteLine(String.Format("Adding file {0}", e.CurrentEntry.FileName))
-        ///             Exit Select
-        ///         Case ZipProgressEventType.Adding_Completed
-        ///             Console.WriteLine("Added all files")
-        ///             Exit Select
-        ///     End Select
-        /// End Sub
-        ///
-        /// Sub CreateTheZip()
-        ///     Using zip as ZipFile = New ZipFile
-        ///         AddHandler zip.AddProgress, AddressOf AddProgressHandler
-        ///         zip.AddDirectory(System.IO.Path.GetFileName(DirToZip))
-        ///         zip.Save(ZipFileToCreate);
-        ///     End Using
-        /// End Sub
-        ///
-        /// </code>
-        ///
-        /// </example>
-        ///
-        /// <seealso cref="Ionic.Zip.ZipFile.SaveProgress"/>
-        /// <seealso cref="Ionic.Zip.ZipFile.ReadProgress"/>
-        /// <seealso cref="Ionic.Zip.ZipFile.ExtractProgress"/>
-        internal event EventHandler<AddProgressEventArgs> AddProgress;
-
-        private void OnAddStarted()
-        {
-            EventHandler<AddProgressEventArgs> ap = AddProgress;
-            if (ap != null)
-            {
-                var e = AddProgressEventArgs.Started(ArchiveNameForEvent);
-                ap(this, e);
-                if (e.Cancel) // workitem 13371
-                    _addOperationCanceled = true;
-            }
-        }
-
-        private void OnAddCompleted()
-        {
-            EventHandler<AddProgressEventArgs> ap = AddProgress;
-            if (ap != null)
-            {
-                var e = AddProgressEventArgs.Completed(ArchiveNameForEvent);
-                ap(this, e);
-            }
-        }
-
-        internal void AfterAddEntry(ZipEntry entry)
-        {
-            EventHandler<AddProgressEventArgs> ap = AddProgress;
-            if (ap != null)
-            {
-                var e = AddProgressEventArgs.AfterEntry(ArchiveNameForEvent, entry, _entries.Count);
-                ap(this, e);
-                if (e.Cancel) // workitem 13371
-                    _addOperationCanceled = true;
-            }
-        }
-
-        #endregion
-
-
-
-        #region Error
         /// <summary>
         /// An event that is raised when an error occurs during open or read of files
         /// while saving a zip archive.
@@ -1199,6 +935,123 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         /// <seealso cref="Ionic.Zip.ZipFile.ZipErrorAction"/>
         internal event EventHandler<ZipErrorEventArgs> ZipError;
 
+        private string ArchiveNameForEvent
+        {
+            get
+            {
+                return (_name != null) ? _name : "(stream)";
+            }
+        }
+
+        private Int64 LengthOfReadStream
+        {
+            get
+            {
+                if (_lengthOfReadStream == -99)
+                {
+                    _lengthOfReadStream = (_ReadStreamIsOurs)
+                        ? SharedUtilities.GetFileLength(_name)
+                        : -1L;
+                }
+                return _lengthOfReadStream;
+            }
+        }
+
+        internal void AfterAddEntry(ZipEntry entry)
+        {
+            EventHandler<AddProgressEventArgs> ap = AddProgress;
+            if (ap != null)
+            {
+                var e = AddProgressEventArgs.AfterEntry(ArchiveNameForEvent, entry, _entries.Count);
+                ap(this, e);
+                if (e.Cancel) // workitem 13371
+                    _addOperationCanceled = true;
+            }
+        }
+
+        // Can be called from within ZipEntry._ExtractOne.
+        internal bool OnExtractBlock(ZipEntry entry, Int64 bytesWritten, Int64 totalBytesToWrite)
+        {
+            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
+            if (ep != null)
+            {
+                var e = ExtractProgressEventArgs.ByteUpdate(ArchiveNameForEvent, entry,
+                                                            bytesWritten, totalBytesToWrite);
+                ep(this, e);
+                if (e.Cancel)
+                    _extractOperationCanceled = true;
+            }
+            return _extractOperationCanceled;
+        }
+
+        internal bool OnExtractExisting(ZipEntry entry, string path)
+        {
+            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
+            if (ep != null)
+            {
+                var e = ExtractProgressEventArgs.ExtractExisting(ArchiveNameForEvent, entry, path);
+                ep(this, e);
+                if (e.Cancel)
+                    _extractOperationCanceled = true;
+            }
+            return _extractOperationCanceled;
+        }
+
+        internal void OnReadBytes(ZipEntry entry)
+        {
+            EventHandler<ReadProgressEventArgs> rp = ReadProgress;
+            if (rp != null)
+            {
+                var e = ReadProgressEventArgs.ByteUpdate(ArchiveNameForEvent,
+                                    entry,
+                                    ReadStream.Position,
+                                    LengthOfReadStream);
+                rp(this, e);
+            }
+        }
+
+        internal void OnReadEntry(bool before, ZipEntry entry)
+        {
+            EventHandler<ReadProgressEventArgs> rp = ReadProgress;
+            if (rp != null)
+            {
+                ReadProgressEventArgs e = (before)
+                    ? ReadProgressEventArgs.Before(ArchiveNameForEvent, _entries.Count)
+                    : ReadProgressEventArgs.After(ArchiveNameForEvent, entry, _entries.Count);
+                rp(this, e);
+            }
+        }
+
+        internal bool OnSaveBlock(ZipEntry entry, Int64 bytesXferred, Int64 totalBytesToXfer)
+        {
+            EventHandler<SaveProgressEventArgs> sp = SaveProgress;
+            if (sp != null)
+            {
+                var e = SaveProgressEventArgs.ByteUpdate(ArchiveNameForEvent, entry,
+                                                         bytesXferred, totalBytesToXfer);
+                sp(this, e);
+                if (e.Cancel)
+                    _saveOperationCanceled = true;
+            }
+            return _saveOperationCanceled;
+        }
+
+        // Can be called from within ZipEntry.InternalExtract.
+        internal bool OnSingleEntryExtract(ZipEntry entry, string path, bool before)
+        {
+            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
+            if (ep != null)
+            {
+                var e = (before)
+                    ? ExtractProgressEventArgs.BeforeExtractEntry(ArchiveNameForEvent, entry, path)
+                    : ExtractProgressEventArgs.AfterExtractEntry(ArchiveNameForEvent, entry, path);
+                ep(this, e);
+                if (e.Cancel)
+                    _extractOperationCanceled = true;
+            }
+            return _extractOperationCanceled;
+        }
+
         internal bool OnZipErrorSaving(ZipEntry entry, Exception exc)
         {
             if (ZipError != null)
@@ -1213,7 +1066,127 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
             return _saveOperationCanceled;
         }
-        #endregion
 
+        private void OnAddCompleted()
+        {
+            EventHandler<AddProgressEventArgs> ap = AddProgress;
+            if (ap != null)
+            {
+                var e = AddProgressEventArgs.Completed(ArchiveNameForEvent);
+                ap(this, e);
+            }
+        }
+
+        private void OnAddStarted()
+        {
+            EventHandler<AddProgressEventArgs> ap = AddProgress;
+            if (ap != null)
+            {
+                var e = AddProgressEventArgs.Started(ArchiveNameForEvent);
+                ap(this, e);
+                if (e.Cancel) // workitem 13371
+                    _addOperationCanceled = true;
+            }
+        }
+
+        private void OnExtractAllCompleted(string path)
+        {
+            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
+            if (ep != null)
+            {
+                var e = ExtractProgressEventArgs.ExtractAllCompleted(ArchiveNameForEvent,
+                                                                     path);
+                ep(this, e);
+            }
+        }
+
+        private void OnExtractAllStarted(string path)
+        {
+            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
+            if (ep != null)
+            {
+                var e = ExtractProgressEventArgs.ExtractAllStarted(ArchiveNameForEvent,
+                                                                   path);
+                ep(this, e);
+            }
+        }
+
+        private void OnExtractEntry(int current, bool before, ZipEntry currentEntry, string path)
+        {
+            EventHandler<ExtractProgressEventArgs> ep = ExtractProgress;
+            if (ep != null)
+            {
+                var e = new ExtractProgressEventArgs(ArchiveNameForEvent, before, _entries.Count, current, currentEntry, path);
+                ep(this, e);
+                if (e.Cancel)
+                    _extractOperationCanceled = true;
+            }
+        }
+
+        private void OnReadCompleted()
+        {
+            EventHandler<ReadProgressEventArgs> rp = ReadProgress;
+            if (rp != null)
+            {
+                var e = ReadProgressEventArgs.Completed(ArchiveNameForEvent);
+                rp(this, e);
+            }
+        }
+
+        private void OnReadStarted()
+        {
+            EventHandler<ReadProgressEventArgs> rp = ReadProgress;
+            if (rp != null)
+            {
+                var e = ReadProgressEventArgs.Started(ArchiveNameForEvent);
+                rp(this, e);
+            }
+        }
+
+        private void OnSaveCompleted()
+        {
+            EventHandler<SaveProgressEventArgs> sp = SaveProgress;
+            if (sp != null)
+            {
+                var e = SaveProgressEventArgs.Completed(ArchiveNameForEvent);
+                sp(this, e);
+            }
+        }
+
+        private void OnSaveEntry(int current, ZipEntry entry, bool before)
+        {
+            EventHandler<SaveProgressEventArgs> sp = SaveProgress;
+            if (sp != null)
+            {
+                var e = new SaveProgressEventArgs(ArchiveNameForEvent, before, _entries.Count, current, entry);
+                sp(this, e);
+                if (e.Cancel)
+                    _saveOperationCanceled = true;
+            }
+        }
+
+        private void OnSaveEvent(ZipProgressEventType eventFlavor)
+        {
+            EventHandler<SaveProgressEventArgs> sp = SaveProgress;
+            if (sp != null)
+            {
+                var e = new SaveProgressEventArgs(ArchiveNameForEvent, eventFlavor);
+                sp(this, e);
+                if (e.Cancel)
+                    _saveOperationCanceled = true;
+            }
+        }
+
+        private void OnSaveStarted()
+        {
+            EventHandler<SaveProgressEventArgs> sp = SaveProgress;
+            if (sp != null)
+            {
+                var e = SaveProgressEventArgs.Started(ArchiveNameForEvent);
+                sp(this, e);
+                if (e.Cancel)
+                    _saveOperationCanceled = true;
+            }
+        }
     }
 }

@@ -55,7 +55,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return fileLength;
         }
 
-
         [System.Diagnostics.Conditional("NETCF")]
         public static void Workaround_Ladybug318918(Stream s)
         {
@@ -64,7 +63,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             // It's required only on NETCF.
             s.Flush();
         }
-
 
 #if LEGACY
         /// <summary>
@@ -131,7 +129,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return path;
         }
 
-
         /// <summary>
         /// Utility routine for transforming path names from filesystem format (on Windows that means backslashes) to
         /// a format suitable for use within zipfiles. This means trimming the volume letter and colon (if any) And
@@ -157,19 +154,19 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return SimplifyFwdSlashPath(pathName);
         }
 
-
 #if (Core)
-        static System.Text.Encoding ibm437 = System.Text.Encoding.GetEncoding("UTF-8");   
+        private static System.Text.Encoding ibm437 = System.Text.Encoding.GetEncoding("UTF-8");
 #else
         static System.Text.Encoding ibm437 = System.Text.Encoding.GetEncoding("IBM437");
 #endif
-        static System.Text.Encoding utf8 = System.Text.Encoding.GetEncoding("UTF-8");
+        private static System.Text.Encoding utf8 = System.Text.Encoding.GetEncoding("UTF-8");
 
         internal static byte[] StringToByteArray(string value, System.Text.Encoding encoding)
         {
             byte[] a = encoding.GetBytes(value);
             return a;
         }
+
         internal static byte[] StringToByteArray(string value)
         {
             return StringToByteArray(value, ibm437);
@@ -197,7 +194,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return s;
         }
 
-
         internal static int ReadSignature(System.IO.Stream s)
         {
             int x = 0;
@@ -205,7 +201,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             catch (BadReadException) { }
             return x;
         }
-
 
         internal static int ReadEntrySignature(System.IO.Stream s)
         {
@@ -245,7 +240,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return x;
         }
 
-
         internal static int ReadInt(System.IO.Stream s)
         {
             return _ReadFourBytes(s, "Could not read block - no data!  (position 0x{0:X8})");
@@ -282,8 +276,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             int data = unchecked((((block[3] * 256 + block[2]) * 256) + block[1]) * 256 + block[0]);
             return data;
         }
-
-
 
         /// <summary>
         ///   Finds a signature in the zip stream. This is useful for finding
@@ -350,7 +342,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 }
                 else break;
                 if (success) break;
-
             } while (true);
 
             if (!success)
@@ -367,7 +358,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return bytesRead;
         }
 
-
         // If I have a time in the .NET environment, and I want to use it for
         // SetWastWriteTime() etc, then I need to adjust it for Win32.
         internal static DateTime AdjustTime_Reverse(DateTime time)
@@ -376,7 +366,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             DateTime adjusted = time;
             if (DateTime.Now.IsDaylightSavingTime() && !time.IsDaylightSavingTime())
                 adjusted = time - new System.TimeSpan(1, 0, 0);
-
             else if (!DateTime.Now.IsDaylightSavingTime() && time.IsDaylightSavingTime())
                 adjusted = time + new System.TimeSpan(1, 0, 0);
 
@@ -392,14 +381,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             DateTime adjusted = time;
             if (DateTime.Now.IsDaylightSavingTime() && !time.IsDaylightSavingTime())
                 adjusted = time + new System.TimeSpan(1, 0, 0);
-
             else if (!DateTime.Now.IsDaylightSavingTime() && time.IsDaylightSavingTime())
                 adjusted = time - new System.TimeSpan(1, 0, 0);
 
             return adjusted;
         }
 #endif
-
 
         internal static DateTime PackedToDateTime(Int32 packedDateTime)
         {
@@ -449,7 +436,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 success= true;
                         }
                         catch (System.ArgumentOutOfRangeException) { }
-
                     }
                 }
                 // workitem 8814
@@ -479,14 +465,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             {
                 string msg = String.Format("y({0}) m({1}) d({2}) h({3}) m({4}) s({5})", year, month, day, hour, minute, second);
                 throw new ZipException(String.Format("Bad date/time format in the zip file. ({0})", msg));
-
             }
             // workitem 6191
             //d = AdjustTime_Reverse(d);
             d = DateTime.SpecifyKind(d, DateTimeKind.Local);
             return d;
         }
-
 
         internal
          static Int32 DateTimeToPacked(DateTime time)
@@ -506,7 +490,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             Int32 result = (Int32)(((UInt32)(packedDate << 16)) | packedTime);
             return result;
         }
-
 
         /// <summary>
         ///   Create a pseudo-random filename, suitable for use as a temporary
@@ -574,13 +557,13 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return result;
         }
 #else
+
         public static string InternalGetTempFileName()
         {
             return "DotNetZip-" + Path.GetRandomFileName().Substring(0, 8) + ".tmp";
         }
 
 #endif
-
 
         /// <summary>
         /// Workitem 7889: handle ERROR_LOCK_VIOLATION during read
@@ -642,7 +625,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return n;
         }
 
-
 #if !NETCF
         // workitem 8009
         //
@@ -663,14 +645,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         // generates the JIT-compile time exception.
         //
 #endif
+
         private static uint _HRForException(System.Exception ex1)
         {
             return unchecked((uint)System.Runtime.InteropServices.Marshal.GetHRForException(ex1));
         }
-
     }
-
-
 
     /// <summary>
     ///   A decorator stream. It wraps another stream, and performs bookkeeping
@@ -714,6 +694,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
     {
         // workitem 12374: this class is now public
         private System.IO.Stream _s;
+
         private Int64 _bytesWritten;
         private Int64 _bytesRead;
         private Int64 _initialOffset;
@@ -863,7 +844,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get { return _initialOffset + _bytesWritten; }
         }
 
-
         /// <summary>
         ///   The Position of the stream.
         /// </summary>
@@ -899,6 +879,4 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _s.SetLength(value);
         }
     }
-
-
 }

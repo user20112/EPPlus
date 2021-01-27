@@ -13,27 +13,28 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
+
+using SkiaSharp;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Xml;
 using System.Globalization;
+using System.Xml;
+
 namespace OfficeOpenXml.Style.XmlAccess
 {
     /// <summary>
@@ -41,8 +42,20 @@ namespace OfficeOpenXml.Style.XmlAccess
     /// </summary>
     public sealed class ExcelColorXml : StyleXmlHelper
     {
+        private bool _auto;
+
+        private bool _exists;
+
+        private int _indexed;
+
+        private string _rgb;
+
+        private string _theme;
+
+        private decimal _tint;
+
         internal ExcelColorXml(XmlNamespaceManager nameSpaceManager)
-            : base(nameSpaceManager)
+                                                            : base(nameSpaceManager)
         {
             _auto = false;
             _theme = "";
@@ -50,32 +63,25 @@ namespace OfficeOpenXml.Style.XmlAccess
             _rgb = "";
             _indexed = int.MinValue;
         }
+
         internal ExcelColorXml(XmlNamespaceManager nsm, XmlNode topNode) :
             base(nsm, topNode)
         {
-            if(topNode==null)
+            if (topNode == null)
             {
-                _exists=false;
+                _exists = false;
             }
             else
             {
                 _exists = true;
                 _auto = GetXmlNodeBool("@auto");
                 _theme = GetXmlNodeString("@theme");
-                _tint = GetXmlNodeDecimalNull("@tint")??decimal.MinValue;
+                _tint = GetXmlNodeDecimalNull("@tint") ?? decimal.MinValue;
                 _rgb = GetXmlNodeString("@rgb");
                 _indexed = GetXmlNodeIntNull("@indexed") ?? int.MinValue;
             }
         }
-        
-        internal override string Id
-        {
-            get
-            {
-                return _auto.ToString() + "|" + _theme + "|" + _tint + "|" + _rgb + "|" + _indexed;
-            }
-        }
-        bool _auto;
+
         public bool Auto
         {
             get
@@ -89,7 +95,46 @@ namespace OfficeOpenXml.Style.XmlAccess
                 Clear();
             }
         }
-        string _theme;
+
+        /// <summary>
+        /// Indexed color value
+        /// </summary>
+        public int Indexed
+        {
+            get
+            {
+                return (_indexed == int.MinValue ? 0 : _indexed);
+            }
+            set
+            {
+                if (value < 0 || value > 65)
+                {
+                    throw (new ArgumentOutOfRangeException("Index out of range"));
+                }
+                Clear();
+                _indexed = value;
+                _exists = true;
+            }
+        }
+
+        /// <summary>
+        /// RGB value
+        /// </summary>
+        public string Rgb
+        {
+            get
+            {
+                return _rgb;
+            }
+            set
+            {
+                _rgb = value;
+                _exists = true;
+                _indexed = int.MinValue;
+                _auto = false;
+            }
+        }
+
         /// <summary>
         /// Theme color value
         /// </summary>
@@ -100,7 +145,7 @@ namespace OfficeOpenXml.Style.XmlAccess
                 return _theme;
             }
         }
-        decimal _tint;
+
         /// <summary>
         /// Tint
         /// </summary>
@@ -123,45 +168,29 @@ namespace OfficeOpenXml.Style.XmlAccess
                 _exists = true;
             }
         }
-        string _rgb;
-        /// <summary>
-        /// RGB value
-        /// </summary>
-        public string Rgb
+
+        internal bool Exists
         {
             get
             {
-                return _rgb;
-            }
-            set
-            {
-                _rgb = value;
-                _exists=true;
-                _indexed = int.MinValue;
-                _auto = false;
+                return _exists;
             }
         }
-        int _indexed;
-        /// <summary>
-        /// Indexed color value
-        /// </summary>
-        public int Indexed
+
+        internal override string Id
         {
             get
             {
-                return (_indexed == int.MinValue ? 0 : _indexed);
-            }
-            set
-            {
-                if (value < 0 || value > 65)
-                {
-                    throw (new ArgumentOutOfRangeException("Index out of range"));
-                }
-                Clear();
-                _indexed = value;
-                _exists = true;
+                return _auto.ToString() + "|" + _theme + "|" + _tint + "|" + _rgb + "|" + _indexed;
             }
         }
+
+        public void SetColor(SKColor color)
+        {
+            Clear();
+            _rgb = ((uint)color).ToString("X");
+        }
+
         internal void Clear()
         {
             _theme = "";
@@ -170,21 +199,16 @@ namespace OfficeOpenXml.Style.XmlAccess
             _rgb = "";
             _auto = false;
         }
-        public void SetColor(System.Drawing.Color color)
-        {
-            Clear();
-            _rgb = color.ToArgb().ToString("X");
-        }
 
         internal ExcelColorXml Copy()
         {
-            return new ExcelColorXml(NameSpaceManager) {_indexed=_indexed, _tint=_tint, _rgb=_rgb, _theme=_theme, _auto=_auto, _exists=_exists };
+            return new ExcelColorXml(NameSpaceManager) { _indexed = _indexed, _tint = _tint, _rgb = _rgb, _theme = _theme, _auto = _auto, _exists = _exists };
         }
 
         internal override XmlNode CreateXmlNode(XmlNode topNode)
         {
             TopNode = topNode;
-            if(_rgb!="")
+            if (_rgb != "")
             {
                 SetXmlNodeString("@rgb", _rgb);
             }
@@ -205,15 +229,6 @@ namespace OfficeOpenXml.Style.XmlAccess
                 SetXmlNodeString("@tint", _tint.ToString(CultureInfo.InvariantCulture));
             }
             return TopNode;
-        }
-
-        bool _exists;
-        internal bool Exists
-        {
-            get
-            {
-                return _exists;
-            }
         }
     }
 }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml;
-
-namespace OfficeOpenXml.Style.Dxf
+﻿namespace OfficeOpenXml.Style.Dxf
 {
     public class ExcelDxfBorderBase : DxfStyleBase<ExcelDxfBorderBase>
     {
@@ -16,30 +10,7 @@ namespace OfficeOpenXml.Style.Dxf
             Top = new ExcelDxfBorderItem(_styles);
             Bottom = new ExcelDxfBorderItem(_styles);
         }
-        /// <summary>
-        /// Left border style
-        /// </summary>
-        public ExcelDxfBorderItem Left
-        {
-            get;
-            internal set;
-        }
-        /// <summary>
-        /// Right border style
-        /// </summary>
-        public ExcelDxfBorderItem Right
-        {
-            get;
-            internal set;
-        }
-        /// <summary>
-        /// Top border style
-        /// </summary>
-        public ExcelDxfBorderItem Top
-        {
-            get;
-            internal set;
-        }
+
         /// <summary>
         /// Bottom border style
         /// </summary>
@@ -48,6 +19,34 @@ namespace OfficeOpenXml.Style.Dxf
             get;
             internal set;
         }
+
+        /// <summary>
+        /// Left border style
+        /// </summary>
+        public ExcelDxfBorderItem Left
+        {
+            get;
+            internal set;
+        }
+
+        /// <summary>
+        /// Right border style
+        /// </summary>
+        public ExcelDxfBorderItem Right
+        {
+            get;
+            internal set;
+        }
+
+        /// <summary>
+        /// Top border style
+        /// </summary>
+        public ExcelDxfBorderItem Top
+        {
+            get;
+            internal set;
+        }
+
         ///// <summary>
         ///// Diagonal border style
         ///// </summary>
@@ -73,6 +72,17 @@ namespace OfficeOpenXml.Style.Dxf
         //    set;
         //}
 
+        protected internal override bool HasValue
+        {
+            get
+            {
+                return Left.HasValue ||
+                    Right.HasValue ||
+                    Top.HasValue ||
+                    Bottom.HasValue;
+            }
+        }
+
         protected internal override string Id
         {
             get
@@ -81,26 +91,17 @@ namespace OfficeOpenXml.Style.Dxf
             }
         }
 
+        protected internal override ExcelDxfBorderBase Clone()
+        {
+            return new ExcelDxfBorderBase(_styles) { Bottom = Bottom.Clone(), Top = Top.Clone(), Left = Left.Clone(), Right = Right.Clone() };
+        }
+
         protected internal override void CreateNodes(XmlHelper helper, string path)
         {
             Left.CreateNodes(helper, path + "/d:left");
             Right.CreateNodes(helper, path + "/d:right");
             Top.CreateNodes(helper, path + "/d:top");
             Bottom.CreateNodes(helper, path + "/d:bottom");
-        }
-        protected internal override bool HasValue
-        {
-            get 
-            {
-                return Left.HasValue ||
-                    Right.HasValue ||
-                    Top.HasValue ||
-                    Bottom.HasValue;
-            }
-        }
-        protected internal override ExcelDxfBorderBase Clone()
-        {
-            return new ExcelDxfBorderBase(_styles) { Bottom = Bottom.Clone(), Top=Top.Clone(), Left=Left.Clone(), Right=Right.Clone() };
         }
     }
 }

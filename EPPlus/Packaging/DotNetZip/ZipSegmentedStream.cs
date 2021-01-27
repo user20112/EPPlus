@@ -23,16 +23,14 @@
 //
 // ------------------------------------------------------------------
 
-
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
     internal class ZipSegmentedStream : System.IO.Stream
     {
-        enum RwMode
+        private enum RwMode
         {
             None = 0,
             ReadOnly = 1,
@@ -44,8 +42,10 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         private bool _exceptionPending; // **see note below
         private string _baseName;
         private string _baseDir;
+
         //private bool _isDisposed;
         private string _currentName;
+
         private string _currentTempName;
         private uint _currentDiskNumber;
         private uint _maxDiskNumber;
@@ -88,7 +88,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return zss;
         }
 
-
         public static ZipSegmentedStream ForWriting(string name, int maxSegmentSize)
         {
             ZipSegmentedStream zss = new ZipSegmentedStream()
@@ -110,7 +109,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             return zss;
         }
-
 
         /// <summary>
         ///   Sort-of like a factory method, ForUpdate is used only when
@@ -161,7 +159,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             set;
         }
 
-
         public UInt32 CurrentSegment
         {
             get
@@ -197,7 +194,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         public String CurrentTempName
         {
             get
@@ -220,7 +216,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                                  diskNumber + 1);
         }
 
-
         // Returns the segment that WILL be current if writing
         // a block of the given length.
         // This isn't exactly true. It could roll over beyond
@@ -235,7 +230,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return CurrentSegment;
         }
 
-
         public override String ToString()
         {
             return String.Format("{0}[{1}][{2}], pos=0x{3:X})",
@@ -243,7 +237,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                                  rwMode.ToString(),
                                  this.Position);
         }
-
 
         private void _SetReadStream()
         {
@@ -264,7 +257,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             _innerStream = File.OpenRead(CurrentName);
         }
-
 
         /// <summary>
         /// Read from the stream
@@ -290,7 +282,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 {
                     _exceptionPending = true;
                     throw new ZipException(String.Format("Read error in file {0}", CurrentName));
-
                 }
 
                 if (CurrentSegment + 1 == _maxDiskNumber)
@@ -305,8 +296,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
             return r;
         }
-
-
 
         private void _SetWriteStream(uint increment)
         {
@@ -338,7 +327,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _innerStream.Write(BitConverter.GetBytes(ZipConstants.SplitArchiveSignature), 0, 4);
         }
 
-
         /// <summary>
         /// Write to the stream.
         /// </summary>
@@ -352,7 +340,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _exceptionPending = true;
                 throw new InvalidOperationException("Stream Error: Cannot Write.");
             }
-
 
             if (ContiguousWrite)
             {
@@ -374,7 +361,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 
             _innerStream.Write(buffer, offset, count);
         }
-
 
         public long TruncateBackward(uint diskNumber, long offset)
         {
@@ -453,8 +439,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return r;
         }
 
-
-
         public override bool CanRead
         {
             get
@@ -465,7 +449,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         public override bool CanSeek
         {
             get
@@ -474,7 +457,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                         _innerStream.CanSeek;
             }
         }
-
 
         public override bool CanWrite
         {
@@ -523,7 +505,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _innerStream.SetLength(value);
         }
 
-
         protected override void Dispose(bool disposing)
         {
             // this gets called by Stream.Close()
@@ -565,7 +546,5 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 base.Dispose(disposing);
             }
         }
-
     }
-
 }

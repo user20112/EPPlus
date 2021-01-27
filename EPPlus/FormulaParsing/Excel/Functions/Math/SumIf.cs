@@ -7,28 +7,29 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Mats Alm   		                Added		                2013-12-03
  *******************************************************************************/
-using System.Collections.Generic;
-using System.Linq;
+
 using OfficeOpenXml.FormulaParsing.ExcelUtilities;
 using OfficeOpenXml.FormulaParsing.Exceptions;
 using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 using OfficeOpenXml.FormulaParsing.Utilities;
 using OfficeOpenXml.Utils;
+using System.Collections.Generic;
+using System.Linq;
 using Require = OfficeOpenXml.FormulaParsing.Utilities.Require;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
@@ -40,7 +41,6 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
         public SumIf()
             : this(new ExpressionEvaluator())
         {
-
         }
 
         public SumIf(ExpressionEvaluator evaluator)
@@ -78,6 +78,23 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
             return CreateResult(retVal, DataType.Decimal);
         }
 
+        private double CalculateSingleRange(ExcelDataProvider.IRangeInfo range, string expression, ParsingContext context)
+        {
+            var retVal = 0d;
+            foreach (var candidate in range)
+            {
+                if (expression != null && IsNumeric(candidate.Value) && _evaluator.Evaluate(candidate.Value, expression) && IsNumeric(candidate.Value))
+                {
+                    if (candidate.IsExcelError)
+                    {
+                        throw (new ExcelErrorValueException((ExcelErrorValue)candidate.Value));
+                    }
+                    retVal += candidate.ValueDouble;
+                }
+            }
+            return retVal;
+        }
+
         private double CalculateWithSumRange(ExcelDataProvider.IRangeInfo range, string criteria, ExcelDataProvider.IRangeInfo sumRange, ParsingContext context)
         {
             var retVal = 0d;
@@ -97,23 +114,6 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Math
                         }
                         retVal += ConvertUtil.GetValueDouble(v, true);
                     }
-                }
-            }
-            return retVal;
-        }
-
-        private double CalculateSingleRange(ExcelDataProvider.IRangeInfo range, string expression, ParsingContext context)
-        {
-            var retVal = 0d;
-            foreach (var candidate in range)
-            {
-                if (expression != null && IsNumeric(candidate.Value) && _evaluator.Evaluate(candidate.Value, expression) && IsNumeric(candidate.Value))
-                {
-                    if (candidate.IsExcelError)
-                    {
-                        throw (new ExcelErrorValueException((ExcelErrorValue)candidate.Value));
-                    }
-                    retVal += candidate.ValueDouble;
                 }
             }
             return retVal;

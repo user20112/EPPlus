@@ -1,12 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace OfficeOpenXml.Utils
 {
     internal class UriHelper
     {
+        internal static Uri GetRelativeUri(Uri WorksheetUri, Uri uri)
+        {
+            string[] source = WorksheetUri.OriginalString.Split('/');
+            string[] target = uri.OriginalString.Split('/');
+
+            int slen;
+            if (WorksheetUri.OriginalString.EndsWith("/"))
+            {
+                slen = source.Length;
+            }
+            else
+            {
+                slen = source.Length - 1;
+            }
+            int i = 0;
+            while (i < slen && i < target.Length && source[i] == target[i])
+            {
+                i++;
+            }
+
+            string dirUp = "";
+            for (int s = i; s < slen; s++)
+            {
+                dirUp += "../";
+            }
+            string file = "";
+            for (int t = i; t < target.Length; t++)
+            {
+                file += (file == "" ? "" : "/") + target[t];
+            }
+            return new Uri(dirUp + file, UriKind.Relative);
+        }
+
         internal static Uri ResolvePartUri(Uri sourceUri, Uri targetUri)
         {
             if (targetUri.OriginalString.StartsWith("/") || targetUri.OriginalString.Contains("://"))
@@ -53,39 +83,6 @@ namespace OfficeOpenXml.Utils
                 }
             }
             return new Uri(file,UriKind.RelativeOrAbsolute);
-        }
-
-        internal static Uri GetRelativeUri(Uri WorksheetUri, Uri uri)
-        {
-            string[] source = WorksheetUri.OriginalString.Split('/');
-            string[] target = uri.OriginalString.Split('/');
-
-            int slen;
-            if (WorksheetUri.OriginalString.EndsWith("/"))
-            {
-                slen = source.Length;
-            }
-            else
-            {
-                slen = source.Length-1;
-            }
-            int i = 0;
-            while (i < slen && i < target.Length && source[i] == target[i])
-            {
-                i++;
-            }
-
-            string dirUp="";
-            for (int s = i; s < slen; s++)
-            {
-                dirUp += "../";
-            }
-            string file = "";
-            for (int t = i; t < target.Length; t++)
-            {                
-                file += (file==""?"":"/") + target[t];
-            }
-            return new Uri(dirUp+file,UriKind.Relative);
         }
     }
 }

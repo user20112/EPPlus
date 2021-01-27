@@ -13,28 +13,27 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Jan Källman		Added		2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
-using System.Xml;
+
 using OfficeOpenXml.Style;
+using System;
+using System.Globalization;
+using System.Xml;
 
 namespace OfficeOpenXml.Drawing.Chart
 {
@@ -49,64 +48,77 @@ namespace OfficeOpenXml.Drawing.Chart
         Bottom,
         TopRight
     }
+
     /// <summary>
     /// Chart ledger
     /// </summary>
     public class ExcelChartLegend : XmlHelper
     {
-        ExcelChart _chart;
+        private const string OVERLAY_PATH = "c:overlay/@val";
+        private const string POSITION_PATH = "c:legendPos/@val";
+        private ExcelDrawingBorder _border = null;
+        private ExcelChart _chart;
+        private ExcelDrawingFill _fill = null;
+
+        private ExcelTextFont _font = null;
+
         internal ExcelChartLegend(XmlNamespaceManager ns, XmlNode node, ExcelChart chart)
-           : base(ns,node)
+                           : base(ns,node)
        {
            _chart=chart;
            SchemaNodeOrder = new string[] { "legendPos", "layout","overlay", "txPr", "bodyPr", "lstStyle", "spPr" };
        }
-        const string POSITION_PATH = "c:legendPos/@val";
+
         /// <summary>
-        /// Position of the Legend
+        /// Border style
         /// </summary>
-        public eLegendPosition Position 
+        public ExcelDrawingBorder Border
         {
             get
             {
-                switch(GetXmlNodeString(POSITION_PATH).ToLower(CultureInfo.InvariantCulture))
+                if (_border == null)
                 {
-                    case "t":
-                        return eLegendPosition.Top;
-                    case "b":
-                        return eLegendPosition.Bottom;
-                    case "l":
-                        return eLegendPosition.Left;
-                    case "tr":
-                        return eLegendPosition.TopRight;
-                    default:
-                        return eLegendPosition.Right;
+                    _border = new ExcelDrawingBorder(NameSpaceManager, TopNode, "c:spPr/a:ln");
                 }
-            }
-            set
-            {
-                if (TopNode == null) throw(new Exception("Can't set position. Chart has no legend"));
-                switch (value)
-                {
-                    case eLegendPosition.Top:
-                        SetXmlNodeString(POSITION_PATH, "t");
-                        break;
-                    case eLegendPosition.Bottom:
-                        SetXmlNodeString(POSITION_PATH, "b");
-                        break;
-                    case eLegendPosition.Left:
-                        SetXmlNodeString(POSITION_PATH, "l");
-                        break;
-                    case eLegendPosition.TopRight:
-                        SetXmlNodeString(POSITION_PATH, "tr");
-                        break;
-                    default:
-                        SetXmlNodeString(POSITION_PATH, "r");
-                        break;
-                }
+                return _border;
             }
         }
-        const string OVERLAY_PATH = "c:overlay/@val";
+
+        /// <summary>
+        /// Fill style
+        /// </summary>
+        public ExcelDrawingFill Fill
+        {
+            get
+            {
+                if (_fill == null)
+                {
+                    _fill = new ExcelDrawingFill(NameSpaceManager, TopNode, "c:spPr");
+                }
+                return _fill;
+            }
+        }
+
+        /// <summary>
+        /// Font properties
+        /// </summary>
+        public ExcelTextFont Font
+        {
+            get
+            {
+                if (_font == null)
+                {
+                    if (TopNode.SelectSingleNode("c:txPr", NameSpaceManager) == null)
+                    {
+                        CreateNode("c:txPr/a:bodyPr");
+                        CreateNode("c:txPr/a:lstStyle");
+                    }
+                    _font = new ExcelTextFont(NameSpaceManager, TopNode, "c:txPr/a:p/a:pPr/a:defRPr", new string[] { "legendPos", "layout", "pPr", "defRPr", "solidFill", "uFill", "latin", "cs", "r", "rPr", "t" });
+                }
+                return _font;
+            }
+        }
+
         /// <summary>
         /// If the legend overlays other objects
         /// </summary>
@@ -122,56 +134,76 @@ namespace OfficeOpenXml.Drawing.Chart
                 SetXmlNodeBool(OVERLAY_PATH, value);
             }
         }
-        ExcelDrawingFill _fill = null;
+
         /// <summary>
-        /// Fill style
+        /// Position of the Legend
         /// </summary>
-        public ExcelDrawingFill Fill
+        public eLegendPosition Position
         {
             get
             {
-                if (_fill == null)
+                switch(GetXmlNodeString(POSITION_PATH).ToLower(CultureInfo.InvariantCulture))
                 {
-                    _fill = new ExcelDrawingFill(NameSpaceManager, TopNode, "c:spPr");
+                    case "t":
+                        return eLegendPosition.Top;
+
+                    case "b":
+                        return eLegendPosition.Bottom;
+
+                    case "l":
+                        return eLegendPosition.Left;
+
+                    case "tr":
+                        return eLegendPosition.TopRight;
+
+                    default:
+                        return eLegendPosition.Right;
                 }
-                return _fill;
             }
-        }
-        ExcelDrawingBorder _border = null;
-        /// <summary>
-        /// Border style
-        /// </summary>
-        public ExcelDrawingBorder Border
-        {
-            get
+            set
             {
-                if (_border == null)
+                if (TopNode == null) throw(new Exception("Can't set position. Chart has no legend"));
+                switch (value)
                 {
-                    _border = new ExcelDrawingBorder(NameSpaceManager, TopNode, "c:spPr/a:ln");
+                    case eLegendPosition.Top:
+                        SetXmlNodeString(POSITION_PATH, "t");
+                        break;
+
+                    case eLegendPosition.Bottom:
+                        SetXmlNodeString(POSITION_PATH, "b");
+                        break;
+
+                    case eLegendPosition.Left:
+                        SetXmlNodeString(POSITION_PATH, "l");
+                        break;
+
+                    case eLegendPosition.TopRight:
+                        SetXmlNodeString(POSITION_PATH, "tr");
+                        break;
+
+                    default:
+                        SetXmlNodeString(POSITION_PATH, "r");
+                        break;
                 }
-                return _border;
             }
         }
-        ExcelTextFont _font = null;
+
         /// <summary>
-        /// Font properties
+        /// Add a legend to the chart
         /// </summary>
-        public ExcelTextFont Font
+        public void Add()
         {
-            get
-            {
-                if (_font == null)
-                {
-                    if (TopNode.SelectSingleNode("c:txPr",NameSpaceManager) == null)
-                    {
-                        CreateNode("c:txPr/a:bodyPr");
-                        CreateNode("c:txPr/a:lstStyle");
-                    }
-                    _font = new ExcelTextFont(NameSpaceManager, TopNode, "c:txPr/a:p/a:pPr/a:defRPr", new string[] { "legendPos", "layout", "pPr", "defRPr", "solidFill", "uFill", "latin", "cs", "r", "rPr", "t" });
-                }
-                return _font;
-            }
+            if (TopNode != null) return;
+
+            //XmlHelper xml = new XmlHelper(NameSpaceManager, _chart.ChartXml);
+            XmlHelper xml = XmlHelperFactory.Create(NameSpaceManager, _chart.ChartXml);
+            xml.SchemaNodeOrder = _chart.SchemaNodeOrder;
+
+            xml.CreateNode("c:chartSpace/c:chart/c:legend");
+            TopNode = _chart.ChartXml.SelectSingleNode("c:chartSpace/c:chart/c:legend", NameSpaceManager);
+            TopNode.InnerXml = "<c:legendPos val=\"r\" /><c:layout />";
         }
+
         /// <summary>
         /// Remove the legend
         /// </summary>
@@ -180,21 +212,6 @@ namespace OfficeOpenXml.Drawing.Chart
             if (TopNode == null) return;
             TopNode.ParentNode.RemoveChild(TopNode);
             TopNode = null;
-        }
-        /// <summary>
-        /// Add a legend to the chart
-        /// </summary>
-        public void Add()
-        {
-            if(TopNode!=null) return;
-
-            //XmlHelper xml = new XmlHelper(NameSpaceManager, _chart.ChartXml);
-            XmlHelper xml = XmlHelperFactory.Create(NameSpaceManager, _chart.ChartXml);
-            xml.SchemaNodeOrder=_chart.SchemaNodeOrder;
-
-            xml.CreateNode("c:chartSpace/c:chart/c:legend");
-            TopNode = _chart.ChartXml.SelectSingleNode("c:chartSpace/c:chart/c:legend", NameSpaceManager);
-            TopNode.InnerXml="<c:legendPos val=\"r\" /><c:layout />";                        
         }
     }
 }

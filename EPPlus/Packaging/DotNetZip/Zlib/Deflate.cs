@@ -66,12 +66,10 @@
 //
 // -----------------------------------------------------------------------
 
-
 using System;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zlib
 {
-
     internal enum BlockState
     {
         NeedMore = 0,       // block not completed, need more input or more output
@@ -129,7 +127,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                 return Table[(int)level];
             }
 
-
             static Config()
             {
                 Table = new Config[] {
@@ -149,7 +146,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
             private static readonly Config[] Table;
         }
-
 
         private CompressFunc DeflateFunction;
 
@@ -183,6 +179,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
         // The three kinds of block type
         private static readonly int Z_BINARY = 0;
+
         private static readonly int Z_ASCII = 1;
         private static readonly int Z_UNKNOWN = 2;
 
@@ -248,7 +245,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
         internal int block_start;
 
-        Config config;
+        private Config config;
         internal int match_length;    // length of best match
         internal int prev_match;      // previous match
         internal int match_available; // set if previous match exists
@@ -266,7 +263,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
         internal CompressionLevel compressionLevel; // compression level (1..9)
         internal CompressionStrategy compressionStrategy; // favor or force Huffman coding
-
 
         internal short[] dyn_ltree;         // literal and length tree
         internal short[] dyn_dtree;         // distance tree
@@ -292,7 +288,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         internal sbyte[] depth = new sbyte[2 * InternalConstants.L_CODES + 1];
 
         internal int _lengthOffset;                 // index for literals or lengths
-
 
         // Size of match buffer for literals/lengths.  There are 4 reasons for
         // limiting lit_bufsize to 64K:
@@ -334,14 +329,12 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         // are always zero.
         internal int bi_valid;
 
-
         internal DeflateManager()
         {
             dyn_ltree = new short[HEAP_SIZE * 2];
             dyn_dtree = new short[(2 * InternalConstants.D_CODES + 1) * 2]; // distance tree
             bl_tree = new short[(2 * InternalConstants.BL_CODES + 1) * 2]; // Huffman tree for bit lengths
         }
-
 
         // lm_init
         private void _InitializeLazyMatch()
@@ -432,7 +425,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             return (tn2 < tm2 || (tn2 == tm2 && depth[n] <= depth[m]));
         }
 
-
         // Scan a literal or distance tree to determine the frequencies of the codes
         // in the bit length tree.
         internal void scan_tree(short[] tree, int max_code)
@@ -520,7 +512,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
             return max_blindex;
         }
-
 
         // Send the header for a block using dynamic Huffman trees: the counts, the
         // lengths of the bit length codes, the literal tree and the distance tree.
@@ -659,7 +650,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                         pending[pendingCount++] = (byte)bi_buf;
                         pending[pendingCount++] = (byte)(bi_buf >> 8);
 
-
                     bi_buf = (short)((uint)value >> (Buf_size - bi_valid));
                     bi_valid += len - Buf_size;
                 }
@@ -700,7 +690,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
             last_eob_len = 7;
         }
-
 
         // Save the match info and tally the frequency counts. Return true if
         // the current block must be flushed.
@@ -746,8 +735,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             // on 16 bit machines and because stored blocks are restricted to
             // 64K-1 bytes.
         }
-
-
 
         // Send the block data compressed using the given Huffman trees
         internal void send_compressed_block(short[] ltree, short[] dtree)
@@ -811,8 +798,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             last_eob_len = ltree[END_BLOCK * 2 + 1];
         }
 
-
-
         // Set the data type to ASCII or BINARY, using a crude approximation:
         // binary if more than 20% of the bytes are <= 6 or >= 128, ascii otherwise.
         // IN assertion: the fields freq of dyn_ltree are set and the total of all
@@ -836,8 +821,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
             data_type = (sbyte)(bin_freq > (ascii_freq >> 2) ? Z_BINARY : Z_ASCII);
         }
-
-
 
         // Flush the bit buffer, keeping at most 7 bits in it.
         internal void bi_flush()
@@ -968,7 +951,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
             return flush == FlushType.Finish ? BlockState.FinishDone : BlockState.BlockDone;
         }
-
 
         // Send a stored block
         internal void _tr_stored_block(int buf, int stored_len, bool eof)
@@ -1325,7 +1307,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                     if (match_length <= 5 && (compressionStrategy == CompressionStrategy.Filtered ||
                                               (match_length == MIN_MATCH && strstart - match_start > 4096)))
                     {
-
                         // If prev_match is also MIN_MATCH, match_start is garbage
                         // but we will ignore the current match anyway.
                         match_length = MIN_MATCH - 1;
@@ -1374,7 +1355,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                 }
                 else if (match_available != 0)
                 {
-
                     // If there was no match at the previous position, output a
                     // single literal. If there was a match but the current match
                     // is longer, truncate the previous match to a single literal.
@@ -1418,7 +1398,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
             return flush == FlushType.Finish ? BlockState.FinishDone : BlockState.BlockDone;
         }
-
 
         internal int longest_match(int cur_match)
         {
@@ -1507,15 +1486,14 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             return lookahead;
         }
 
-
         private bool Rfc1950BytesEmitted = false;
         private bool _WantRfc1950HeaderBytes = true;
+
         internal bool WantRfc1950HeaderBytes
         {
             get { return _WantRfc1950HeaderBytes; }
             set { _WantRfc1950HeaderBytes = value; }
         }
-
 
         internal int Initialize(ZlibCodec codec, CompressionLevel level)
         {
@@ -1582,7 +1560,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             return ZlibConstants.Z_OK;
         }
 
-
         internal void Reset()
         {
             _codec.TotalBytesIn = _codec.TotalBytesOut = 0;
@@ -1603,7 +1580,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             _InitializeLazyMatch();
         }
 
-
         internal int End()
         {
             if (status != INIT_STATE && status != BUSY_STATE && status != FINISH_STATE)
@@ -1620,7 +1596,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             return status == BUSY_STATE ? ZlibConstants.Z_DATA_ERROR : ZlibConstants.Z_OK;
         }
 
-
         private void SetDeflater()
         {
             switch (config.Flavor)
@@ -1628,15 +1603,16 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                 case DeflateFlavor.Store:
                     DeflateFunction = DeflateNone;
                     break;
+
                 case DeflateFlavor.Fast:
                     DeflateFunction = DeflateFast;
                     break;
+
                 case DeflateFlavor.Slow:
                     DeflateFunction = DeflateSlow;
                     break;
             }
         }
-
 
         internal int SetParams(CompressionLevel level, CompressionStrategy strategy)
         {
@@ -1663,7 +1639,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
             return result;
         }
-
 
         internal int SetDictionary(byte[] dictionary)
         {
@@ -1701,8 +1676,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
             return ZlibConstants.Z_OK;
         }
-
-
 
         internal int Deflate(FlushType flush)
         {
@@ -1874,6 +1847,5 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
             return pendingCount != 0 ? ZlibConstants.Z_OK : ZlibConstants.Z_STREAM_END;
         }
-
     }
 }

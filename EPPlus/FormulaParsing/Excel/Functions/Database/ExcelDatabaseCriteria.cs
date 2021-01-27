@@ -7,39 +7,36 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  *******************************************************************************
  * Mats Alm   		                Added		                2015-04-06
  *******************************************************************************/
-using System;
+
+using OfficeOpenXml.Utils;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.Utilities;
-using OfficeOpenXml.Utils;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Database
 {
     public class ExcelDatabaseCriteria
     {
+        private readonly Dictionary<ExcelDatabaseCriteriaField, object> _criterias = new Dictionary<ExcelDatabaseCriteriaField, object>();
         private readonly ExcelDataProvider _dataProvider;
+        private readonly int _fieldRow;
         private readonly int _fromCol;
         private readonly int _toCol;
         private readonly string _worksheet;
-        private readonly int _fieldRow;
-        private readonly Dictionary<ExcelDatabaseCriteriaField, object> _criterias = new Dictionary<ExcelDatabaseCriteriaField, object>(); 
 
         public ExcelDatabaseCriteria(ExcelDataProvider dataProvider, string range)
         {
@@ -52,6 +49,11 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Database
             Initialize();
         }
 
+        public virtual IDictionary<ExcelDatabaseCriteriaField, object> Items
+        {
+            get { return _criterias; }
+        }
+
         private void Initialize()
         {
             for (var x = _fromCol; x <= _toCol; x++)
@@ -61,7 +63,7 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Database
                 if (fieldObj != null && val != null)
                 {
                     if(fieldObj is string)
-                    { 
+                    {
                         var field = new ExcelDatabaseCriteriaField(fieldObj.ToString().ToLower(CultureInfo.InvariantCulture));
                         _criterias.Add(field, val);
                     }
@@ -70,14 +72,8 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.Database
                         var field = new ExcelDatabaseCriteriaField((int) fieldObj);
                         _criterias.Add(field, val);
                     }
-
                 }
             }
-        }
-
-        public virtual IDictionary<ExcelDatabaseCriteriaField, object> Items
-        {
-            get { return _criterias; }
         }
     }
 }

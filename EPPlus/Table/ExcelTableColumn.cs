@@ -13,28 +13,27 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		Added		30-AUG-2010
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
-using System.Xml;
+
 using OfficeOpenXml.Utils;
+using System;
+using System.Globalization;
+using System.Xml;
 
 namespace OfficeOpenXml.Table
 {
@@ -43,7 +42,7 @@ namespace OfficeOpenXml.Table
     /// </summary>
     public enum RowFunctions
     {
-        Average,        
+        Average,
         Count,
         CountNums,
         Custom,
@@ -61,16 +60,71 @@ namespace OfficeOpenXml.Table
     public class ExcelTableColumn : XmlHelper
     {
         internal ExcelTable _tbl;
+        private const string CALCULATEDCOLUMNFORMULA_PATH = "d:calculatedColumnFormula";
+
+        private const string DATACELLSTYLE_PATH = "@dataCellStyle";
+
+        private const string TOTALSROWFORMULA_PATH = "d:totalsRowFormula";
+
         internal ExcelTableColumn(XmlNamespaceManager ns, XmlNode topNode, ExcelTable tbl, int pos) :
-            base(ns, topNode)
+                                    base(ns, topNode)
         {
             _tbl = tbl;
             Position = pos;
         }
+
+        /// <summary>
+        /// Sets a calculated column Formula.
+        /// Be carefull with this property since it is not validated.
+        /// <example>
+        /// tbl.Columns[9].CalculatedColumnFormula = string.Format("SUM(MyDataTable[[#This Row],[{0}]])",tbl.Columns[9].Name);
+        /// </example>
+        /// </summary>
+        public string CalculatedColumnFormula
+        {
+            get
+            {
+                return GetXmlNodeString(CALCULATEDCOLUMNFORMULA_PATH);
+            }
+            set
+            {
+                if (value.StartsWith("=")) value = value.Substring(1, value.Length - 1);
+                SetXmlNodeString(CALCULATEDCOLUMNFORMULA_PATH, value);
+            }
+        }
+
+        /// <summary>
+        /// The named style for datacells in the column
+        /// </summary>
+        public string DataCellStyleName
+        {
+            get
+            {
+                return GetXmlNodeString(DATACELLSTYLE_PATH);
+            }
+            set
+            {
+                if (_tbl.WorkSheet.Workbook.Styles.NamedStyles.FindIndexByID(value) < 0)
+                {
+                    throw (new Exception(string.Format("Named style {0} does not exist.", value)));
+                }
+                SetXmlNodeString(TopNode, DATACELLSTYLE_PATH, value, true);
+
+                int fromRow = _tbl.Address._fromRow + (_tbl.ShowHeader ? 1 : 0),
+                    toRow = _tbl.Address._toRow - (_tbl.ShowTotal ? 1 : 0),
+                    col = _tbl.Address._fromCol + Position;
+
+                if (fromRow <= toRow)
+                {
+                    _tbl.WorkSheet.Cells[fromRow, col, toRow, col].StyleName = value;
+                }
+            }
+        }
+
         /// <summary>
         /// The column id
         /// </summary>
-        public int Id 
+        public int Id
         {
             get
             {
@@ -81,14 +135,7 @@ namespace OfficeOpenXml.Table
                 SetXmlNodeString("@id", value.ToString());
             }
         }
-        /// <summary>
-        /// The position of the column
-        /// </summary>
-        public int Position
-        {
-            get;
-            private set;
-        }
+
         /// <summary>
         /// The name of the column
         /// </summary>
@@ -96,7 +143,7 @@ namespace OfficeOpenXml.Table
         {
             get
             {
-                var n=GetXmlNodeString("@name");
+                var n = GetXmlNodeString("@name");
                 if (string.IsNullOrEmpty(n))
                 {
                     if (_tbl.ShowHeader)
@@ -105,7 +152,7 @@ namespace OfficeOpenXml.Table
                     }
                     else
                     {
-                        n = "Column" + (this.Position+1).ToString();
+                        n = "Column" + (this.Position + 1).ToString();
                     }
                 }
                 return n;
@@ -121,20 +168,38 @@ namespace OfficeOpenXml.Table
                 _tbl.WorkSheet.SetTableTotalFunction(_tbl, this);
             }
         }
+
         /// <summary>
-        /// A string text in the total row
+        /// The position of the column
         /// </summary>
-        public string TotalsRowLabel
+        public int Position
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Sets a custom Totals row Formula.
+        /// Be carefull with this property since it is not validated.
+        /// <example>
+        /// tbl.Columns[9].TotalsRowFormula = string.Format("SUM([{0}])",tbl.Columns[9].Name);
+        /// </example>
+        /// </summary>
+        public string TotalsRowFormula
         {
             get
             {
-                return GetXmlNodeString("@totalsRowLabel");
+                return GetXmlNodeString(TOTALSROWFORMULA_PATH);
             }
             set
             {
-                SetXmlNodeString("@totalsRowLabel", value);
+                if (value.StartsWith("=")) value = value.Substring(1, value.Length - 1);
+                SetXmlNodeString("@totalsRowFunction", "custom");
+                SetXmlNodeString(TOTALSROWFORMULA_PATH, value);
+                _tbl.WorkSheet.SetTableTotalFunction(_tbl, this);
             }
         }
+
         /// <summary>
         /// Build-in total row functions.
         /// To set a custom Total row formula use the TotalsRowFormula property
@@ -157,7 +222,7 @@ namespace OfficeOpenXml.Table
             {
                 if (value == RowFunctions.Custom)
                 {
-                    throw(new Exception("Use the TotalsRowFormula-property to set a custom table formula"));
+                    throw (new Exception("Use the TotalsRowFormula-property to set a custom table formula"));
                 }
                 string s = value.ToString();
                 s = s.Substring(0, 1).ToLower(CultureInfo.InvariantCulture) + s.Substring(1, s.Length - 1);
@@ -165,76 +230,20 @@ namespace OfficeOpenXml.Table
                 _tbl.WorkSheet.SetTableTotalFunction(_tbl, this);
             }
         }
-        const string TOTALSROWFORMULA_PATH = "d:totalsRowFormula";
+
         /// <summary>
-        /// Sets a custom Totals row Formula.
-        /// Be carefull with this property since it is not validated. 
-        /// <example>
-        /// tbl.Columns[9].TotalsRowFormula = string.Format("SUM([{0}])",tbl.Columns[9].Name);
-        /// </example>
+        /// A string text in the total row
         /// </summary>
-        public string TotalsRowFormula
+        public string TotalsRowLabel
         {
             get
             {
-                return GetXmlNodeString(TOTALSROWFORMULA_PATH);
+                return GetXmlNodeString("@totalsRowLabel");
             }
             set
             {
-                if (value.StartsWith("=")) value = value.Substring(1, value.Length - 1);
-                SetXmlNodeString("@totalsRowFunction", "custom");                
-                SetXmlNodeString(TOTALSROWFORMULA_PATH, value);
-                _tbl.WorkSheet.SetTableTotalFunction(_tbl, this);
+                SetXmlNodeString("@totalsRowLabel", value);
             }
         }
-        const string DATACELLSTYLE_PATH = "@dataCellStyle";
-        /// <summary>
-        /// The named style for datacells in the column
-        /// </summary>
-        public string DataCellStyleName
-        {
-            get
-            {
-                return GetXmlNodeString(DATACELLSTYLE_PATH);
-            }
-            set
-            {
-                if(_tbl.WorkSheet.Workbook.Styles.NamedStyles.FindIndexByID(value)<0)
-                {
-                    throw(new Exception(string.Format("Named style {0} does not exist.",value)));
-                }
-                SetXmlNodeString(TopNode, DATACELLSTYLE_PATH, value,true);
-               
-                int fromRow=_tbl.Address._fromRow + (_tbl.ShowHeader?1:0),
-                    toRow=_tbl.Address._toRow - (_tbl.ShowTotal?1:0),
-                    col=_tbl.Address._fromCol+Position;
-
-                if (fromRow <= toRow)
-                {
-                    _tbl.WorkSheet.Cells[fromRow, col, toRow, col].StyleName = value;
-                }
-            }
-        }
-  		const string CALCULATEDCOLUMNFORMULA_PATH = "d:calculatedColumnFormula";
- 		/// <summary>
- 		/// Sets a calculated column Formula.
- 		/// Be carefull with this property since it is not validated. 
- 		/// <example>
- 		/// tbl.Columns[9].CalculatedColumnFormula = string.Format("SUM(MyDataTable[[#This Row],[{0}]])",tbl.Columns[9].Name);
- 		/// </example>
- 		/// </summary>
- 		public string CalculatedColumnFormula
- 		{
- 			get
- 			{
- 				return GetXmlNodeString(CALCULATEDCOLUMNFORMULA_PATH);
- 			}
- 			set
- 			{
- 				if (value.StartsWith("=")) value = value.Substring(1, value.Length - 1);
- 				SetXmlNodeString(CALCULATEDCOLUMNFORMULA_PATH, value);
- 			}
- 		}
-
     }
 }

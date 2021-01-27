@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 
 namespace OfficeOpenXml.FormulaParsing.Logging
 {
@@ -16,6 +13,7 @@ namespace OfficeOpenXml.FormulaParsing.Logging
         private DateTime _startTime = DateTime.Now;
         private Dictionary<string, int> _funcs = new Dictionary<string, int>();
         private Dictionary<string, long> _funcPerformance = new Dictionary<string, long>();
+
         internal TextFileLogger(FileInfo fileInfo)
         {
 #if (Core)
@@ -85,7 +83,6 @@ namespace OfficeOpenXml.FormulaParsing.Logging
                 }
                 _sw.WriteLine();
                 _funcs.Clear();
-
             }
         }
 
@@ -109,7 +106,7 @@ namespace OfficeOpenXml.FormulaParsing.Logging
 
         public void Dispose()
         {
-            _sw.Close(); 
+            _sw.Close();
             _sw.Dispose();
         }
     }

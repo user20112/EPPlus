@@ -26,7 +26,6 @@
 //
 // ------------------------------------------------------------------
 
-
 using System;
 using System.IO;
 
@@ -118,8 +117,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         // on generation:
         // all optional fields get 0, except for the OS, which gets 255.
         //
-
-
 
         /// <summary>
         ///   The comment on the GZIP stream.
@@ -221,12 +218,11 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
         private int _headerByteCount;
         internal ZlibBaseStream _baseStream;
-        bool _disposed;
-        bool _firstReadDone;
-        string _FileName;
-        string _Comment;
-        int _Crc32;
-
+        private bool _disposed;
+        private bool _firstReadDone;
+        private string _FileName;
+        private string _Comment;
+        private int _Crc32;
 
         /// <summary>
         ///   Create a <c>GZipStream</c> using the specified <c>CompressionMode</c>.
@@ -539,8 +535,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             _baseStream = new ZlibBaseStream(stream, mode, level, ZlibStreamFlavor.GZIP, leaveOpen);
         }
 
-        #region Zlib properties
-
         /// <summary>
         /// This property sets the flush behavior on the stream.
         /// </summary>
@@ -587,7 +581,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
         }
 
-
         /// <summary> Returns the total number of bytes input so far.</summary>
         virtual public long TotalIn
         {
@@ -605,10 +598,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                 return this._baseStream._z.TotalBytesOut;
             }
         }
-
-        #endregion
-
-        #region Stream methods
 
         /// <summary>
         ///   Dispose the stream.
@@ -653,7 +642,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
         }
 
-
         /// <summary>
         /// Indicates whether the stream can be read.
         /// </summary>
@@ -679,7 +667,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
         {
             get { return false; }
         }
-
 
         /// <summary>
         /// Indicates whether the stream can be written.
@@ -786,8 +773,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             return n;
         }
 
-
-
         /// <summary>
         ///   Calling this method always throws a <see cref="NotImplementedException"/>.
         /// </summary>
@@ -849,8 +834,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 
             _baseStream.Write(buffer, offset, count);
         }
-        #endregion
-
 
         internal static readonly System.DateTime _unixEpoch = new System.DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 #if SILVERLIGHT || NETCF
@@ -858,7 +841,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
 #else
         internal static readonly System.Text.Encoding iso8859dash1 = System.Text.Encoding.GetEncoding("iso-8859-1");
 #endif
-
 
         private int EmitHeader()
         {
@@ -923,8 +905,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             return header.Length; // bytes written
         }
 
-
-
         /// <summary>
         ///   Compress a string into a byte array using GZip.
         /// </summary>
@@ -952,7 +932,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                 return ms.ToArray();
             }
         }
-
 
         /// <summary>
         ///   Compress a byte array into a new byte array using GZip.
@@ -982,7 +961,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
             }
         }
 
-
         /// <summary>
         ///   Uncompress a GZip'ed byte array into a single string.
         /// </summary>
@@ -1003,7 +981,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                 return ZlibBaseStream.UncompressString(compressed, decompressor);
             }
         }
-
 
         /// <summary>
         ///   Uncompress a GZip'ed byte array into a byte array.
@@ -1027,7 +1004,5 @@ namespace OfficeOpenXml.Packaging.Ionic.Zlib
                 return ZlibBaseStream.UncompressBuffer(compressed, decompressor);
             }
         }
-
-
     }
 }

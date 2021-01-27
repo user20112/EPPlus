@@ -13,37 +13,114 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Mats Alm   		                Added       		        2011-01-08
  * Jan Källman		    License changed GPL-->LGPL  2011-12-27
  *******************************************************************************/
+
+using OfficeOpenXml.DataValidation.Formulas.Contracts;
+using OfficeOpenXml.Utils;
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Xml;
-using OfficeOpenXml.Utils;
-using OfficeOpenXml.DataValidation.Formulas.Contracts;
-using System.Text.RegularExpressions;
-using System.Collections;
 
 namespace OfficeOpenXml.DataValidation.Formulas
 {
     internal class ExcelDataValidationFormulaList : ExcelDataValidationFormula, IExcelDataValidationFormulaList
     {
-        #region class DataValidationList
+        private string _formulaPath;
+
+        public ExcelDataValidationFormulaList(XmlNamespaceManager namespaceManager, XmlNode itemNode, string formulaPath)
+                    : base(namespaceManager, itemNode, formulaPath)
+        {
+            Require.Argument(formulaPath).IsNotNullOrEmpty("formulaPath");
+            _formulaPath = formulaPath;
+            var values = new DataValidationList();
+            values.ListChanged += new EventHandler<EventArgs>(values_ListChanged);
+            Values = values;
+            SetInitialValues();
+        }
+
+        public IList<string> Values
+        {
+            get;
+            private set;
+        }
+
+        internal override void ResetValue()
+        {
+            Values.Clear();
+        }
+
+        protected override string GetValueAsString()
+        {
+            var sb = new StringBuilder();
+            foreach (var val in Values)
+            {
+                if (sb.Length == 0)
+                {
+                    sb.Append("\"");
+                    sb.Append(val);
+                }
+                else
+                {
+                    sb.AppendFormat(",{0}", val);
+                }
+            }
+            sb.Append("\"");
+            return sb.ToString();
+        }
+
+        private void SetInitialValues()
+        {
+            var @value = GetXmlNodeString(_formulaPath);
+            if (!string.IsNullOrEmpty(@value))
+            {
+                if (@value.StartsWith("\"") && @value.EndsWith("\""))
+                {
+                    @value = @value.TrimStart('"').TrimEnd('"');
+                    var items = @value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var item in items)
+                    {
+                        Values.Add(item);
+                    }
+                }
+                else
+                {
+                    ExcelFormula = @value;
+                }
+            }
+        }
+
+        private void values_ListChanged(object sender, EventArgs e)
+        {
+            if (Values.Count > 0)
+            {
+                State = FormulaState.Value;
+            }
+            var valuesAsString = GetValueAsString();
+            // Excel supports max 255 characters in this field.
+            if (valuesAsString.Length > 255)
+            {
+                throw new InvalidOperationException("The total length of a DataValidation list cannot exceed 255 characters");
+            }
+            SetXmlNodeString(_formulaPath, valuesAsString);
+        }
+
         private class DataValidationList : IList<string>, ICollection
         {
             private IList<string> _items = new List<string>();
@@ -55,30 +132,29 @@ namespace OfficeOpenXml.DataValidation.Formulas
                 remove { _listChanged -= value; }
             }
 
-            private void OnListChanged()
+            int ICollection.Count
             {
-                if (_listChanged != null)
-                {
-                    _listChanged(this, EventArgs.Empty);
-                }
+                get { return _items.Count; }
             }
 
-            #region IList members
-            int IList<string>.IndexOf(string item)
+            int ICollection<string>.Count
             {
-                return _items.IndexOf(item);
+                get { return _items.Count; }
             }
 
-            void IList<string>.Insert(int index, string item)
+            bool ICollection<string>.IsReadOnly
             {
-                _items.Insert(index, item);
-                OnListChanged();
+                get { return false; }
             }
 
-            void IList<string>.RemoveAt(int index)
+            public bool IsSynchronized
             {
-                _items.RemoveAt(index);
-                OnListChanged();
+                get { return ((ICollection)_items).IsSynchronized; }
+            }
+
+            public object SyncRoot
+            {
+                get { return ((ICollection)_items).SyncRoot; }
             }
 
             string IList<string>.this[int index]
@@ -111,26 +187,14 @@ namespace OfficeOpenXml.DataValidation.Formulas
                 return _items.Contains(item);
             }
 
+            public void CopyTo(Array array, int index)
+            {
+                _items.CopyTo((string[])array, index);
+            }
+
             void ICollection<string>.CopyTo(string[] array, int arrayIndex)
             {
                 _items.CopyTo(array, arrayIndex);
-            }
-
-            int ICollection<string>.Count
-            {
-                get { return _items.Count; }
-            }
-
-            bool ICollection<string>.IsReadOnly
-            {
-                get { return false; }
-            }
-
-            bool ICollection<string>.Remove(string item)
-            {
-                var retVal = _items.Remove(item);
-                OnListChanged();
-                return retVal;
             }
 
             IEnumerator<string> IEnumerable<string>.GetEnumerator()
@@ -142,106 +206,38 @@ namespace OfficeOpenXml.DataValidation.Formulas
             {
                 return _items.GetEnumerator();
             }
-            #endregion
 
-            public void CopyTo(Array array, int index)
+            int IList<string>.IndexOf(string item)
             {
-                _items.CopyTo((string[])array, index);
+                return _items.IndexOf(item);
             }
 
-            int ICollection.Count
+            void IList<string>.Insert(int index, string item)
             {
-                get { return _items.Count; }
+                _items.Insert(index, item);
+                OnListChanged();
             }
 
-            public bool IsSynchronized
+            bool ICollection<string>.Remove(string item)
             {
-                get { return ((ICollection)_items).IsSynchronized; }
+                var retVal = _items.Remove(item);
+                OnListChanged();
+                return retVal;
             }
 
-            public object SyncRoot
+            void IList<string>.RemoveAt(int index)
             {
-                get { return ((ICollection)_items).SyncRoot; }
+                _items.RemoveAt(index);
+                OnListChanged();
             }
-        }
-        #endregion
 
-        public ExcelDataValidationFormulaList(XmlNamespaceManager namespaceManager, XmlNode itemNode, string formulaPath)
-            : base(namespaceManager, itemNode, formulaPath)
-        {
-            Require.Argument(formulaPath).IsNotNullOrEmpty("formulaPath");
-            _formulaPath = formulaPath;
-            var values = new DataValidationList();
-            values.ListChanged += new EventHandler<EventArgs>(values_ListChanged);
-            Values = values;
-            SetInitialValues();
-        }
-
-        private string _formulaPath;
-
-        private void SetInitialValues()
-        {
-            var @value = GetXmlNodeString(_formulaPath);
-            if (!string.IsNullOrEmpty(@value))
+            private void OnListChanged()
             {
-                if (@value.StartsWith("\"") && @value.EndsWith("\""))
+                if (_listChanged != null)
                 {
-                    @value = @value.TrimStart('"').TrimEnd('"');
-                    var items = @value.Split(new char[]{','}, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var item in items)
-                    {
-                        Values.Add(item);
-                    }
-                }
-                else
-                {
-                    ExcelFormula = @value;
+                    _listChanged(this, EventArgs.Empty);
                 }
             }
-        }
-
-        void values_ListChanged(object sender, EventArgs e)
-        {
-            if (Values.Count > 0)
-            {
-                State = FormulaState.Value;
-            }
-            var valuesAsString = GetValueAsString();
-            // Excel supports max 255 characters in this field.
-            if (valuesAsString.Length > 255)
-            {
-                throw new InvalidOperationException("The total length of a DataValidation list cannot exceed 255 characters");
-            }
-            SetXmlNodeString(_formulaPath, valuesAsString);
-        }
-        public IList<string> Values
-        {
-            get;
-            private set;
-        }
-
-        protected override string  GetValueAsString()
-        {
-            var sb = new StringBuilder();
-            foreach (var val in Values)
-            {
-                if (sb.Length == 0)
-                {
-                    sb.Append("\"");
-                    sb.Append(val);
-                }
-                else
-                {
-                    sb.AppendFormat(",{0}", val);
-                }
-            }
-            sb.Append("\"");
-            return sb.ToString();
-        }
-
-        internal override void ResetValue()
-        {
-            Values.Clear();
         }
     }
 }

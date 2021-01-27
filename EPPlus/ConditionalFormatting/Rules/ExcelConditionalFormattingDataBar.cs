@@ -13,29 +13,28 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Eyal Seagull        Added       		  2012-04-03
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
-using System.Xml;
+
 using OfficeOpenXml.ConditionalFormatting.Contracts;
+using SkiaSharp;
+using System;
 using System.Globalization;
+using System.Xml;
+
 namespace OfficeOpenXml.ConditionalFormatting
 {
     /// <summary>
@@ -47,15 +46,14 @@ namespace OfficeOpenXml.ConditionalFormatting
     {
         /****************************************************************************************/
 
-        #region Private Properties
-
-        #endregion Private Properties
-
         /****************************************************************************************/
 
-        #region Constructors
+        private const string _colorPath = "d:dataBar/d:color/@rgb";
+
+        private const string _showValuePath = "d:dataBar/@showValue";
+
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="type"></param>
         /// <param name="priority"></param>
@@ -145,7 +143,7 @@ namespace OfficeOpenXml.ConditionalFormatting
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="type"></param>
         /// <param name="priority"></param>
@@ -169,7 +167,7 @@ namespace OfficeOpenXml.ConditionalFormatting
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="type"></param>
         /// <param name="priority"></param>
@@ -189,8 +187,36 @@ namespace OfficeOpenXml.ConditionalFormatting
               null)
         {
         }
-        #endregion Constructors
-        private const string _showValuePath="d:dataBar/@showValue";
+
+        public SKColor Color
+        {
+            get
+            {
+                var rgb = GetXmlNodeString(_colorPath);
+                if (!string.IsNullOrEmpty(rgb))
+                {
+                    return new SKColor(uint.Parse(rgb, NumberStyles.HexNumber));
+                }
+                return SKColors.White;
+            }
+            set
+            {
+                SetXmlNodeString(_colorPath, ((uint)value).ToString("X"));
+            }
+        }
+
+        public ExcelConditionalFormattingIconDataBarValue HighValue
+        {
+            get;
+            internal set;
+        }
+
+        public ExcelConditionalFormattingIconDataBarValue LowValue
+        {
+            get;
+            internal set;
+        }
+
         public bool ShowValue
         {
             get
@@ -200,38 +226,6 @@ namespace OfficeOpenXml.ConditionalFormatting
             set
             {
                 SetXmlNodeBool(_showValuePath, value);
-            }
-        }
-
-
-        public ExcelConditionalFormattingIconDataBarValue LowValue
-        {
-            get;
-            internal set;
-        }
-
-        public ExcelConditionalFormattingIconDataBarValue HighValue
-        {
-            get;
-            internal set;
-        }
-
-
-        private const string _colorPath = "d:dataBar/d:color/@rgb";
-        public Color Color
-        {
-            get
-            {
-                var rgb=GetXmlNodeString(_colorPath);
-                if(!string.IsNullOrEmpty(rgb))
-                {
-                    return Color.FromArgb(int.Parse(rgb, NumberStyles.HexNumber));
-                }
-                return Color.White;
-            }
-            set
-            {
-                SetXmlNodeString(_colorPath, value.ToArgb().ToString("X"));
             }
         }
     }

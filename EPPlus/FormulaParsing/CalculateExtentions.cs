@@ -13,40 +13,38 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
- * Jan Källman                      Added                       2012-03-04  
+ * Jan Källman                      Added                       2012-03-04
  *******************************************************************************/
 
-using System.Threading;
+using OfficeOpenXml.FormulaParsing;
+using OfficeOpenXml.FormulaParsing.Exceptions;
 using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing;
-using OfficeOpenXml.FormulaParsing.Exceptions;
+using System.Threading;
 
 namespace OfficeOpenXml
 {
     public static class CalculationExtension
     {
-
         public static void Calculate(this ExcelWorkbook workbook)
         {
             Calculate(workbook, new ExcelCalculationOption(){AllowCirculareReferences=false});
         }
+
         public static void Calculate(this ExcelWorkbook workbook, ExcelCalculationOption options)
         {
             Init(workbook);
@@ -59,9 +57,9 @@ namespace OfficeOpenXml
                 workbook.FormulaParser.Logger.Log(msg);
             }
 
-            //TODO: Remove when tests are done. Outputs the dc to a text file. 
+            //TODO: Remove when tests are done. Outputs the dc to a text file.
             //var fileDc = new System.IO.StreamWriter("c:\\temp\\dc.txt");
-                        
+
             //for (int i = 0; i < dc.list.Count; i++)
             //{
             //    fileDc.WriteLine(i.ToString() + "," + dc.list[i].Column.ToString() + "," + dc.list[i].Row.ToString() + "," + (dc.list[i].ws==null ? "" : dc.list[i].ws.Name) + "," + dc.list[i].Formula);
@@ -81,14 +79,16 @@ namespace OfficeOpenXml
 
             //workbook._isCalculated = true;
         }
+
         public static void Calculate(this ExcelWorksheet worksheet)
         {
             Calculate(worksheet, new ExcelCalculationOption());
         }
+
         public static void Calculate(this ExcelWorksheet worksheet, ExcelCalculationOption options)
         {
             Init(worksheet.Workbook);
-            //worksheet.Workbook._formulaParser = null; TODO:Cant reset. Don't work with userdefined or overrided worksheet functions            
+            //worksheet.Workbook._formulaParser = null; TODO:Cant reset. Don't work with userdefined or overrided worksheet functions
             var dc = DependencyChainFactory.Create(worksheet, options);
             var parser = worksheet.Workbook.FormulaParser;
             parser.InitNewCalc();
@@ -99,10 +99,12 @@ namespace OfficeOpenXml
             }
             CalcChain(worksheet.Workbook, parser, dc);
         }
+
         public static void Calculate(this ExcelRangeBase range)
         {
             Calculate(range, new ExcelCalculationOption());
         }
+
         public static void Calculate(this ExcelRangeBase range, ExcelCalculationOption options)
         {
             Init(range._workbook);
@@ -111,10 +113,12 @@ namespace OfficeOpenXml
             var dc = DependencyChainFactory.Create(range, options);
             CalcChain(range._workbook, parser, dc);
         }
+
         public static object Calculate(this ExcelWorksheet worksheet, string Formula)
         {
             return Calculate(worksheet, Formula, new ExcelCalculationOption());
         }
+
         public static object Calculate(this ExcelWorksheet worksheet, string Formula, ExcelCalculationOption options)
         {
             try
@@ -138,6 +142,7 @@ namespace OfficeOpenXml
                 return new ExcelErrorValueException(ex.Message, ExcelErrorValue.Create(eErrorType.Value));
             }
         }
+
         private static void CalcChain(ExcelWorkbook wb, FormulaParser parser, DependencyChain dc)
         {
             var debug = parser.Logger != null;
@@ -166,6 +171,7 @@ namespace OfficeOpenXml
                 }
             }
         }
+
         private static void Init(ExcelWorkbook workbook)
         {
             workbook._formulaTokens = new CellStore<List<Token>>();;

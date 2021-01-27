@@ -1,10 +1,7 @@
-﻿using System;
+﻿using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.Exceptions;
-using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
 {
@@ -44,20 +41,25 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
                     if (date1.Month == 2 && date2.Day==31)
                     {
                         var daysInFeb = calendar.IsLeapYear(date1.Year) ? 29 : 28;
-                        if (date1.Day == daysInFeb) d360Result++;  
+                        if (date1.Day == daysInFeb) d360Result++;
                     }
                     return CreateResult(d360Result / 360d, DataType.Decimal);
+
                 case 1:
                     return CreateResult(System.Math.Abs((date2 - date1).TotalDays / CalculateAcutalYear(date1, date2)), DataType.Decimal);
+
                 case 2:
                     return CreateResult(System.Math.Abs((date2 - date1).TotalDays / 360d), DataType.Decimal);
+
                 case 3:
                     return CreateResult(System.Math.Abs((date2 - date1).TotalDays / 365d), DataType.Decimal);
+
                 case 4:
                     var args = functionArguments.ToList();
                     args.Add(new FunctionArgument(true));
                     double? result = System.Math.Abs(func.Execute(args, context).ResultNumeric / 360d);
                     return CreateResult(result.Value, DataType.Decimal);
+
                 default:
                     return null;
             }
@@ -83,7 +85,7 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
                 else if (dt2.Month == 2 && dt2.Day == 29)
                     perYear = 366;
             }
-            return perYear/(double) nYears;  
+            return perYear/(double) nYears;
         }
     }
 }

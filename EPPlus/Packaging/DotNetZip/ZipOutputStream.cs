@@ -42,12 +42,12 @@
 // ------------------------------------------------------------------
 //
 
-using System;
-using System.Threading;
-using System.Collections.Generic;
-using System.IO;
 using Ionic.Zip;
 using OfficeOpenXml.Packaging.Ionic.Zlib;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 
 namespace OfficeOpenXml.Packaging.Ionic.Zip
 {
@@ -231,7 +231,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         /// </example>
         public ZipOutputStream(Stream stream) : this(stream, false) { }
 
-
         /// <summary>
         ///   Create a ZipOutputStream that writes to a filesystem file.
         /// </summary>
@@ -318,7 +317,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _Init(stream, false, fileName);
         }
 
-
         /// <summary>
         ///   Create a ZipOutputStream.
         /// </summary>
@@ -359,7 +357,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
 #endif
         }
 
-
         /// <summary>Provides a string representation of the instance.</summary>
         /// <remarks>
         ///   <para>
@@ -371,7 +368,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             return String.Format ("ZipOutputStream::{0}(leaveOpen({1})))", _name, _leaveUnderlyingStreamOpen);
         }
-
 
         /// <summary>
         ///   Sets the password to be used on the <c>ZipOutputStream</c> instance.
@@ -443,7 +439,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   The Encryption to use for entries added to the <c>ZipOutputStream</c>.
         /// </summary>
@@ -487,7 +482,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   Size of the work buffer to use for the ZLIB codec during compression.
         /// </summary>
@@ -503,7 +497,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get;
             set;
         }
-
 
         /// <summary>
         ///   The compression strategy to use for all entries.
@@ -522,7 +515,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get;
             set;
         }
-
 
         /// <summary>
         ///   The type of timestamp attached to the ZipEntry.
@@ -548,7 +540,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _timestamp = value;
             }
         }
-
 
         /// <summary>
         ///   Sets the compression level to be used for entries subsequently added to
@@ -595,7 +586,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get;
             set;
         }
-
 
         /// <summary>
         ///   A comment attached to the zip archive.
@@ -649,8 +639,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
-
         /// <summary>
         ///   Specify whether to use ZIP64 extensions when saving a zip archive.
         /// </summary>
@@ -685,7 +673,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
 
-
         /// <summary>
         ///   Indicates whether ZIP64 extensions were used when saving the zip archive.
         /// </summary>
@@ -700,7 +687,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _anyEntriesUsedZip64 || _directoryNeededZip64;
             }
         }
-
 
         /// <summary>
         ///   Whether the ZipOutputStream should use case-insensitive comparisons when
@@ -732,9 +718,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
           {
               _DontIgnoreCase = !value;
           }
-
         }
-
 
         /// <summary>
         ///   Indicates whether to encode entry filenames and entry comments using
@@ -866,7 +850,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 {
                     _alternateEncoding = System.Text.Encoding.UTF8;
                     _alternateEncodingUsage = ZipOption.AsNecessary;
-
                 }
                 else
                 {
@@ -875,7 +858,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 }
             }
         }
-
 
         /// <summary>
         ///   The text encoding to use when emitting entries into the zip archive, for
@@ -1023,15 +1005,15 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             get
             {
                 #if Core
-                    return System.Text.Encoding.GetEncoding("utf-8");     
+                    return System.Text.Encoding.GetEncoding("utf-8");
                 #else
                                 return System.Text.Encoding.GetEncoding("IBM437");
                 #endif
             }
         }
 
-
 #if !NETCF
+
         /// <summary>
         ///   The size threshold for an entry, above which a parallel deflate is used.
         /// </summary>
@@ -1103,7 +1085,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _ParallelDeflateThreshold;
             }
         }
-
 
         /// <summary>
         ///   The maximum number of buffer pairs to use when performing
@@ -1196,8 +1177,8 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _maxBufferPairs = value;
             }
         }
-#endif
 
+#endif
 
         private void InsureUniqueEntry(ZipEntry ze1)
         {
@@ -1207,7 +1188,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 throw new ArgumentException(String.Format("The entry '{0}' already exists in the zip archive.", ze1.FileName));
             }
         }
-
 
         internal Stream OutputStream
         {
@@ -1241,7 +1221,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         {
             return _entriesWritten.ContainsKey(SharedUtilities.NormalizePathForUseInZipFile(name));
         }
-
 
         /// <summary>
         ///   Write the data from the buffer to the stream.
@@ -1289,8 +1268,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             if (count != 0)
                 _entryOutputStream.Write(buffer, offset, count);
         }
-
-
 
         /// <summary>
         ///   Specify the name of the next entry that will be written to the zip file.
@@ -1406,8 +1383,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             return _currentEntry;
         }
 
-
-
         private void _InitiateCurrentEntry(bool finishing)
         {
             // If finishing==true, this means we're initiating the entry at the time of
@@ -1453,8 +1428,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             _needToWriteEntryHeader = false;
         }
 
-
-
         private void _FinishCurrentEntry()
         {
             if (_currentEntry != null)
@@ -1472,8 +1445,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 _outputCounter = null; _encryptor = _deflater = null; _entryOutputStream = null;
             }
         }
-
-
 
         /// <summary>
         /// Dispose the stream
@@ -1538,8 +1509,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
             _disposed = true;
         }
-
-
 
         /// <summary>
         /// Always returns false.
@@ -1608,7 +1577,6 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             throw new NotSupportedException();
         }
 
-
         private EncryptionAlgorithm _encryption;
         private ZipEntryTimestamp _timestamp;
         internal String _password;
@@ -1620,8 +1588,10 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         private int _entryCount;
         private ZipOption _alternateEncodingUsage = ZipOption.Never;
 #if (Core)
+
         private System.Text.Encoding _alternateEncoding
-            = System.Text.Encoding.GetEncoding("utf-8"); // 
+            = System.Text.Encoding.GetEncoding("utf-8"); //
+
 #else
         private System.Text.Encoding _alternateEncoding
             = System.Text.Encoding.GetEncoding("IBM437"); // default = IBM437
@@ -1656,10 +1626,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         // the _exceptionPending flag is used to track that, and to
         // allow the original exception to be propagated to the
         // application without extra "noise."
-
     }
-
-
 
     internal class ZipContainer
     {
@@ -1725,6 +1692,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
         }
 
 #if !NETCF
+
         public Ionic.Zlib.ParallelDeflateOutputStream ParallelDeflater
         {
             get
@@ -1748,6 +1716,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _zos.ParallelDeflateThreshold;
             }
         }
+
         public int ParallelDeflateMaxBufferPairs
         {
             get
@@ -1756,6 +1725,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return _zos.ParallelDeflateMaxBufferPairs;
             }
         }
+
 #endif
 
         public int CodecBufferSize
@@ -1795,6 +1765,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return null;
             }
         }
+
         public System.Text.Encoding DefaultEncoding
         {
             get
@@ -1804,6 +1775,7 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
                 return null;
             }
         }
+
         public ZipOption AlternateEncodingUsage
         {
             get
@@ -1823,5 +1795,4 @@ namespace OfficeOpenXml.Packaging.Ionic.Zip
             }
         }
     }
-
 }

@@ -1,9 +1,7 @@
-﻿using System;
+﻿using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 
 namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
 {
@@ -14,6 +12,7 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
             European,
             Us
         }
+
         public override CompileResult Execute(IEnumerable<FunctionArgument> arguments, ParsingContext context)
         {
             ValidateArguments(arguments, 2);
@@ -45,7 +44,7 @@ namespace OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime
             {
                 var calendar = new GregorianCalendar();
                 var nDaysInFeb = calendar.IsLeapYear(dt1.Year) ? 29 : 28;
-               
+
                  // If the investment is EOM and (Date1 is the last day of February) and (Date2 is the last day of February), then change D2 to 30.
                 if (startMonth == 2 && startDay == nDaysInFeb && endMonth == 2 && endDay == nDaysInFeb)
                 {

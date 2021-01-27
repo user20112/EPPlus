@@ -13,26 +13,25 @@
 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
  * The GNU Lesser General Public License can be viewed at http://www.opensource.org/licenses/lgpl-license.php
  * If you unfamiliar with this license or have questions about it, here is an http://www.gnu.org/licenses/gpl-faq.html
  *
- * All code and executables are provided "as is" with no warranty either express or implied. 
+ * All code and executables are provided "as is" with no warranty either express or implied.
  * The author accepts no liability for any damage or loss of business that this product may cause.
  *
  * Code change notes:
- * 
+ *
  * Author							Change						Date
  * ******************************************************************************
  * Jan Källman		                Initial Release		        2009-10-01
  * Jan Källman		License changed GPL-->LGPL 2011-12-16
  *******************************************************************************/
-using System;
-using System.Collections.Generic;
-using System.Text;
+
 using System.Xml;
+
 namespace OfficeOpenXml.Style.XmlAccess
 {
     /// <summary>
@@ -40,13 +39,24 @@ namespace OfficeOpenXml.Style.XmlAccess
     /// </summary>
     public sealed class ExcelNamedStyleXml : StyleXmlHelper
     {
-        ExcelStyles _styles;
+        private const string buildInIdPath = "@builtinId";
+        private const string customBuiltinPath = "@customBuiltin";
+        private const string idPath = "@xfId";
+        private const string namePath = "@name";
+        private string _name;
+        private ExcelStyle _style = null;
+        private ExcelStyles _styles;
+        private int _styleXfId = 0;
+
+        private int _xfId = int.MinValue;
+
         internal ExcelNamedStyleXml(XmlNamespaceManager nameSpaceManager, ExcelStyles styles)
-            : base(nameSpaceManager)
+                            : base(nameSpaceManager)
         {
             _styles = styles;
             BuildInId = int.MinValue;
         }
+
         internal ExcelNamedStyleXml(XmlNamespaceManager NameSpaceManager, XmlNode topNode, ExcelStyles styles) :
             base(NameSpaceManager, topNode)
         {
@@ -58,50 +68,11 @@ namespace OfficeOpenXml.Style.XmlAccess
             _styles = styles;
             _style = new ExcelStyle(styles, styles.NamedStylePropertyChange, -1, Name, _styleXfId);
         }
-        internal override string Id
-        {
-            get
-            {
-                return Name;
-            }
-        }
-        int _styleXfId=0;
-        const string idPath = "@xfId";
-        /// <summary>
-        /// Named style index
-        /// </summary>
-        public int StyleXfId
-        {
-            get
-            {
-                return _styleXfId;
-            }
-            set
-            {
-                _styleXfId = value;
-            }
-        }
-        int _xfId = int.MinValue;
-        /// <summary>
-        /// Style index
-        /// </summary>
-        internal int XfId
-        {
-            get
-            {
-                return _xfId;
-            }
-            set
-            {
-                _xfId = value;
-            }
-        }
-        const string buildInIdPath = "@builtinId";
+
         public int BuildInId { get; set; }
-        const string customBuiltinPath = "@customBuiltin";
+
         public bool CustomBuildin { get; set; }
-        const string namePath = "@name";
-        string _name;
+
         /// <summary>
         /// Name of the style
         /// </summary>
@@ -116,7 +87,7 @@ namespace OfficeOpenXml.Style.XmlAccess
                 _name = value;
             }
         }
-        ExcelStyle _style = null;
+
         /// <summary>
         /// The style object
         /// </summary>
@@ -132,6 +103,44 @@ namespace OfficeOpenXml.Style.XmlAccess
             }
         }
 
+        /// <summary>
+        /// Named style index
+        /// </summary>
+        public int StyleXfId
+        {
+            get
+            {
+                return _styleXfId;
+            }
+            set
+            {
+                _styleXfId = value;
+            }
+        }
+
+        internal override string Id
+        {
+            get
+            {
+                return Name;
+            }
+        }
+
+        /// <summary>
+        /// Style index
+        /// </summary>
+        internal int XfId
+        {
+            get
+            {
+                return _xfId;
+            }
+            set
+            {
+                _xfId = value;
+            }
+        }
+
         internal override XmlNode CreateXmlNode(XmlNode topNode)
         {
             TopNode = topNode;
@@ -139,7 +148,7 @@ namespace OfficeOpenXml.Style.XmlAccess
             SetXmlNodeString("@xfId", _styles.CellStyleXfs[StyleXfId].newID.ToString());
             if (BuildInId>=0) SetXmlNodeString("@builtinId", BuildInId.ToString());
             if(CustomBuildin) SetXmlNodeBool(customBuiltinPath, true);
-            return TopNode;            
+            return TopNode;
         }
     }
 }
